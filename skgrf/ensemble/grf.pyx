@@ -15,7 +15,7 @@ from skgrf.ensemble cimport grf_
 cdef class DataNumpy:
     """Cython wrapper for DataNumpy C++ class in ``DataNumpy.h``.
     This wraps the Data class in C++, which encapsulates training data passed to the
-    random forest classes. It allows us to pass numpy arrays as a ranger-compatible
+    random forest classes. It allows us to pass numpy arrays as a grf-compatible
     Data object.
     """
     cdef unique_ptr[grf_.DataNumpy] c_data
@@ -50,10 +50,10 @@ cpdef regression_predict(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
-    test_matrix,
-    sparse_test_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
-    unsigned int estimate_variance,
+    bool estimate_variance,
 ):
     cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
@@ -65,7 +65,12 @@ cpdef regression_predict(
     test_data = DataNumpy(test_matrix)
 
     forest = deserialize_forest(forest_object)
-    predictions = predictor.predict(deref(forest), deref(train_data.c_data), deref(test_data.c_data), estimate_variance)
+    predictions = predictor.predict(
+        deref(forest),
+        deref(train_data.c_data),
+        deref(test_data.c_data),
+        estimate_variance,
+    )
 
     return create_prediction_object(predictions)
 
@@ -92,20 +97,15 @@ cpdef regression_train(
     unsigned int num_threads,
     unsigned int seed,
 ):
-    # cdef unique_ptr[grf_.Data] data
-
     cdef grf_.ForestOptions* options
-
     cdef vector[grf_.Prediction] predictions
 
     trainer = new grf_.ForestTrainer(grf_.regression_trainer())
-    # data.reset(new grf_.DefaultData(train_matrix, num_rows, num_cols))
-    npdata = DataNumpy(train_matrix)
-    # data.reset(move(npdata.c_data))
-    deref(npdata.c_data).set_outcome_index(outcome_index - 1)
+    data = DataNumpy(train_matrix)
+    deref(data.c_data).set_outcome_index(outcome_index - 1)
 
     if use_sample_weights:
-        deref(npdata.c_data).set_weight_index(sample_weight_index - 1)
+        deref(data.c_data).set_weight_index(sample_weight_index - 1)
 
     options = new grf_.ForestOptions(
         num_trees,
@@ -124,12 +124,105 @@ cpdef regression_train(
         samples_per_cluster,
     )
 
-    forest = new grf_.Forest(trainer.train(deref(npdata.c_data), deref(options)))
+    forest = new grf_.Forest(trainer.train(deref(data.c_data), deref(options)))
 
     if compute_oob_predictions:
         predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
 
     return create_forest_object(forest, predictions)
+
+cpdef quantile_train(
+    vector[double] quantiles,
+    bool regression_splitting,
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
+    size_t outcome_index,
+    unsigned int mtry,
+    unsigned int num_trees,
+    int min_node_size,
+    double sample_fraction,
+    bool honesty,
+    double honesty_fraction,
+    bool honesty_prune_leaves,
+    size_t ci_group_size,
+    double alpha,
+    double imbalance_penalty,
+    vector[size_t] clusters,
+    unsigned int samples_per_cluster,
+    bool compute_oob_predictions,
+    int num_threads,
+    unsigned int seed,
+):
+    cdef grf_.ForestOptions* options
+    cdef vector[grf_.Prediction] predictions
+
+    if regression_splitting:
+        trainer = new grf_.ForestTrainer(grf_.regression_trainer())
+    else:
+        trainer = new grf_.ForestTrainer(grf_.quantile_trainer(quantiles))
+
+    data = DataNumpy(train_matrix)
+    deref(data.c_data).set_outcome_index(outcome_index - 1)
+
+    options = new grf_.ForestOptions(
+        num_trees,
+        ci_group_size,
+        sample_fraction,
+        mtry,
+        min_node_size,
+        honesty,
+        honesty_fraction,
+        honesty_prune_leaves,
+        alpha,
+        imbalance_penalty,
+        num_threads,
+        seed,
+        clusters,
+        samples_per_cluster,
+    )
+
+    forest = new grf_.Forest(trainer.train(deref(data.c_data), deref(options)))
+
+    if compute_oob_predictions:
+        predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
+
+    return create_forest_object(forest, predictions)
+
+
+cpdef quantile_predict(
+    dict forest_object,
+    vector[double] quantiles,
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
+    size_t outcome_index,
+    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
+    unsigned int num_threads,
+):
+    cdef grf_.Forest* forest
+    cdef vector[grf_.Prediction] predictions
+    sys.stdout.write("g\n")
+
+    predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
+    train_data = DataNumpy(train_matrix)
+    deref(train_data.c_data).set_outcome_index(outcome_index - 1)
+    sys.stdout.write("h\n")
+
+    test_data = DataNumpy(test_matrix)
+    sys.stdout.write("i\n")
+
+    forest = deserialize_forest(forest_object)
+    sys.stdout.write("j\n")
+    predictions = predictor.predict(
+        deref(forest),
+        deref(train_data.c_data),
+        deref(test_data.c_data),
+        False,  # estimate_variance
+    )
+    sys.stdout.write("k\n")
+
+    return create_prediction_object(predictions)
+
 
 cdef create_forest_object(
     grf_.Forest* forest,
@@ -245,14 +338,17 @@ cdef create_prediction_matrix(
 cdef create_variance_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
+    # TODO
     return []
 
 cdef create_error_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
+    # TODO
     return []
 
 cdef create_excess_error_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
+    # TODO
     return []

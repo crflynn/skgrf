@@ -1,1 +1,3 @@
 from skgrf.ensemble.forest_regressor import GRFRegressor
+from skgrf.ensemble.forest_quantile_regressor import GRFQuantileRegressor
+

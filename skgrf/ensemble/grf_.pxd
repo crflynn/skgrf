@@ -445,7 +445,10 @@ cdef extern from "./grf/src/forest/ForestPredictors.cpp":
 
 cdef extern from "./grf/src/forest/ForestPredictors.h" namespace "grf":
     cdef ForestPredictor regression_predictor(unsigned int num_threads)
-
+    cdef ForestPredictor quantile_predictor(
+        unsigned int num_threads,
+        const vector[double]& quantiles
+    )
 
 cdef extern from "./grf/src/forest/ForestTrainer.cpp":
     pass
@@ -472,4 +475,5 @@ cdef extern from "./grf/src/forest/ForestTrainers.cpp":
 
 cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
     cdef ForestTrainer regression_trainer()
+    cdef ForestTrainer quantile_trainer(const vector[double]& quantiles)
 
