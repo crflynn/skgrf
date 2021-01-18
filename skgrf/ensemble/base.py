@@ -20,9 +20,9 @@ class GRFValidationMixin:
         else:
             return max(counts)
 
-    def _check_n_jobs(self):
-        # TODO
-        pass
+    def _get_num_threads(self):
+        """Get GRF-expected num_threads value."""
+        return max([self.n_jobs, 0])  # sklearn convention is -1 for all cpus, grf is 0
 
     def _create_train_matrices(self, X, y=None, sample_weight=None, treatment=None, instrument=None, censor=None):
         n_cols = X.shape[1]

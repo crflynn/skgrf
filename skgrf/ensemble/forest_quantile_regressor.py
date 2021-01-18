@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.utils import check_X_y
-from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -10,10 +9,12 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
-class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     def __init__(
         self,
         n_estimators=100,
+        quantiles=None,
+        regression_splitting=False,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -23,11 +24,12 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         honesty_prune_leaves=True,
         alpha=0.05,
         imbalance_penalty=0,
-        ci_group_size=2,
         n_jobs=-1,
         seed=42,
     ):
         self.n_estimators = n_estimators
+        self.quantiles = quantiles
+        self.regression_splitting = regression_splitting
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
         self.mtry = mtry
@@ -37,38 +39,33 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
-        self.ci_group_size = ci_group_size
         self.n_jobs = n_jobs
         self.seed = seed
 
-    def fit(self, X, y, sample_weight=None, cluster=None):
+    def fit(self, X, y, cluster=None):
+        if self.quantiles is None:
+            raise ValueError("quantiles must be set")
+
         X, y = check_X_y(X, y)
 
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
+        cluster = self._check_cluster(X=X, cluster=cluster)
 
-        cluster = self._check_cluster(cluster, sample_weight)
-
-        samples_per_cluster = self._check_equalize_cluster_weights(cluster, sample_weight)
+        samples_per_cluster = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=None)
 
         if self.mtry is None:
             self.mtry_ = min(np.ceil(np.sqrt(X.shape[1] + 20)), X.shape[1])
         else:
             self.mtry_ = self.mtry
 
-        if sample_weight is None:
-            use_sample_weights = False
-        else:
-            use_sample_weights = True
+        train_matrix = self._create_train_matrices(X, y)
+        self.train_ = train_matrix
 
-        train_matrix = self._create_train_matrices(X, y, sample_weight=sample_weight)
-
-        self.grf_forest_ = grf.regression_train(
+        self.grf_forest_ = grf.quantile_train(
+            self.quantiles,
+            self.regression_splitting,
             np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),
+            np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
-            self.sample_weight_index_,
-            use_sample_weights,
             self.mtry_,
             self.n_estimators,  # num_trees
             self.min_node_size,
@@ -76,29 +73,31 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
-            self.ci_group_size,
+            1,  # ci_group_size,
             self.alpha,
             self.imbalance_penalty,
             cluster,
             samples_per_cluster,
             False,  # compute_oob_predictions,
-            self._get_num_threads(),  # num_threads,
+            self._get_num_threads(),  # num_threads
             self.seed,
         )
+        print(self.grf_forest_)
         return self
 
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
 
-        result = grf.regression_predict(
+        result = grf.quantile_predict(
             self.grf_forest_,
-            np.asfortranarray([[]]),  # train_matrix
+            self.quantiles,
+            np.asfortranarray(self.train_.astype("float64")),
+            # np.asfortranarray([[]]),  # sparse_train_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
-            self._get_num_threads(),
-            False,  # estimate variance
+            self._get_num_threads(),  # num_threads
         )
         return np.atleast_1d(np.squeeze(np.array(result["predictions"])))

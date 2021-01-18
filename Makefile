@@ -1,3 +1,7 @@
+.PHONY: buildpre
+buildpre:
+	poetry run python buildpre.py
+
 .PHONY: build
 build:
 	poetry run python build.py clean
