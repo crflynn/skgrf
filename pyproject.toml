@@ -3,9 +3,10 @@ name = "skgrf"
 version = "0.1.0"
 description = ""
 authors = ["flynn <crf204@gmail.com>"]
+build = "build.py"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.6.1"
 scikit-learn = "*"
 
 [tool.poetry.dev-dependencies]
