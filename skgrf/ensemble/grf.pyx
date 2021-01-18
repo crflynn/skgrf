@@ -60,7 +60,7 @@ cpdef regression_predict(
 
     predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
     train_data = DataNumpy(train_matrix)
-    deref(train_data.c_data).set_outcome_index(outcome_index - 1)
+    deref(train_data.c_data).set_outcome_index(outcome_index)
 
     test_data = DataNumpy(test_matrix)
 
@@ -102,7 +102,7 @@ cpdef regression_train(
 
     trainer = new grf_.ForestTrainer(grf_.regression_trainer())
     data = DataNumpy(train_matrix)
-    deref(data.c_data).set_outcome_index(outcome_index - 1)
+    deref(data.c_data).set_outcome_index(outcome_index)
 
     if use_sample_weights:
         deref(data.c_data).set_weight_index(sample_weight_index - 1)
@@ -130,6 +130,7 @@ cpdef regression_train(
         predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
 
     return create_forest_object(forest, predictions)
+
 
 cpdef quantile_train(
     vector[double] quantiles,
@@ -162,7 +163,7 @@ cpdef quantile_train(
         trainer = new grf_.ForestTrainer(grf_.quantile_trainer(quantiles))
 
     data = DataNumpy(train_matrix)
-    deref(data.c_data).set_outcome_index(outcome_index - 1)
+    deref(data.c_data).set_outcome_index(outcome_index)
 
     options = new grf_.ForestOptions(
         num_trees,
@@ -205,7 +206,7 @@ cpdef quantile_predict(
 
     predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
     train_data = DataNumpy(train_matrix)
-    deref(train_data.c_data).set_outcome_index(outcome_index - 1)
+    deref(train_data.c_data).set_outcome_index(outcome_index)
     sys.stdout.write("h\n")
 
     test_data = DataNumpy(test_matrix)
@@ -232,6 +233,7 @@ cdef create_forest_object(
     if not predictions.empty():
         result.update(create_prediction_object(predictions))
     return result
+
 
 cdef grf_.Forest* deserialize_forest(
     dict forest_object
@@ -270,6 +272,7 @@ cdef grf_.Forest* deserialize_forest(
     )
     return forest
 
+
 cdef serialize_forest(
     grf_.Forest* forest,
 ):
@@ -307,6 +310,7 @@ cdef serialize_forest(
 
     return result
 
+
 cdef create_prediction_object(
     const vector[grf_.Prediction]& predictions,
 ):
@@ -316,6 +320,7 @@ cdef create_prediction_object(
     output["debiased_error"] = create_error_matrix(predictions)
     output["excess_error"] = create_excess_error_matrix(predictions)
     return output
+
 
 cdef create_prediction_matrix(
     const vector[grf_.Prediction]& predictions,
@@ -335,17 +340,20 @@ cdef create_prediction_matrix(
 
     return preds
 
+
 cdef create_variance_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
     # TODO
     return []
 
+
 cdef create_error_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
     # TODO
     return []
+
 
 cdef create_excess_error_matrix(
     const vector[grf_.Prediction]& predictions,

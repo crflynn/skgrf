@@ -24,7 +24,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         alpha=0.05,
         imbalance_penalty=0,
         ci_group_size=2,
-        n_jobs=0,
+        n_jobs=-1,
         seed=42,
     ):
         self.n_estimators = n_estimators
@@ -61,8 +61,6 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         else:
             use_sample_weights = True
 
-        self._check_n_jobs()
-
         train_matrix = self._create_train_matrices(X, y, sample_weight=sample_weight)
 
         self.grf_forest_ = grf.regression_train(
@@ -84,7 +82,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             cluster,
             samples_per_cluster,
             False,  # compute_oob_predictions,
-            self.n_jobs,  # num_threads,
+            self._get_num_threads(),  # num_threads,
             self.seed,
         )
         return self
@@ -100,7 +98,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
-            self.n_jobs,
+            self._get_num_threads(),
             False,  # estimate variance
         )
         return np.atleast_1d(np.squeeze(np.array(result["predictions"])))

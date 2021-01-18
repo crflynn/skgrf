@@ -24,11 +24,11 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         honesty_prune_leaves=True,
         alpha=0.05,
         imbalance_penalty=0,
-        n_jobs=0,
+        n_jobs=-1,
         seed=42,
     ):
         self.n_estimators = n_estimators
-        self.quantiles = quantiles or [0.1, 0.5, 0.9]
+        self.quantiles = quantiles
         self.regression_splitting = regression_splitting
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
@@ -43,6 +43,9 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.seed = seed
 
     def fit(self, X, y, cluster=None):
+        if self.quantiles is None:
+            raise ValueError("quantiles must be set")
+
         X, y = check_X_y(X, y)
 
         cluster = self._check_cluster(X=X, cluster=cluster)
@@ -53,8 +56,6 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.mtry_ = min(np.ceil(np.sqrt(X.shape[1] + 20)), X.shape[1])
         else:
             self.mtry_ = self.mtry
-
-        self._check_n_jobs()
 
         train_matrix = self._create_train_matrices(X, y)
         self.train_ = train_matrix
@@ -78,7 +79,7 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             cluster,
             samples_per_cluster,
             False,  # compute_oob_predictions,
-            self.n_jobs,  # num_threads,
+            self._get_num_threads(),  # num_threads
             self.seed,
         )
         print(self.grf_forest_)
@@ -92,10 +93,11 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.grf_forest_,
             self.quantiles,
             np.asfortranarray(self.train_.astype("float64")),
+            # np.asfortranarray([[]]),  # sparse_train_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
-            self.n_jobs,  # num_threads
+            self._get_num_threads(),  # num_threads
         )
         return np.atleast_1d(np.squeeze(np.array(result["predictions"])))
