@@ -53,7 +53,7 @@ jobs:
 
     - name: Format
       run: |
-        poetry run isort -y -c
+        poetry run isort --check .
         poetry run black --check .
 
   linux:
