@@ -36,10 +36,10 @@ Installation
 Usage
 -----
 
-GRFForestRegressor
-~~~~~~~~~~~~~~~~~~
+GRFRegressor
+~~~~~~~~~~~~
 
-The ``GRFForestRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy class.
+The ``GRFRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy class.
 
 .. code-block:: python
 
