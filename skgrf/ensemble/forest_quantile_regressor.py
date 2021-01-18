@@ -82,7 +82,6 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self._get_num_threads(),  # num_threads
             self.seed,
         )
-        print(self.grf_forest_)
         return self
 
     def predict(self, X):
