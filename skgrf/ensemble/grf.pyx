@@ -202,25 +202,20 @@ cpdef quantile_predict(
 ):
     cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
-    sys.stdout.write("g\n")
 
     predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
     train_data = DataNumpy(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
-    sys.stdout.write("h\n")
 
     test_data = DataNumpy(test_matrix)
-    sys.stdout.write("i\n")
 
     forest = deserialize_forest(forest_object)
-    sys.stdout.write("j\n")
     predictions = predictor.predict(
         deref(forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         False,  # estimate_variance
     )
-    sys.stdout.write("k\n")
 
     return create_prediction_object(predictions)
 
