@@ -1,3 +1,8 @@
+.. skgrf documentation master file, created by
+   sphinx-quickstart on Mon Jan 18 17:31:34 2021.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
 skgrf
 =====
 
@@ -21,6 +26,14 @@ skgrf
 ``skgrf`` provides `scikit-learn <https://scikit-learn.org/stable/index.html>`__ compatible Python bindings to the C++ random forest implementation, `grf <https://github.com/grf-labs/grf>`__, using `Cython <https://cython.readthedocs.io/en/latest/>`__.
 
 The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs/grf/releases/tag/v1.2.0>`__ of ``grf``.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   grf_regressor
+   grf_quantile_regressor
+
 
 
 Installation
@@ -46,13 +59,13 @@ The ``GRFRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy class
     from sklearn.datasets import load_boston
     from sklearn.model_selection import train_test_split
     from skgrf.ensemble import GRFRegressor
-    
+
     X, y = load_boston(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y)
-    
+
     rfr = GRFRegressor()
     rfr.fit(X_train, y_train)
-    
+
     predictions = rfr.predict(X_test)
     print(predictions)
     # [31.81349144 32.2734354  16.51560285 11.90284392 39.69744341 21.30367911
@@ -60,7 +73,6 @@ The ``GRFRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy class
     #  ...
     #  20.70674263 17.09041289 12.89671205 20.79787926 21.18317924 25.45553279
     #  20.82455595]
-
 
 GRFQuantileRegressor
 ~~~~~~~~~~~~~~~~~~~~
@@ -72,13 +84,13 @@ The ``GRFQuantileRegressor`` predictor uses ``grf``'s QuantilePredictionStrategy
     from sklearn.datasets import load_boston
     from sklearn.model_selection import train_test_split
     from skgrf.ensemble import GRFQuantileRegressor
-    
+
     X, y = load_boston(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y)
-    
+
     gqr = GRFQuantileRegressor(quantiles=[0.1, 0.9])
     gqr.fit(X_train, y_train)
-    
+
     predictions = gqr.predict(X_test)
     print(predictions)
     # [[21.9 50. ]
@@ -92,17 +104,12 @@ License
 
 ``skgrf`` is licensed under `GPLv3 <https://github.com/crflynn/skgrf/blob/main/LICENSE.txt>`__.
 
-Development
------------
 
-To develop locally, it is recommended to have ``asdf``, ``make`` and a C++ compiler already installed. After cloning, run ``make setup``. This will setup the grf submodule, install python and poetry from ``.tool-versions``, install dependencies using poetry, copy the grf source code into skgrf, and then build and install skgrf in the local virtualenv.
 
-To format code, run ``make fmt``. This will run isort and black against the .py files.
 
-To run tests and inspect coverage, run ``make test``.
+Indices and tables
+==================
 
-To rebuild in place after making changes, run ``make build``.
-
-To create python package artifacts, run ``make dist``.
-
-To build and view documentation, run ``make docs``.
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

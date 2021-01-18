@@ -3,6 +3,7 @@ import numpy as np
 
 class GRFValidationMixin:
     def _check_cluster(self, X, cluster):
+        """Validate cluster definitions against training data."""
         if cluster is None:
             return np.array([])
         # TODO assert integers
@@ -10,6 +11,7 @@ class GRFValidationMixin:
         return np.array(cluster)
 
     def _check_equalize_cluster_weights(self, cluster, sample_weight):
+        """Validate cluster weight against equalize cluster weight param."""
         if len(cluster) == 0:
             return 0
         _, counts = np.unique(cluster, return_counts=True)
@@ -25,6 +27,12 @@ class GRFValidationMixin:
         return max([self.n_jobs, 0])  # sklearn convention is -1 for all cpus, grf is 0
 
     def _create_train_matrices(self, X, y=None, sample_weight=None, treatment=None, instrument=None, censor=None):
+        """Create a concatenated training matrix.
+
+        GRF expects training data to be combined into a single matrix with reference variables
+        that point to column indices. This creates that concatenated matrix and sets
+        reference indices to be passed to GRF.
+        """
         n_cols = X.shape[1]
         concats = [X]
         if y is not None:

@@ -11,6 +11,38 @@ from skgrf.ensemble.base import GRFValidationMixin
 
 
 class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+    r"""GRF Regression implementation for sci-kit learn.
+
+    Provides a sklearn regressor interface to the GRF C++ library using Cython. The
+    argument names to the constructor are similar to the C++ library and accompanied R
+    package for familiarity.
+
+    :param int n_estimators: The number of tree regressors to train
+    :param bool equalize_cluster_weights: Weight the samples such that clusters have
+        equally weight. If ``False``, larger clusters will have more weight. If
+        ``True``, the number of samples drawn from each cluster is equal to the size of
+        the smallest cluster. If ``True``, sample weights should not be passed on
+        fitting.
+    :param float sample_fraction: Fraction of samples used in each tree.
+    :param int mtry: The number of features to split on each node. The default is
+        ``sqrt(p) + 20`` where ``p`` is the number of features.
+    :param int min_node_size: The minimum number of observations in each tree leaf.
+    :param bool honesty: Use honest splitting (subsample splitting).
+    :param float honesty_fraction: The fraction of data used for subsample splitting.
+    :param bool honesty_prune_leaves: Prune estimation sample tree such that no leaves
+        are empty. If ``False``, trees with empty leaves are skipped.
+    :param float alpha: The maximum imbalance of a split.
+    :param float imbalance_penalty: Penalty applied to imbalanced splits.
+    :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
+        is required to provide confidence intervals.
+    :param int n_jobs: The number of threads. Default is number of CPU cores.
+    :param int seed: Random seed value.
+
+    :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
+    :ivar dict grf_forest\_: The returned result object from calling C++ grf.
+    :ivar int mtry\_: The ``mtry`` value determined by validation.
+    :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
+    """
     def __init__(
         self,
         n_estimators=100,
@@ -42,7 +74,15 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.seed = seed
 
     def fit(self, X, y, sample_weight=None, cluster=None):
+        """Fit the grf forest using training data.
+
+        :param array2d X: training input features
+        :param array1d y: training input targets
+        :param array1d sample_weight: optional weights for input samples
+        :param array1d cluster: optional cluster assignments for input samples
+        """
         X, y = check_X_y(X, y)
+        self.n_features_ = X.shape[1]
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
@@ -88,6 +128,10 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         return self
 
     def predict(self, X):
+        """Predict regression target for X.
+
+        :param array2d X: prediction input features
+        """
         check_is_fitted(self)
         X = check_array(X)
 
