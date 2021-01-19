@@ -445,6 +445,12 @@ cdef extern from "./grf/src/forest/ForestPredictors.cpp":
     pass
 
 cdef extern from "./grf/src/forest/ForestPredictors.h" namespace "grf":
+    cdef ForestPredictor ll_regression_predictor(
+        unsigned int num_threads,
+        vector[double] lambdas,
+        bool weight_penalty,
+        vector[size_t] linear_correction_variables,
+    )
     cdef ForestPredictor regression_predictor(unsigned int num_threads)
     cdef ForestPredictor survival_predictor(
         unsigned int num_threads,
@@ -479,6 +485,13 @@ cdef extern from "./grf/src/forest/ForestTrainers.cpp":
     pass
 
 cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
+    cdef ForestTrainer ll_regression_trainer(
+        double split_lambda,
+        bool weight_penalty,
+        const vector[double]& overall_beta,
+        size_t ll_split_cutoff,
+        vector[size_t] ll_split_variables,
+    )
     cdef ForestTrainer quantile_trainer(const vector[double]& quantiles)
     cdef ForestTrainer regression_trainer()
     cdef ForestTrainer survival_trainer()

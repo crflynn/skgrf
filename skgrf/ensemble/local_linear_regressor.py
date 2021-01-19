@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
+from sklearn.utils import check_X_y
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
@@ -8,10 +10,10 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
-class GRFSurvival(GRFValidationMixin, BaseEstimator):
-    r"""GRF Survival implementation for sci-kit learn.
+class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+    r"""GRF Local Linear Regression implementation for sci-kit learn.
 
-    Provides a sklearn survival interface to the GRF C++ library using Cython.
+    Provides a sklearn regressor interface to the GRF C++ library using Cython.
 
     .. warning::
 
@@ -20,9 +22,7 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         estimator will result in a file at least as large as the serialized training
         dataset.
 
-    :param int n_estimators: The number of survival trees to train
-    :param array1d failure_times: An array of times on which to fit the survival
-        curve. If not provided then the observed failure times are used.
+    :param int n_estimators: The number of tree regressors to train
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
@@ -37,6 +37,9 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
     :param bool honesty_prune_leaves: Prune estimation sample tree such that no leaves
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
+    :param float imbalance_penalty: Penalty applied to imbalanced splits.
+    :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
+        is required to provide confidence intervals.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
@@ -44,16 +47,15 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
-    :ivar int censor_index\_: The index of the grf train matrix holding the censoring.
-    :ivar array1d failure_times_\_: An array of unique failure times from the training
-        set.
-    :ivar int num_failures_\_: The length of the ``failure_times`` array.
     """
 
     def __init__(
         self,
         n_estimators=100,
-        failure_times=None,
+        ll_split_weight_penalty=False,
+        ll_split_lambda=0.1,
+        ll_split_variables=None,
+        ll_split_cutoff=None,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -62,11 +64,16 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
+        imbalance_penalty=0,
+        ci_group_size=2,
         n_jobs=-1,
         seed=42,
     ):
         self.n_estimators = n_estimators
-        self.failure_times = failure_times
+        self.ll_split_weight_penalty = ll_split_weight_penalty
+        self.ll_split_lambda = ll_split_lambda
+        self.ll_split_variables = ll_split_variables
+        self.ll_split_cutoff = ll_split_cutoff
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
         self.mtry = mtry
@@ -75,6 +82,8 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         self.honesty_fraction = honesty_fraction
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
+        self.imbalance_penalty = imbalance_penalty
+        self.ci_group_size = ci_group_size
         self.n_jobs = n_jobs
         self.seed = seed
 
@@ -82,13 +91,11 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         """Fit the grf forest using training data.
 
         :param array2d X: training input features
-        :param array1d y: training input targets, rows of (bool, float) representing
-            (survival, time)
+        :param array1d y: training input targets
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X = check_array(X)
-        y = np.array(y.tolist())
+        X, y = check_X_y(X, y)
         self.n_features_ = X.shape[1]
 
         if sample_weight is not None:
@@ -108,26 +115,39 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         else:
             use_sample_weights = True
 
-        # Extract the failure times from the training targets
-        if self.failure_times is None:
-            self.failure_times_ = np.sort(np.unique(y[:, 1][y[:, 0] == 1]))
-        else:
-            self.failure_times_ = self.failure_times
-        self.num_failures_ = len(self.failure_times_)
-
-        # Relabel the failure times to consecutive integers
-        y_times_relabeled = np.searchsorted(self.failure_times_, y[:, 1])
-        y_censor = y[:, 0]
-
-        train_matrix = self._create_train_matrices(X, y_times_relabeled, sample_weight=sample_weight, censor=y_censor)
+        train_matrix = self._create_train_matrices(X, y, sample_weight=sample_weight)
         self.train_ = train_matrix
 
-        self.grf_forest_ = grf.survival_train(
+        if self.ll_split_variables is None:
+            self.ll_split_variables_ = list(range(X.shape[1]))
+
+        # calculate overall beta
+        if self.ll_split_cutoff is None:
+            self.ll_split_cutoff_ = int(X.shape[0] ** 0.5)
+        else:
+            # TODO add checks
+            self.ll_split_cutoff_ = self.ll_split_cutoff
+
+        if self.ll_split_cutoff_ > 0:
+            # TODO convert R to python
+            # J = np.diag(np.ones(X.shape[1]+1))
+            # J[0,0] = 0
+            # D = np.concatenate([np.ones(X.shape[0]), X], axis=1)
+            self.overall_beta_ = np.empty((0,), dtype=float, order="F")
+        else:
+            self.overall_beta_ = np.empty((0,), dtype=float, order="F")
+
+        print(self.__dict__)
+        self.grf_forest_ = grf.ll_regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
             np.asfortranarray([[]]),
             self.outcome_index_,
-            self.censor_index_,
             self.sample_weight_index_,
+            self.ll_split_lambda,
+            self.ll_split_weight_penalty,
+            self.ll_split_variables_,
+            self.ll_split_cutoff_,
+            self.overall_beta_,
             use_sample_weights,
             self.mtry_,
             self.n_estimators,  # num_trees
@@ -136,51 +156,35 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
+            self.ci_group_size,
             self.alpha,
-            self.num_failures_,
+            self.imbalance_penalty,
             cluster,
             samples_per_cluster,
-            False,  # compute_oob_predictions,
             self._get_num_threads(),  # num_threads,
             self.seed,
         )
         return self
 
-    def predict_cumulative_hazard_function(self, X):
-        """Predict cumulative hazard function.
-
-        :param array2d X: prediction input features
-        """
-        surv = self.predict_survival_function(X)
-        return -np.log(surv)
-
     def predict(self, X):
-        """Predict risk score.
-
-        :param array2d X: prediction input features
-        """
-        chf = self.predict_cumulative_hazard_function(X)
-        return chf.sum(1)
-
-    def predict_survival_function(self, X):
-        """Predict survival function.
+        """Predict regression target for X.
 
         :param array2d X: prediction input features
         """
         check_is_fitted(self)
         X = check_array(X)
 
-        result = grf.survival_predict(
+        result = grf.ll_regression_predict(
             self.grf_forest_,
             np.asfortranarray(self.train_.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
-            self.censor_index_,
-            self.sample_weight_index_,
-            False,  # use_sample_weights
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
+            [self.ll_split_lambda],  # ll_lambda
+            self.ll_split_weight_penalty,  # ll_weight_penalty
+            self.ll_split_variables_,  # linear_correction_variables
             self._get_num_threads(),
-            self.num_failures_,
+            False,  # estimate variance
         )
         return np.atleast_1d(np.squeeze(np.array(result["predictions"])))

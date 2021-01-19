@@ -25,14 +25,16 @@ skgrf
 
 ``skgrf`` provides `scikit-learn <https://scikit-learn.org/stable/index.html>`__ compatible Python bindings to the C++ random forest implementation, `grf <https://github.com/grf-labs/grf>`__, using `Cython <https://cython.readthedocs.io/en/latest/>`__.
 
-The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs/grf/releases/tag/v1.2.0>`__ of ``grf``.
+The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs/grf/releases/tag/v1.2.0>`__ of ``grf``. Refer to the `GRF docs <https://grf-labs.github.io/grf/REFERENCE.html>`__ for detailed references.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   grf_regressor
+   grf_local_linear_regressor
    grf_quantile_regressor
+   grf_regressor
+   grf_survival
 
 
 
