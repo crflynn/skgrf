@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.base import RegressorMixin
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
@@ -9,7 +8,7 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
-class GRFSurvival(GRFValidationMixin, RegressorMixin, BaseEstimator):
+class GRFSurvival(GRFValidationMixin, BaseEstimator):
     r"""GRF Survival implementation for sci-kit learn.
 
     Provides a sklearn survival interface to the GRF C++ library using Cython.

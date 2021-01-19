@@ -1,6 +1,5 @@
 import cython
 import numpy as np
-import sys
 
 cimport numpy as np
 from cython.operator cimport dereference as deref
@@ -304,14 +303,12 @@ cpdef survival_predict(
     test_data = DataNumpy(test_matrix)
 
     forest = deserialize_forest(forest_object)
-    sys.stdout.write("beforepredict")
     predictions = predictor.predict(
         deref(forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         False,  # estimate_variance
     )
-    sys.stdout.write("afterpredict")
 
     return create_prediction_object(predictions)
 

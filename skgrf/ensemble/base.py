@@ -56,6 +56,4 @@ class GRFValidationMixin:
             self.sample_weight_index_ = n_cols
             n_cols += 1
             concats.append(np.atleast_2d(sample_weight).T)
-        for c in concats:
-            print(c.shape)
         return np.concatenate(concats, axis=1)
