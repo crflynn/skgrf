@@ -14,11 +14,12 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
 
     Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.
 
-    .. Note::
+    .. warning::
 
-        The training dataset is recorded onto the ``GRFQuantileRegressor`` instance.
-        This means that serializing this estimator will be at least as large as
-        the serialized training dataset.
+        Because the training dataset is required for prediction, the training dataset
+        is recorded onto the estimator instance. This means that serializing this
+        estimator will result in a file at least as large as the serialized training
+        dataset.
 
     :param int n_estimators: The number of tree regressors to train
     :param list(float) quantiles: A list of quantiles on which to predict.
