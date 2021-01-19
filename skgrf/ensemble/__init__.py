@@ -1,2 +1,3 @@
-from skgrf.ensemble.forest_quantile_regressor import GRFQuantileRegressor
-from skgrf.ensemble.forest_regressor import GRFRegressor
+from skgrf.ensemble.quantile_regressor import GRFQuantileRegressor
+from skgrf.ensemble.regressor import GRFRegressor
+from skgrf.ensemble.survival import GRFSurvival

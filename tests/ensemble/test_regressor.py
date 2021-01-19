@@ -1,11 +1,8 @@
-import numpy as np
 import pickle
 import pytest
-import random
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
-from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFRegressor

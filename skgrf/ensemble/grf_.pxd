@@ -12,6 +12,7 @@ cdef extern from "./grf/src/commons/Data.h" namespace "grf":
         double get(size_t row, size_t col)
         void reserve_memory()
         void set(size_t col, size_t row, double value, bool& error)
+        void set_censor_index(size_t index)
         void set_outcome_index(size_t index)
         void set_weight_index(size_t index)
 
@@ -445,9 +446,13 @@ cdef extern from "./grf/src/forest/ForestPredictors.cpp":
 
 cdef extern from "./grf/src/forest/ForestPredictors.h" namespace "grf":
     cdef ForestPredictor regression_predictor(unsigned int num_threads)
+    cdef ForestPredictor survival_predictor(
+        unsigned int num_threads,
+        size_t num_failures,
+    )
     cdef ForestPredictor quantile_predictor(
         unsigned int num_threads,
-        const vector[double]& quantiles
+        const vector[double]& quantiles,
     )
 
 cdef extern from "./grf/src/forest/ForestTrainer.cpp":
@@ -474,6 +479,7 @@ cdef extern from "./grf/src/forest/ForestTrainers.cpp":
     pass
 
 cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
-    cdef ForestTrainer regression_trainer()
     cdef ForestTrainer quantile_trainer(const vector[double]& quantiles)
+    cdef ForestTrainer regression_trainer()
+    cdef ForestTrainer survival_trainer()
 
