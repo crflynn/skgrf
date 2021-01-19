@@ -1,6 +1,5 @@
 import cython
 import numpy as np
-import sys
 
 cimport numpy as np
 from cython.operator cimport dereference as deref
@@ -43,36 +42,6 @@ cdef class DataNumpy:
 
     def set(self, size_t col, size_t row, double value, bool& error):
         return deref(self.c_data).set(col, row, value, error)
-
-
-cpdef regression_predict(
-    dict forest_object,
-    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
-    size_t outcome_index,
-    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
-    unsigned int num_threads,
-    bool estimate_variance,
-):
-    cdef grf_.Forest* forest
-    cdef vector[grf_.Prediction] predictions
-
-    predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
-    train_data = DataNumpy(train_matrix)
-    deref(train_data.c_data).set_outcome_index(outcome_index)
-
-    test_data = DataNumpy(test_matrix)
-
-    forest = deserialize_forest(forest_object)
-    predictions = predictor.predict(
-        deref(forest),
-        deref(train_data.c_data),
-        deref(test_data.c_data),
-        estimate_variance,
-    )
-
-    return create_prediction_object(predictions)
 
 
 cpdef regression_train(
@@ -130,6 +99,36 @@ cpdef regression_train(
         predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
 
     return create_forest_object(forest, predictions)
+
+
+cpdef regression_predict(
+    dict forest_object,
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
+    size_t outcome_index,
+    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
+    unsigned int num_threads,
+    bool estimate_variance,
+):
+    cdef grf_.Forest* forest
+    cdef vector[grf_.Prediction] predictions
+
+    predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
+    train_data = DataNumpy(train_matrix)
+    deref(train_data.c_data).set_outcome_index(outcome_index)
+
+    test_data = DataNumpy(test_matrix)
+
+    forest = deserialize_forest(forest_object)
+    predictions = predictor.predict(
+        deref(forest),
+        deref(train_data.c_data),
+        deref(test_data.c_data),
+        estimate_variance,
+    )
+
+    return create_prediction_object(predictions)
 
 
 cpdef quantile_train(
@@ -206,6 +205,100 @@ cpdef quantile_predict(
     predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
     train_data = DataNumpy(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
+
+    test_data = DataNumpy(test_matrix)
+
+    forest = deserialize_forest(forest_object)
+    predictions = predictor.predict(
+        deref(forest),
+        deref(train_data.c_data),
+        deref(test_data.c_data),
+        False,  # estimate_variance
+    )
+
+    return create_prediction_object(predictions)
+
+
+cpdef survival_train(
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
+    size_t outcome_index,
+    size_t censor_index,
+    size_t sample_weight_index,
+    bool use_sample_weights,
+    unsigned int mtry,
+    unsigned int num_trees,
+    unsigned int min_node_size,
+    double sample_fraction,
+    bool honesty,
+    double honesty_fraction,
+    bool honesty_prune_leaves,
+    double alpha,
+    size_t num_failures,
+    vector[size_t] clusters,
+    unsigned int samples_per_cluster,
+    bool compute_oob_predictions,
+    int num_threads,
+    unsigned int seed,
+):
+    cdef grf_.ForestOptions* options
+    cdef vector[grf_.Prediction] predictions
+
+    trainer = new grf_.ForestTrainer(grf_.survival_trainer())
+
+    data = DataNumpy(train_matrix)
+    deref(data.c_data).set_outcome_index(outcome_index)
+    deref(data.c_data).set_censor_index(censor_index)
+    if use_sample_weights:
+        deref(data.c_data).set_weight_index(sample_weight_index)
+
+    options = new grf_.ForestOptions(
+        num_trees,
+        1,  # ci_group_size
+        sample_fraction,
+        mtry,
+        min_node_size,
+        honesty,
+        honesty_fraction,
+        honesty_prune_leaves,
+        alpha,
+        0,  # imbalance_penalty
+        num_threads,
+        seed,
+        clusters,
+        samples_per_cluster,
+    )
+
+    forest = new grf_.Forest(trainer.train(deref(data.c_data), deref(options)))
+
+    if compute_oob_predictions:
+        predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures))
+
+    return create_forest_object(forest, predictions)
+
+
+cpdef survival_predict(
+    dict forest_object,
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
+    size_t outcome_index,
+    size_t censor_index,
+    size_t sample_weight_index,
+    bool use_sample_weights,
+    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
+    unsigned int num_threads,
+    size_t num_failures,
+):
+    cdef grf_.Forest* forest
+    cdef vector[grf_.Prediction] predictions
+
+    predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures))
+    train_data = DataNumpy(train_matrix)
+    deref(train_data.c_data).set_outcome_index(outcome_index)
+    deref(train_data.c_data).set_censor_index(censor_index)
+    if use_sample_weights:
+        deref(train_data.c_data).set_weight_index(sample_weight_index)
 
     test_data = DataNumpy(test_matrix)
 

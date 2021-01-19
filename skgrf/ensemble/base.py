@@ -42,17 +42,18 @@ class GRFValidationMixin:
         if treatment is not None:
             self.treatment_index_ = n_cols
             n_cols += 1
-            concats.append(treatment)
+            concats.append(np.atleast_2d(treatment).T)
         if instrument is not None:
             self.instrument_index_ = n_cols
             n_cols += 1
-            concats.append(instrument)
+            concats.append(np.atleast_2d(instrument).T)
         if censor is not None:
             self.censor_index_ = n_cols
             n_cols += 1
-            concats.append(censor)
+            concats.append(np.atleast_2d(censor).T)
         self.sample_weight_index_ = 0
         if sample_weight is not None:
             self.sample_weight_index_ = n_cols
-            concats.append(sample_weight)
+            n_cols += 1
+            concats.append(np.atleast_2d(sample_weight).T)
         return np.concatenate(concats, axis=1)

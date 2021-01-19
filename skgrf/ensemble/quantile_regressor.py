@@ -13,8 +13,6 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     r"""GRF Quantile Regression implementation for sci-kit learn.
 
     Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.
-    The argument names to the constructor are similar to the C++ library and
-    accompanied R package for familiarity.
 
     .. Note::
 
@@ -50,6 +48,7 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
     :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
     """
+
     def __init__(
         self,
         n_estimators=100,

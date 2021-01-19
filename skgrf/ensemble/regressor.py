@@ -13,9 +13,7 @@ from skgrf.ensemble.base import GRFValidationMixin
 class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     r"""GRF Regression implementation for sci-kit learn.
 
-    Provides a sklearn regressor interface to the GRF C++ library using Cython. The
-    argument names to the constructor are similar to the C++ library and accompanied R
-    package for familiarity.
+    Provides a sklearn regressor interface to the GRF C++ library using Cython.
 
     :param int n_estimators: The number of tree regressors to train
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
@@ -43,6 +41,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
     """
+
     def __init__(
         self,
         n_estimators=100,
