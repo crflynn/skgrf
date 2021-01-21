@@ -21,7 +21,8 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         ``True``, the number of samples drawn from each cluster is equal to the size of
         the smallest cluster. If ``True``, sample weights should not be passed on
         fitting.
-    :param float sample_fraction: Fraction of samples used in each tree.
+    :param float sample_fraction: Fraction of samples used in each tree. If
+        ``ci_group_size`` > 1, the max allowed fraction is 0.5
     :param int mtry: The number of features to split on each node. The default is
         ``sqrt(p) + 20`` where ``p`` is the number of features.
     :param int min_node_size: The minimum number of observations in each tree leaf.
@@ -40,6 +41,10 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
+    :ivar list samples_per_cluster\_: The number of samples to train per cluster.
+    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
+    :ivar int n_classes\_: The number of unique class labels from the fit input
+        ``cluster``.
     """
 
     def __init__(
@@ -83,24 +88,20 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         X, y = check_X_y(X, y)
         self.n_features_ = X.shape[1]
 
+        self._check_sample_fraction()
+        self._check_alpha()
+
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-
-        cluster = self._check_cluster(cluster, sample_weight)
-
-        samples_per_cluster = self._check_equalize_cluster_weights(cluster, sample_weight)
-
-        if self.mtry is None:
-            self.mtry_ = min(np.ceil(np.sqrt(X.shape[1] + 20)), X.shape[1])
-        else:
-            self.mtry_ = self.mtry
-
-        if sample_weight is None:
-            use_sample_weights = False
-        else:
             use_sample_weights = True
+        else:
+            use_sample_weights = False
 
-        train_matrix = self._create_train_matrices(X, y, sample_weight=sample_weight)
+        cluster = self._check_cluster(X=X, cluster=cluster)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=sample_weight)
+        self.mtry_ = self._check_mtry(X=X)
+
+        train_matrix = self._create_train_matrices(X=X, y=y, sample_weight=sample_weight)
 
         self.grf_forest_ = grf.regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
@@ -119,7 +120,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.alpha,
             self.imbalance_penalty,
             cluster,
-            samples_per_cluster,
+            self.samples_per_cluster_,
             False,  # compute_oob_predictions,
             self._get_num_threads(),  # num_threads,
             self.seed,

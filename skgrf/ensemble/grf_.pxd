@@ -71,7 +71,7 @@ cdef extern from "./grf/src/forest/Forest.h" namespace "grf":
             size_t num_variables,
             size_t ci_group_size,
         )
-        Forest(Forest&& forest)
+        Forest(Forest&& forest) except +
         const size_t get_ci_group_size() const
         const size_t get_num_variables() const
         const vector[unique_ptr[Tree]]& get_trees() const
