@@ -98,7 +98,7 @@ class TestGRFRegressor:
 
     def test_alpha(self, boston_X, boston_y, alpha):
         gfr = GRFRegressor(alpha=alpha)
-        if alpha <=0 or alpha >= 0.25:
+        if alpha <= 0 or alpha >= 0.25:
             with pytest.raises(ValueError):
                 gfr.fit(boston_X, boston_y)
         else:
