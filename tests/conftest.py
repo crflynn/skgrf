@@ -47,6 +47,13 @@ def lung_y():
     return _lung_y
 
 
+@pytest.fixture
+def lung_cluster():
+    cluster = np.zeros(_lung_y.shape)
+    cluster[20:] = 1
+    return cluster
+
+
 @pytest.fixture(params=[True, False])
 def equalize_cluster_weights(request):
     return request.param
@@ -80,5 +87,3 @@ def honesty_prune_leaves(request):
 @pytest.fixture(params=[-0.1, 0, 0.05, 0.1, 0.2, 0.25, 0.3])
 def alpha(request):
     return request.param
-
-

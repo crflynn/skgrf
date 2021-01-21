@@ -101,7 +101,7 @@ class TestGRFQuantileRegressor:
     def test_alpha(self, boston_X, boston_y, alpha):
         gqr = GRFQuantileRegressor(alpha=alpha)
         gqr.quantiles = [0.2, 0.5, 0.8]
-        if alpha <=0 or alpha >= 0.25:
+        if alpha <= 0 or alpha >= 0.25:
             with pytest.raises(ValueError):
                 gqr.fit(boston_X, boston_y)
         else:

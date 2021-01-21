@@ -21,8 +21,6 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         dataset.
 
     :param int n_estimators: The number of survival trees to train
-    :param array1d failure_times: An array of times on which to fit the survival
-        curve. If not provided then the observed failure times are used.
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
@@ -53,7 +51,6 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
     def __init__(
         self,
         n_estimators=100,
-        failure_times=None,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -66,7 +63,6 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         seed=42,
     ):
         self.n_estimators = n_estimators
-        self.failure_times = failure_times
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
         self.mtry = mtry
@@ -91,28 +87,21 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         y = np.array(y.tolist())
         self.n_features_ = X.shape[1]
 
+        self._check_sample_fraction()
+        self._check_alpha()
+
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-
-        cluster = self._check_cluster(cluster, sample_weight)
-
-        samples_per_cluster = self._check_equalize_cluster_weights(cluster, sample_weight)
-
-        if self.mtry is None:
-            self.mtry_ = min(np.ceil(np.sqrt(X.shape[1] + 20)), X.shape[1])
-        else:
-            self.mtry_ = self.mtry
-
-        if sample_weight is None:
-            use_sample_weights = False
-        else:
             use_sample_weights = True
+        else:
+            use_sample_weights = False
+
+        cluster = self._check_cluster(X=X, cluster=cluster)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=sample_weight)
+        self.mtry_ = self._check_mtry(X=X)
 
         # Extract the failure times from the training targets
-        if self.failure_times is None:
-            self.failure_times_ = np.sort(np.unique(y[:, 1][y[:, 0] == 1]))
-        else:
-            self.failure_times_ = self.failure_times
+        self.failure_times_ = np.sort(np.unique(y[:, 1][y[:, 0] == 1]))
         self.num_failures_ = len(self.failure_times_)
 
         # Relabel the failure times to consecutive integers
@@ -139,7 +128,7 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
             self.alpha,
             self.num_failures_,
             cluster,
-            samples_per_cluster,
+            self.samples_per_cluster_,
             False,  # compute_oob_predictions,
             self._get_num_threads(),  # num_threads,
             self.seed,
