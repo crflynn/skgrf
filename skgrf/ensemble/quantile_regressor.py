@@ -47,6 +47,10 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
+    :ivar list samples_per_cluster\_: The number of samples to train per cluster.
+    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
+    :ivar int n_classes\_: The number of unique class labels from the fit input
+        ``cluster``.
     :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
     """
 
@@ -95,14 +99,12 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         X, y = check_X_y(X, y)
         self.n_features_ = X.shape[1]
 
+        self._check_sample_fraction()
+        self._check_alpha()
+
         cluster = self._check_cluster(X=X, cluster=cluster)
-
-        samples_per_cluster = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=None)
-
-        if self.mtry is None:
-            self.mtry_ = min(np.ceil(np.sqrt(X.shape[1] + 20)), X.shape[1])
-        else:
-            self.mtry_ = self.mtry
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=None)
+        self.mtry_ = self._check_mtry(X=X)
 
         train_matrix = self._create_train_matrices(X, y)
         self.train_ = train_matrix
@@ -124,7 +126,7 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.alpha,
             self.imbalance_penalty,
             cluster,
-            samples_per_cluster,
+            self.samples_per_cluster_,
             False,  # compute_oob_predictions,
             self._get_num_threads(),  # num_threads
             self.seed,
