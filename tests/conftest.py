@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from sklearn.datasets import load_boston
 from sklearn.datasets import load_iris
@@ -19,6 +20,13 @@ def boston_y():
 
 
 @pytest.fixture
+def boston_cluster():
+    cluster = np.zeros(_boston_y.shape)
+    cluster[20:] = 1
+    return cluster
+
+
+@pytest.fixture
 def iris_X():
     return _iris_X
 
@@ -37,3 +45,40 @@ def lung_X():
 @pytest.fixture
 def lung_y():
     return _lung_y
+
+
+@pytest.fixture(params=[True, False])
+def equalize_cluster_weights(request):
+    return request.param
+
+
+@pytest.fixture(params=[-0.1, 0, 0.2, 0.5, 0.8, 1.0, 1.1])
+def sample_fraction(request):
+    return request.param
+
+
+@pytest.fixture(params=[2, None])
+def mtry(request):
+    return request.param
+
+
+@pytest.fixture(params=[True, False])
+def honesty(request):
+    return request.param
+
+
+@pytest.fixture(params=[-0.1, 0, 0.2, 0.5, 0.8, 1.0, 1.1])
+def honesty_fraction(request):
+    return request.param
+
+
+@pytest.fixture(params=[True, False])
+def honesty_prune_leaves(request):
+    return request.param
+
+
+@pytest.fixture(params=[-0.1, 0, 0.05, 0.1, 0.2, 0.25, 0.3])
+def alpha(request):
+    return request.param
+
+
