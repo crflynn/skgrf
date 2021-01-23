@@ -98,10 +98,14 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             use_sample_weights = False
 
         cluster = self._check_cluster(X=X, cluster=cluster)
-        self.samples_per_cluster_ = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=sample_weight)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
+            cluster=cluster, sample_weight=sample_weight
+        )
         self.mtry_ = self._check_mtry(X=X)
 
-        train_matrix = self._create_train_matrices(X=X, y=y, sample_weight=sample_weight)
+        train_matrix = self._create_train_matrices(
+            X=X, y=y, sample_weight=sample_weight
+        )
 
         self.grf_forest_ = grf.regression_train(
             np.asfortranarray(train_matrix.astype("float64")),

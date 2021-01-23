@@ -14,7 +14,10 @@ include_dirs = [
     top,
     os.path.join(top, "skgrf", "ensemble"),
     *[d[0] for d in os.walk(os.path.join(top, "skgrf", "ensemble", "grf", "src"))],
-    *[d[0] for d in os.walk(os.path.join(top, "skgrf", "ensemble", "grf", "third_party"))],
+    *[
+        d[0]
+        for d in os.walk(os.path.join(top, "skgrf", "ensemble", "grf", "third_party"))
+    ],
     np.get_include(),
 ]
 
@@ -57,7 +60,11 @@ ext_modules = [create_extension(name) for name in find_pyx_files("skgrf")]
 
 setup(
     ext_modules=cythonize(
-        ext_modules, gdb_debug=False, force=True, annotate=False, compiler_directives={"language_level": "3"}
+        ext_modules,
+        gdb_debug=False,
+        force=True,
+        annotate=False,
+        compiler_directives={"language_level": "3"},
     )
 )
 

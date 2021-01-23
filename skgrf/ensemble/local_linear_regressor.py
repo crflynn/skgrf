@@ -23,6 +23,13 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
         dataset.
 
     :param int n_estimators: The number of tree regressors to train
+    :param bool ll_split_weight_penalty: Use a covariance ridge penalty if using local
+        linear splits.
+    :param float ll_split_lambda: Ridge penalty for splitting.
+    :param list(int) ll_split_variables: Linear correction variables for splitting. Uses
+        all variables if not specified.
+    :param float ll_split_cutoff: Leaf size after which the overall beta is used. If
+        unspecified, default is sqrt of num samples. Passing 0 means no cutoff.
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
@@ -48,6 +55,10 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
+    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
+    :ivar int n_classes\_: The number of unique class labels from the fit input
+        ``cluster``.
+    :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
     """
 
     def __init__(
@@ -99,22 +110,20 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
         X, y = check_X_y(X, y)
         self.n_features_ = X.shape[1]
 
+        self._check_sample_fraction()
+        self._check_alpha()
+
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-
-        cluster = self._check_cluster(cluster, sample_weight)
-
-        samples_per_cluster = self._check_equalize_cluster_weights(cluster, sample_weight)
-
-        if self.mtry is None:
-            self.mtry_ = min(np.ceil(np.sqrt(X.shape[1] + 20)), X.shape[1])
-        else:
-            self.mtry_ = self.mtry
-
-        if sample_weight is None:
-            use_sample_weights = False
-        else:
             use_sample_weights = True
+        else:
+            use_sample_weights = False
+
+        cluster = self._check_cluster(X=X, cluster=cluster)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
+            cluster=cluster, sample_weight=sample_weight
+        )
+        self.mtry_ = self._check_mtry(X=X)
 
         train_matrix = self._create_train_matrices(X, y, sample_weight=sample_weight)
         self.train_ = train_matrix
@@ -126,15 +135,19 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
         if self.ll_split_cutoff is None:
             self.ll_split_cutoff_ = int(X.shape[0] ** 0.5)
         else:
-            # TODO add checks
             self.ll_split_cutoff_ = self.ll_split_cutoff
 
         if self.ll_split_cutoff_ > 0:
-            # TODO convert R to python
-            # J = np.diag(np.ones(X.shape[1]+1))
-            # J[0,0] = 0
-            # D = np.concatenate([np.ones(X.shape[0]), X], axis=1)
-            self.overall_beta_ = np.empty((0,), dtype=float, order="F")
+            J = np.eye(X.shape[1] + 1)
+            J[0, 0] = 0
+            D = np.concatenate([np.ones((X.shape[0], 1)), X], axis=1)
+            self.overall_beta_ = (
+                np.linalg.solve(
+                    D.T @ D + self.ll_split_lambda * J, np.eye(X.shape[1] + 1)
+                )
+                @ D.T
+                @ y
+            )
         else:
             self.overall_beta_ = np.empty((0,), dtype=float, order="F")
 
@@ -161,7 +174,7 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
             self.alpha,
             self.imbalance_penalty,
             cluster,
-            samples_per_cluster,
+            self.samples_per_cluster_,
             self._get_num_threads(),  # num_threads,
             self.seed,
         )

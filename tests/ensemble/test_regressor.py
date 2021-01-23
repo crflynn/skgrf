@@ -42,7 +42,9 @@ class TestGRFRegressor:
         gfr.fit(boston_X, boston_y)
         clone(gfr)
 
-    def test_equalize_cluster_weights(self, boston_X, boston_y, boston_cluster, equalize_cluster_weights):
+    def test_equalize_cluster_weights(
+        self, boston_X, boston_y, boston_cluster, equalize_cluster_weights
+    ):
         gfr = GRFRegressor(equalize_cluster_weights=equalize_cluster_weights)
         gfr.fit(boston_X, boston_y, cluster=boston_cluster)
         if equalize_cluster_weights:
@@ -52,12 +54,16 @@ class TestGRFRegressor:
 
         if equalize_cluster_weights:
             with pytest.raises(ValueError):
-                gfr.fit(boston_X, boston_y, cluster=boston_cluster, sample_weight=boston_y)
+                gfr.fit(
+                    boston_X, boston_y, cluster=boston_cluster, sample_weight=boston_y
+                )
 
         gfr.fit(boston_X, boston_y, cluster=None)
         assert gfr.samples_per_cluster_ == 0
 
-    def test_sample_fraction(self, boston_X, boston_y, sample_fraction):  # and ci_group_size
+    def test_sample_fraction(
+        self, boston_X, boston_y, sample_fraction
+    ):  # and ci_group_size
         gfr = GRFRegressor(sample_fraction=sample_fraction, ci_group_size=1)
         if sample_fraction <= 0 or sample_fraction > 1:
             with pytest.raises(ValueError):
@@ -85,7 +91,9 @@ class TestGRFRegressor:
         gfr.fit(boston_X, boston_y)
 
     def test_honesty_fraction(self, boston_X, boston_y, honesty_fraction):
-        gfr = GRFRegressor(honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True)
+        gfr = GRFRegressor(
+            honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True
+        )
         if honesty_fraction <= 0 or honesty_fraction >= 1:
             with pytest.raises(RuntimeError):
                 gfr.fit(boston_X, boston_y)

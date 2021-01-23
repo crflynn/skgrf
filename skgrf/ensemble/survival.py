@@ -97,7 +97,9 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
             use_sample_weights = False
 
         cluster = self._check_cluster(X=X, cluster=cluster)
-        self.samples_per_cluster_ = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=sample_weight)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
+            cluster=cluster, sample_weight=sample_weight
+        )
         self.mtry_ = self._check_mtry(X=X)
 
         # Extract the failure times from the training targets
@@ -108,7 +110,9 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         y_times_relabeled = np.searchsorted(self.failure_times_, y[:, 1])
         y_censor = y[:, 0]
 
-        train_matrix = self._create_train_matrices(X, y_times_relabeled, sample_weight=sample_weight, censor=y_censor)
+        train_matrix = self._create_train_matrices(
+            X, y_times_relabeled, sample_weight=sample_weight, censor=y_censor
+        )
         self.train_ = train_matrix
 
         self.grf_forest_ = grf.survival_train(

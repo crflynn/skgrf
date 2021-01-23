@@ -43,7 +43,9 @@ class TestGRFSurvival:
         gfs.fit(lung_X, lung_y)
         clone(gfs)
 
-    def test_equalize_cluster_weights(self, lung_X, lung_y, lung_cluster, equalize_cluster_weights):
+    def test_equalize_cluster_weights(
+        self, lung_X, lung_y, lung_cluster, equalize_cluster_weights
+    ):
         gfs = GRFSurvival(equalize_cluster_weights=equalize_cluster_weights)
         gfs.fit(lung_X, lung_y, cluster=lung_cluster)
         if equalize_cluster_weights:
@@ -53,7 +55,12 @@ class TestGRFSurvival:
 
         if equalize_cluster_weights:
             with pytest.raises(ValueError):
-                gfs.fit(lung_X, lung_y, cluster=lung_cluster, sample_weight=np.ones(lung_y.shape))
+                gfs.fit(
+                    lung_X,
+                    lung_y,
+                    cluster=lung_cluster,
+                    sample_weight=np.ones(lung_y.shape),
+                )
 
         gfs.fit(lung_X, lung_y, cluster=None)
         assert gfs.samples_per_cluster_ == 0
@@ -79,7 +86,9 @@ class TestGRFSurvival:
         gfs.fit(lung_X, lung_y)
 
     def test_honesty_fraction(self, lung_X, lung_y, honesty_fraction):
-        gfs = GRFSurvival(honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True)
+        gfs = GRFSurvival(
+            honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True
+        )
         if honesty_fraction <= 0 or honesty_fraction >= 1:
             with pytest.raises(RuntimeError):
                 gfs.fit(lung_X, lung_y)
