@@ -26,7 +26,7 @@ requires = ["poetry-core>=1.0.0", "cython", "numpy"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 120
+line-length = 88
 target-version = ['py37']
 include = '\.pyi?$'
 exclude = '''
@@ -55,5 +55,5 @@ multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
-line_length = 120
+line_length = 88
 known_standard_library = ["setuptools"]

@@ -103,7 +103,9 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self._check_alpha()
 
         cluster = self._check_cluster(X=X, cluster=cluster)
-        self.samples_per_cluster_ = self._check_equalize_cluster_weights(cluster=cluster, sample_weight=None)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
+            cluster=cluster, sample_weight=None
+        )
         self.mtry_ = self._check_mtry(X=X)
 
         train_matrix = self._create_train_matrices(X, y)

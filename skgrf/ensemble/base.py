@@ -21,7 +21,9 @@ class GRFValidationMixin:
         _, counts = np.unique(cluster, return_counts=True)
         if self.equalize_cluster_weights:
             if sample_weight is not None:
-                raise ValueError("Cannot use sample_weight when equalize_cluster_weights is True")
+                raise ValueError(
+                    "Cannot use sample_weight when equalize_cluster_weights is True"
+                )
             return min(counts)
         else:
             return max(counts)
@@ -35,9 +37,13 @@ class GRFValidationMixin:
     def _check_sample_fraction(self):
         if hasattr(self, "ci_group_size") and self.ci_group_size >= 2:
             if self.sample_fraction <= 0 or self.sample_fraction > 0.5:
-                raise ValueError("sample fraction must be between 0 and 0.5 when ci_group_size >= 2")
+                raise ValueError(
+                    "sample fraction must be between 0 and 0.5 when ci_group_size >= 2"
+                )
         if self.sample_fraction <= 0 or self.sample_fraction > 1:
-            raise ValueError("sample fraction must be between 0 and 1 when ci_group_size == 1")
+            raise ValueError(
+                "sample fraction must be between 0 and 1 when ci_group_size == 1"
+            )
 
     def _check_alpha(self):
         if self.alpha <= 0 or self.alpha >= 0.25:
@@ -47,7 +53,15 @@ class GRFValidationMixin:
         """Get GRF-expected num_threads value."""
         return max([self.n_jobs, 0])  # sklearn convention is -1 for all cpus, grf is 0
 
-    def _create_train_matrices(self, X, y=None, sample_weight=None, treatment=None, instrument=None, censor=None):
+    def _create_train_matrices(
+        self,
+        X,
+        y=None,
+        sample_weight=None,
+        treatment=None,
+        instrument=None,
+        censor=None,
+    ):
         """Create a concatenated training matrix.
 
         GRF expects training data to be combined into a single matrix with reference variables

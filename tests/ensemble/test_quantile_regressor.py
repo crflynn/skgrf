@@ -48,7 +48,9 @@ class TestGRFQuantileRegressor:
         gqr.fit(boston_X, boston_y)
         clone(gqr)
 
-    def test_equalize_cluster_weights(self, boston_X, boston_y, boston_cluster, equalize_cluster_weights):
+    def test_equalize_cluster_weights(
+        self, boston_X, boston_y, boston_cluster, equalize_cluster_weights
+    ):
         gqr = GRFQuantileRegressor(equalize_cluster_weights=equalize_cluster_weights)
         gqr.quantiles = [0.2, 0.5, 0.8]
         gqr.fit(boston_X, boston_y, cluster=boston_cluster)
@@ -85,7 +87,9 @@ class TestGRFQuantileRegressor:
         gqr.fit(boston_X, boston_y)
 
     def test_honesty_fraction(self, boston_X, boston_y, honesty_fraction):
-        gqr = GRFQuantileRegressor(honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True)
+        gqr = GRFQuantileRegressor(
+            honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True
+        )
         gqr.quantiles = [0.2, 0.5, 0.8]
         if honesty_fraction <= 0 or honesty_fraction >= 1:
             with pytest.raises(RuntimeError):
@@ -94,7 +98,9 @@ class TestGRFQuantileRegressor:
             gqr.fit(boston_X, boston_y)
 
     def test_honesty_prune_leaves(self, boston_X, boston_y, honesty_prune_leaves):
-        gqr = GRFQuantileRegressor(honesty=True, honesty_prune_leaves=honesty_prune_leaves)
+        gqr = GRFQuantileRegressor(
+            honesty=True, honesty_prune_leaves=honesty_prune_leaves
+        )
         gqr.quantiles = [0.2, 0.5, 0.8]
         gqr.fit(boston_X, boston_y)
 
