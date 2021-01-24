@@ -151,7 +151,6 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
         else:
             self.overall_beta_ = np.empty((0,), dtype=float, order="F")
 
-        print(self.__dict__)
         self.grf_forest_ = grf.ll_regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
             np.asfortranarray([[]]),
@@ -185,6 +184,9 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
 
         :param array2d X: prediction input features
         """
+        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
+
+    def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
         X = check_array(X)
 
@@ -199,6 +201,6 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
             self.ll_split_weight_penalty,  # ll_weight_penalty
             self.ll_split_variables_,  # linear_correction_variables
             self._get_num_threads(),
-            False,  # estimate variance
+            estimate_variance,  # estimate variance
         )
-        return np.atleast_1d(np.squeeze(np.array(result["predictions"])))
+        return result

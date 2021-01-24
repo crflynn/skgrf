@@ -160,6 +160,9 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
 
         :param array2d X: prediction input features
         """
+        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
+
+    def _predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
 
@@ -176,4 +179,4 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
             self._get_num_threads(),
             self.num_failures_,
         )
-        return np.atleast_1d(np.squeeze(np.array(result["predictions"])))
+        return result
