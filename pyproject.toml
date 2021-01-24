@@ -57,3 +57,8 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
 known_standard_library = ["setuptools"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:divide by zero encountered in log:RuntimeWarning",
+]

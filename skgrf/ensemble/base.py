@@ -49,6 +49,10 @@ class GRFValidationMixin:
         if self.alpha <= 0 or self.alpha >= 0.25:
             raise ValueError("alpha must be between 0 and 0.25")
 
+    def _check_reduced_form_weight(self):
+        if self.reduced_form_weight < 0 or self.reduced_form_weight > 1:
+            raise ValueError("reduced_form_weight must be between 0 and 1")
+
     def _get_num_threads(self):
         """Get GRF-expected num_threads value."""
         return max([self.n_jobs, 0])  # sklearn convention is -1 for all cpus, grf is 0
