@@ -733,33 +733,83 @@ cdef create_prediction_matrix(
     if predictions.empty():
         return []
 
-    preds = []
+    result = []
     for j in range(predictions.size()):
-        ps = []
+        values = []
         prediction_values = predictions[j].get_predictions()
         for k in range(prediction_values.size()):
-            ps.append(prediction_values[k])
-        preds.append(ps)
+            values.append(prediction_values[k])
+        result.append(values)
 
-    return preds
+    return result
 
 
 cdef create_variance_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
-    # TODO
-    return []
+    cdef size_t prediction_length
+
+    if predictions.empty():
+        return []
+
+    if not predictions.at(0).contains_variance_estimates():
+        return []
+
+    prediction_length = predictions.at(0).size()
+
+    result = []
+    for j in range(predictions.size()):
+        values = []
+        variance_estimate = predictions[j].get_variance_estimates()
+        for k in range(variance_estimate.size()):
+            values.append(variance_estimate[k])
+        result.append(values)
+
+    return result
 
 
 cdef create_error_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
-    # TODO
-    return []
+    cdef size_t prediction_length
 
+    if predictions.empty():
+        return []
+
+    if not predictions.at(0).contains_error_estimates():
+        return []
+
+    prediction_length = predictions.at(0).size()
+
+    result = []
+    for j in range(predictions.size()):
+        values = []
+        error_estimate = predictions[j].get_error_estimates()
+        for k in range(error_estimate.size()):
+            values.append(error_estimate[k])
+        result.append(values)
+
+    return result
 
 cdef create_excess_error_matrix(
     const vector[grf_.Prediction]& predictions,
 ):
-    # TODO
-    return []
+    cdef size_t prediction_length
+
+    if predictions.empty():
+        return []
+
+    if not predictions.at(0).contains_error_estimates():
+        return []
+
+    prediction_length = predictions.at(0).size()
+
+    result = []
+    for j in range(predictions.size()):
+        values = []
+        error_estimate = predictions[j].get_excess_error_estimates()
+        for k in range(error_estimate.size()):
+            values.append(error_estimate[k])
+        result.append(values)
+
+    return result

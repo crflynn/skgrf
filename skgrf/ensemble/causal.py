@@ -158,6 +158,10 @@ class GRFCausal(GRFValidationMixin, BaseEstimator):
 
         :param array2d X: prediction input features
         """
+
+        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
+
+    def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
         X = check_array(X)
 
@@ -170,6 +174,6 @@ class GRFCausal(GRFValidationMixin, BaseEstimator):
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
             self._get_num_threads(),
-            False,  # estimate variance
+            estimate_variance,
         )
-        return np.atleast_1d(np.squeeze(np.array(result["predictions"])))
+        return result
