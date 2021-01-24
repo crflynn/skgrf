@@ -13,7 +13,9 @@ cdef extern from "./grf/src/commons/Data.h" namespace "grf":
         void reserve_memory()
         void set(size_t col, size_t row, double value, bool& error)
         void set_censor_index(size_t index)
+        void set_instrument_index(size_t index)
         void set_outcome_index(size_t index)
+        void set_treatment_index(size_t index)
         void set_weight_index(size_t index)
 
 
@@ -445,6 +447,7 @@ cdef extern from "./grf/src/forest/ForestPredictors.cpp":
     pass
 
 cdef extern from "./grf/src/forest/ForestPredictors.h" namespace "grf":
+    cdef ForestPredictor instrumental_predictor(unsigned int num_threads)
     cdef ForestPredictor ll_regression_predictor(
         unsigned int num_threads,
         vector[double] lambdas,
@@ -485,6 +488,10 @@ cdef extern from "./grf/src/forest/ForestTrainers.cpp":
     pass
 
 cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
+    cdef ForestTrainer instrumental_trainer(
+        double reduced_form_weight,
+        bool stabilize_splits,
+    )
     cdef ForestTrainer ll_regression_trainer(
         double split_lambda,
         bool weight_penalty,
