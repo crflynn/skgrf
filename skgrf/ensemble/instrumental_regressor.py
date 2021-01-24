@@ -9,10 +9,10 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
-class GRFInstrumental(GRFValidationMixin, BaseEstimator):
-    r"""GRF Instrumental forest implementation for sci-kit learn.
+class GRFInstrumentalRegressor(GRFValidationMixin, BaseEstimator):
+    r"""GRF Instrumental regression implementation for sci-kit learn.
 
-    Provides a sklearn instrumental interface to the GRF C++ library using Cython.
+    Provides a sklearn instrumental regression to the GRF C++ library using Cython.
 
     :param int n_estimators: The number of tree regressors to train
     :param bool equalize_cluster_weights: Weight the samples such that clusters have

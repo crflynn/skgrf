@@ -9,10 +9,10 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
-class GRFCausal(GRFValidationMixin, BaseEstimator):
-    r"""GRF Causal forest implementation for sci-kit learn.
+class GRFCausalRegressor(GRFValidationMixin, BaseEstimator):
+    r"""GRF Causal regression implementation for sci-kit learn.
 
-    Provides a sklearn causal interface to the GRF C++ library using Cython.
+    Provides a sklearn causal regressor to the GRF C++ library using Cython.
 
     :param int n_estimators: The number of tree regressors to train
     :param bool equalize_cluster_weights: Weight the samples such that clusters have

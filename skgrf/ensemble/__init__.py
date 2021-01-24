@@ -1,5 +1,5 @@
-from skgrf.ensemble.causal import GRFCausal
-from skgrf.ensemble.instrumental import GRFInstrumental
+from skgrf.ensemble.causal_regressor import GRFCausalRegressor
+from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
 from skgrf.ensemble.local_linear_regressor import GRFLocalLinearRegressor
 from skgrf.ensemble.quantile_regressor import GRFQuantileRegressor
 from skgrf.ensemble.regressor import GRFRegressor

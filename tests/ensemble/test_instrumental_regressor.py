@@ -5,15 +5,15 @@ from sklearn import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFInstrumental
+from skgrf.ensemble import GRFInstrumentalRegressor
 
 
 class TestGRFInstrumental:
     def test_init(self):
-        _ = GRFInstrumental()
+        _ = GRFInstrumentalRegressor()
 
     def test_fit(self, boston_X, boston_y):
-        gfi = GRFInstrumental()
+        gfi = GRFInstrumentalRegressor()
         with pytest.raises(NotFittedError):
             check_is_fitted(gfi)
         gfi.fit(boston_X, boston_y, boston_y, boston_y)
@@ -22,14 +22,14 @@ class TestGRFInstrumental:
         assert hasattr(gfi, "mtry_")
 
     def test_predict(self, boston_X, boston_y):
-        gfi = GRFInstrumental()
+        gfi = GRFInstrumentalRegressor()
         gfi.fit(boston_X, boston_y, boston_y, boston_y)
         pred = gfi.predict(boston_X)
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
         tf = tempfile.TemporaryFile()
-        gfi = GRFInstrumental()
+        gfi = GRFInstrumentalRegressor()
         gfi.fit(boston_X, boston_y, boston_y, boston_y)
         pickle.dump(gfi, tf)
         tf.seek(0)
@@ -38,6 +38,6 @@ class TestGRFInstrumental:
         assert len(pred) == boston_X.shape[0]
 
     def test_clone(self, boston_X, boston_y):
-        gfi = GRFInstrumental()
+        gfi = GRFInstrumentalRegressor()
         gfi.fit(boston_X, boston_y, boston_y, boston_y)
         clone(gfi)
