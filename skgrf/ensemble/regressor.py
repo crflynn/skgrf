@@ -77,7 +77,9 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.seed = seed
 
-    def fit(self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False):
+    def fit(
+        self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False
+    ):
         """Fit the grf forest using training data.
 
         :param array2d X: training input features

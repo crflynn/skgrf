@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
+from abc import ABC
+from abc import abstractmethod
 from scipy import stats as ss
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
@@ -10,7 +10,8 @@ from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import grf, GRFRegressor
+from skgrf.ensemble import GRFRegressor
+from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
@@ -86,14 +87,14 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
         self.ci_group_size = ci_group_size
-        self.tune_params=tune_params
-        self.tune_n_estimators=tune_n_estimators
-        self.tune_n_reps=tune_n_reps
-        self.tune_n_draws=tune_n_draws
-        self.boost_steps=boost_steps
-        self.boost_error_reduction=boost_error_reduction
-        self.boost_max_steps=boost_max_steps
-        self.boos_trees_tune=boost_trees_tune
+        self.tune_params = tune_params
+        self.tune_n_estimators = tune_n_estimators
+        self.tune_n_reps = tune_n_reps
+        self.tune_n_draws = tune_n_draws
+        self.boost_steps = boost_steps
+        self.boost_error_reduction = boost_error_reduction
+        self.boost_max_steps = boost_max_steps
+        self.boos_trees_tune = boost_trees_tune
         self.n_jobs = n_jobs
         self.seed = seed
 
@@ -142,21 +143,32 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             n_jobs=self.n_jobs,
             seed=self.seed,
         )
-        tunable_params = ("sample_fraction", "mtry", "min_node_size", "honesty_fraction", "honesty_prune_leaves", "alpha", "imbalance_penalty")
+        tunable_params = (
+            "sample_fraction",
+            "mtry",
+            "min_node_size",
+            "honesty_fraction",
+            "honesty_prune_leaves",
+            "alpha",
+            "imbalance_penalty",
+        )
         param_distributions = {}
         for param in self.tune_params:
             if param not in tunable_params:
-                raise ValueError(f"tuning param {param} not found in {str(tunable_params)}")
+                raise ValueError(
+                    f"tuning param {param} not found in {str(tunable_params)}"
+                )
             param_distributions[param] = PARAM_DISTRIBUTIONS[param](*X.shape)
 
         # for k in range()
-        rscv = RandomizedSearchCV(estimator=regression_forest, param_distributions=param_distributions)
+        rscv = RandomizedSearchCV(
+            estimator=regression_forest, param_distributions=param_distributions
+        )
         rscv.fit(X=X, y=y)
         # rscv.
 
         # rsc
         # here we do the tuning / randomized cv
-
 
         self.grf_forest_ = grf.regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
@@ -207,7 +219,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
 
 
 class GRFParamDistribution(ABC):
-    def __init__(self, X_rows:int, X_cols:int):
+    def __init__(self, X_rows: int, X_cols: int):
         self.X_rows = X_rows
         self.X_cols = X_cols
 
@@ -218,30 +230,40 @@ class GRFParamDistribution(ABC):
 
 class GRFMinNodeSizeDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return np.floor(np.exp2(ss.uniform(*args, **kwds) * (np.log(self.X_rows) - np.log(2) - 4)))
+        return np.floor(
+            np.exp2(ss.uniform(*args, **kwds) * (np.log(self.X_rows) - np.log(2) - 4))
+        )
+
 
 class GRFSampleFractionDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
         return 0.05 + 0.45 * ss.uniform(*args, **kwds)
 
+
 class GRFMtryDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return np.ceil(np.min([self.X_cols, np.sqrt(self.X_cols) + 20]) * ss.uniform(*args, **kwds))
+        return np.ceil(
+            np.min([self.X_cols, np.sqrt(self.X_cols) + 20]) * ss.uniform(*args, **kwds)
+        )
+
 
 class GRFAlphaDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
         return ss.uniform(*args, **kwds) / 4
 
+
 class GRFImbalancePenaltyDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return - np.log(ss.uniform(*args, **kwds))
+        return -np.log(ss.uniform(*args, **kwds))
+
 
 class GRFHonestyFractionDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
         return 0.5 + 0.3 * ss.uniform(*args, **kwds)
 
+
 class GRFHonestyPruneLeavesDistribution(GRFParamDistribution):
-    def __init__(self, X_rows:int, X_cols:int):
+    def __init__(self, X_rows: int, X_cols: int):
         super().__init__(X_rows, X_cols)
         self.choices = np.array([True, False])
 
