@@ -1,15 +1,7 @@
-import numpy as np
-from sklearn.base import BaseEstimator
-from sklearn.utils import check_X_y
-from sklearn.utils.validation import _check_sample_weight
-from sklearn.utils.validation import check_array
-from sklearn.utils.validation import check_is_fitted
-
-from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
 
 
-class GRFCausalRegressor(GRFValidationMixin, BaseEstimator):
+class GRFCausalRegressor(GRFInstrumentalRegressor):
     r"""GRF Causal regression implementation for sci-kit learn.
 
     Provides a sklearn causal regressor to the GRF C++ library using Cython.
@@ -33,8 +25,8 @@ class GRFCausalRegressor(GRFValidationMixin, BaseEstimator):
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
     :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
         is required to provide confidence intervals.
-    :param double reduced_form_weight: Whether splits should be regularized towards a
-        naive splitting criterion that ignores the instrument.
+    :param bool orthogonal_boosting: When ``y_hat`` or ``w_hat`` are ``None``, they
+        are estimated using boosted regression forests. (Not yet implemented)
     :param bool stabilize_splits: Whether or not the instrument should be taken into
         account when determining the imbalance of a split.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
@@ -63,32 +55,38 @@ class GRFCausalRegressor(GRFValidationMixin, BaseEstimator):
         alpha=0.05,
         imbalance_penalty=0,
         ci_group_size=2,
-        reduced_form_weight=0,
         stabilize_splits=True,
+        orthogonal_boosting=False,
         n_jobs=-1,
         seed=42,
     ):
-        self.n_estimators = n_estimators
-        self.equalize_cluster_weights = equalize_cluster_weights
-        self.sample_fraction = sample_fraction
-        self.mtry = mtry
-        self.min_node_size = min_node_size
-        self.honesty = honesty
-        self.honesty_fraction = honesty_fraction
-        self.honesty_prune_leaves = honesty_prune_leaves
-        self.alpha = alpha
-        self.imbalance_penalty = imbalance_penalty
-        self.ci_group_size = ci_group_size
-        self.reduced_form_weight = reduced_form_weight
-        self.stabilize_splits = stabilize_splits
-        self.n_jobs = n_jobs
-        self.seed = seed
+        super().__init__(
+            n_estimators=n_estimators,
+            equalize_cluster_weights=equalize_cluster_weights,
+            sample_fraction=sample_fraction,
+            mtry=mtry,
+            min_node_size=min_node_size,
+            honesty=honesty,
+            honesty_fraction=honesty_fraction,
+            honesty_prune_leaves=honesty_prune_leaves,
+            alpha=alpha,
+            imbalance_penalty=imbalance_penalty,
+            ci_group_size=ci_group_size,
+            reduced_form_weight=0,
+            stabilize_splits=stabilize_splits,
+            n_jobs=n_jobs,
+            seed=seed,
+        )
+        self.orthogonal_boosting = orthogonal_boosting
 
+    # noinspection PyMethodOverriding
     def fit(
         self,
         X,
         y,
-        treatment,
+        w,  # treatment
+        y_hat=None,
+        w_hat=None,
         sample_weight=None,
         cluster=None,
     ):
@@ -96,84 +94,26 @@ class GRFCausalRegressor(GRFValidationMixin, BaseEstimator):
 
         :param array2d X: training input features
         :param array1d y: training input targets
-        :param array1d treatment: training input treatments
+        :param array1d w: training input treatments
+        :param array1d y_hat: estimated expected target responses
+        :param array1d w_hat: estimated treatment propensities
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = check_X_y(X, y)
-        self.n_features_ = X.shape[1]
+        if y_hat is None and self.orthogonal_boosting:
+            raise NotImplementedError("orthogonal boosting is not yet implemented")
 
-        self._check_sample_fraction()
-        self._check_alpha()
+        if w_hat is None and self.orthogonal_boosting:
+            raise NotImplementedError("orthogonal boosting is not yet implemented")
 
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
-            use_sample_weights = True
-        else:
-            use_sample_weights = False
-
-        cluster = self._check_cluster(X=X, cluster=cluster)
-        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
-            cluster=cluster, sample_weight=sample_weight
-        )
-        self.mtry_ = self._check_mtry(X=X)
-        self._check_reduced_form_weight()
-
-        train_matrix = self._create_train_matrices(
+        return super().fit(
             X=X,
             y=y,
+            w=w,
+            z=w,
+            y_hat=y_hat,
+            w_hat=w_hat,
+            z_hat=w_hat,
+            cluster=cluster,
             sample_weight=sample_weight,
-            treatment=treatment,
         )
-
-        self.grf_forest_ = grf.causal_train(
-            np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),
-            self.outcome_index_,
-            self.treatment_index_,
-            self.sample_weight_index_,
-            use_sample_weights,
-            self.mtry_,
-            self.n_estimators,  # num_trees
-            self.min_node_size,
-            self.sample_fraction,
-            self.honesty,
-            self.honesty_fraction,
-            self.honesty_prune_leaves,
-            self.ci_group_size,
-            self.reduced_form_weight,
-            self.alpha,
-            self.imbalance_penalty,
-            self.stabilize_splits,
-            cluster,
-            self.samples_per_cluster_,
-            False,  # compute_oob_predictions,
-            self._get_num_threads(),  # num_threads,
-            self.seed,
-        )
-        return self
-
-    def predict(self, X):
-        """Predict regression target for X.
-
-        :param array2d X: prediction input features
-        """
-
-        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
-
-    def _predict(self, X, estimate_variance=False):
-        check_is_fitted(self)
-        X = check_array(X)
-
-        result = grf.causal_predict(
-            self.grf_forest_,
-            np.asfortranarray([[]]),  # train_matrix
-            np.asfortranarray([[]]),  # sparse_train_matrix
-            self.outcome_index_,
-            self.treatment_index_,
-            np.asfortranarray(X.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_test_matrix
-            self._get_num_threads(),
-            estimate_variance,
-        )
-        return result
