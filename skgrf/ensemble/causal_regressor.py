@@ -25,8 +25,8 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
     :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
         is required to provide confidence intervals.
-    :param double orthogonal_boosting: Whether splits should be regularized towards a
-        naive splitting criterion that ignores the instrument.
+    :param bool orthogonal_boosting: When ``y_hat`` or ``w_hat`` are ``None``, they
+        are estimated using boosted regression forests. (Not yet implemented)
     :param bool stabilize_splits: Whether or not the instrument should be taken into
         account when determining the imbalance of a split.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
@@ -115,4 +115,5 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
             w_hat=w_hat,
             z_hat=w_hat,
             cluster=cluster,
+            sample_weight=sample_weight,
         )
