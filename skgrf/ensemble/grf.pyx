@@ -98,6 +98,7 @@ cpdef regression_train(
 
     if compute_oob_predictions:
         predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
+        predictions = predictor.predict_oob(deref(forest),deref(data.c_data), False)
 
     return create_forest_object(forest, predictions)
 
