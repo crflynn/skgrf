@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
@@ -9,7 +10,7 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
 
-class GRFInstrumentalRegressor(GRFValidationMixin, BaseEstimator):
+class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     r"""GRF Instrumental regression implementation for sci-kit learn.
 
     Provides a sklearn instrumental regression to the GRF C++ library using Cython.
@@ -88,8 +89,11 @@ class GRFInstrumentalRegressor(GRFValidationMixin, BaseEstimator):
         self,
         X,
         y,
-        treatment,
-        instrument,
+        w,  # treatment
+        z,  # instrument
+        y_hat=None,
+        w_hat=None,
+        z_hat=None,
         sample_weight=None,
         cluster=None,
     ):
@@ -97,8 +101,11 @@ class GRFInstrumentalRegressor(GRFValidationMixin, BaseEstimator):
 
         :param array2d X: training input features
         :param array1d y: training input targets
-        :param array1d treatment: training input treatments
-        :param array1d instrument: training input instruments
+        :param array1d w: training input treatments
+        :param array1d z: training input instruments
+        :param array1d y_hat: estimated expected target responses
+        :param array1d w_hat: estimated treatment propensities
+        :param array1d z_hat: estimated instrument propensities
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
@@ -121,12 +128,35 @@ class GRFInstrumentalRegressor(GRFValidationMixin, BaseEstimator):
         self.mtry_ = self._check_mtry(X=X)
         self._check_reduced_form_weight()
 
+        if y_hat is None:
+            y_hat = self._estimate_using_regression(
+                X=X, y=y, sample_weight=sample_weight, cluster=cluster
+            )
+
+        if w_hat is None:
+            w_hat = self._estimate_using_regression(
+                X=X, y=w, sample_weight=sample_weight, cluster=cluster
+            )
+
+        # don't repeat calculations for causal
+        if np.all(w == z):
+            z_hat = w_hat
+
+        if z_hat is None:
+            z_hat = self._estimate_using_regression(
+                X=X, y=z, sample_weight=sample_weight, cluster=cluster
+            )
+
+        y_centered = y - y_hat
+        w_centered = w - w_hat
+        z_centered = z - z_hat
+
         train_matrix = self._create_train_matrices(
             X=X,
-            y=y,
+            y=y_centered,
             sample_weight=sample_weight,
-            treatment=treatment,
-            instrument=instrument,
+            treatment=w_centered,
+            instrument=z_centered,
         )
 
         self.grf_forest_ = grf.instrumental_train(
@@ -181,3 +211,42 @@ class GRFInstrumentalRegressor(GRFValidationMixin, BaseEstimator):
             estimate_variance,
         )
         return result
+
+    def _estimate_using_regression(self, X, y, sample_weight=None, cluster=None):
+        """Generate target estimates using a regression.
+
+        In the R package, they perform forest tuning here. For now, we just perform
+        a single regression without tuning. We also don't expose any of the forest
+        parametrization for this process in the estimator.
+
+        # TODO consider implementing tuning, exposing parameters.
+        """
+        train_matrix = self._create_train_matrices(
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+        )
+        n_estimators = max(50, int(self.n_estimators / 4))
+        regression_forest = grf.regression_train(
+            np.asfortranarray(train_matrix.astype("float64")),
+            np.asfortranarray([[]]),
+            self.outcome_index_,
+            self.sample_weight_index_,
+            sample_weight is not None,  # use_sample_weights
+            self.mtry_,
+            n_estimators,  # num_trees
+            5,  # min_node_size
+            self.sample_fraction,
+            True,  # honesty
+            0.5,  # honesty_fraction
+            self.honesty_prune_leaves,
+            1,  # ci_group_size
+            self.alpha,
+            self.imbalance_penalty,
+            cluster,
+            self.samples_per_cluster_,
+            True,  # compute_oob_predictions,
+            self._get_num_threads(),  # num_threads,
+            self.seed,
+        )
+        return np.atleast_1d(np.squeeze(np.array(regression_forest["predictions"])))
