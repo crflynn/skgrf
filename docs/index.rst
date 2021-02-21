@@ -31,6 +31,9 @@ The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs
    :maxdepth: 2
    :caption: Contents:
 
+   grf_boosted_regressor
+   grf_causal_regressor
+   grf_instrumental_regressor
    grf_local_linear_regressor
    grf_quantile_regressor
    grf_regressor
