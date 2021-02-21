@@ -11,11 +11,9 @@
 - [ ] Causal survival forest (waiting on new release)
 
 
-## Dependencies
+## Considerations
 
-Causal forest orthogonal boosting requires boosted regressor.
-
-Causal/Instrumental do forest tuning on regressor using DiceKriging. Find equivalent methodology in sklearn.
+What should we do with respect to tuning? sklearn has search CV for tuning, whereas grf has its own tuning implementation.
 
 ## Tests
 
