@@ -1,3 +1,4 @@
+from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
 from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
 
 
@@ -100,11 +101,31 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
+        boost_params = {
+            "n_estimators": max(50, int(self.n_estimators / 4)),
+            "equalize_cluster_weights": self.equalize_cluster_weights,
+            "sample_fraction": self.sample_fraction,
+            "mtry": self.mtry,
+            "min_node_size": 5,
+            "honesty": True,
+            "honesty_fraction": 0.5,
+            "honesty_prune_leaves": self.honesty_prune_leaves,
+            "alpha": self.alpha,
+            "imbalance_penalty": self.imbalance_penalty,
+            "ci_group_size": 1,
+            "tune_parameters": None,  # TODO ?
+            "n_jobs": self.n_jobs,
+            "seed": self.seed,
+        }
         if y_hat is None and self.orthogonal_boosting:
-            raise NotImplementedError("orthogonal boosting is not yet implemented")
+            br = GRFBoostedRegressor(**boost_params)
+            br.fit(X, y, sample_weight=sample_weight, cluster=cluster)
+            y_hat = br.boosted_forests_["predictions"]
 
         if w_hat is None and self.orthogonal_boosting:
-            raise NotImplementedError("orthogonal boosting is not yet implemented")
+            br = GRFBoostedRegressor(**boost_params)
+            br.fit(X, w, sample_weight=sample_weight, cluster=cluster)
+            w_hat = br.boosted_forests_["predictions"]
 
         return super().fit(
             X=X,

@@ -11,7 +11,7 @@ from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFRegressor
+from skgrf.ensemble.regressor import GRFRegressor
 from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 
