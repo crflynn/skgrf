@@ -11,9 +11,9 @@ from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble.regressor import GRFRegressor
 from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.regressor import GRFRegressor
 
 
 class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
@@ -42,6 +42,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         is required to provide confidence intervals.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
+
     # TODO rest of params
 
     :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
@@ -246,7 +247,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
                 forest = regression_forest
         # endregion
 
-        # initialize boosting with the tuned forest
+        # region boosting with the tuned forest
         forest.fit(X, y, compute_oob_predictions=True)
         current_pred = {
             "predictions": forest.grf_forest_["predictions"],
@@ -331,6 +332,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             debiased_error = current_pred["debiased_error"]
             boosted_forests["forest"].append(forest_residual)
             boosted_forests["error"].append(np.mean(debiased_error))
+        # endregion
         boosted_forests["predictions"] = y_hat
         self.boosted_forests_ = boosted_forests
         return self
@@ -366,6 +368,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         return y_hat
 
 
+# region random parameter tuning functions
 class GRFParamDistribution(ABC):
     def __init__(self, X_rows: int, X_cols: int):
         self.X_rows = X_rows
@@ -445,3 +448,4 @@ PARAM_DISTRIBUTIONS = {
     "honesty_fraction": GRFHonestyFractionDistribution,
     "honesty_prune_leaves": GRFHonestyPruneLeavesDistribution,
 }
+# endregion
