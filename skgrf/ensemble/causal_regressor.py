@@ -1,5 +1,9 @@
+import logging
+
 from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
 from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
+
+logger = logging.getLogger(__name__)
 
 
 class GRFCausalRegressor(GRFInstrumentalRegressor):
@@ -118,11 +122,13 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
             "seed": self.seed,
         }
         if y_hat is None and self.orthogonal_boosting:
+            logger.debug("orthogonal boosting y_hat")
             br = GRFBoostedRegressor(**boost_params)
             br.fit(X, y, sample_weight=sample_weight, cluster=cluster)
             y_hat = br.boosted_forests_["predictions"]
 
         if w_hat is None and self.orthogonal_boosting:
+            logger.debug("orthogonal boosting w_hat")
             br = GRFBoostedRegressor(**boost_params)
             br.fit(X, w, sample_weight=sample_weight, cluster=cluster)
             w_hat = br.boosted_forests_["predictions"]
