@@ -1,12 +1,13 @@
 import numpy as np
 from abc import ABC
 from abc import abstractmethod
+from numpy import random
 from scipy import stats as ss
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.base import clone
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.utils import check_X_y
-from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -41,6 +42,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         is required to provide confidence intervals.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
+    # TODO rest of params
 
     :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -65,7 +67,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         alpha=0.05,
         imbalance_penalty=0,
         ci_group_size=2,
-        tune_params="none",
+        tune_params=None,
         tune_n_estimators=10,
         tune_n_reps=100,
         tune_n_draws=1000,
@@ -94,7 +96,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.boost_steps = boost_steps
         self.boost_error_reduction = boost_error_reduction
         self.boost_max_steps = boost_max_steps
-        self.boos_trees_tune = boost_trees_tune
+        self.boost_trees_tune = boost_trees_tune
         self.n_jobs = n_jobs
         self.seed = seed
 
@@ -109,27 +111,22 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         X, y = check_X_y(X, y)
         self.n_features_ = X.shape[1]
 
+        self._check_boost_error_reduction()
+
         self._check_sample_fraction()
         self._check_alpha()
 
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
-            use_sample_weights = True
-        else:
-            use_sample_weights = False
-
-        cluster = self._check_cluster(X=X, cluster=cluster)
+        cluster_ = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
-            cluster=cluster, sample_weight=sample_weight
+            cluster=cluster_, sample_weight=sample_weight
         )
         self.mtry_ = self._check_mtry(X=X)
 
-        train_matrix = self._create_train_matrices(
-            X=X, y=y, sample_weight=sample_weight
-        )
+        _ = self._create_train_matrices(X=X, y=y, sample_weight=sample_weight)
 
+        # region tuning a regression forest
         regression_forest = GRFRegressor(
-            n_estimators=self.n_estimators,
+            n_estimators=self.tune_n_estimators,
             equalize_cluster_weights=self.equalize_cluster_weights,
             sample_fraction=self.sample_fraction,
             mtry=self.mtry,
@@ -143,79 +140,230 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             n_jobs=self.n_jobs,
             seed=self.seed,
         )
-        tunable_params = (
-            "sample_fraction",
-            "mtry",
-            "min_node_size",
-            "honesty_fraction",
-            "honesty_prune_leaves",
-            "alpha",
-            "imbalance_penalty",
-        )
-        param_distributions = {}
-        for param in self.tune_params:
-            if param not in tunable_params:
-                raise ValueError(
-                    f"tuning param {param} not found in {str(tunable_params)}"
+        if self.tune_params is None:
+            forest = regression_forest.fit(X, y)
+            params = forest.get_params(deep=True)
+        else:
+            tunable_params = (
+                "sample_fraction",
+                "mtry",
+                "min_node_size",
+                "honesty_fraction",
+                "honesty_prune_leaves",
+                "alpha",
+                "imbalance_penalty",
+            )
+            param_distributions = {}
+            for param in self.tune_params:
+                if param not in tunable_params:
+                    raise ValueError(
+                        f"tuning param {param} not found in {str(tunable_params)}"
+                    )
+                param_distributions[param] = PARAM_DISTRIBUTIONS[param](*X.shape)
+
+            uniform_samples = random.uniform(
+                size=(self.tune_n_draws, len(self.tune_params))
+            )
+            param_samples = np.zeros(shape=(self.tune_n_draws, len(self.tune_params)))
+            for idx, param in enumerate(self.tune_params):
+                param_samples[:, idx] = param_distributions[param].dist(
+                    uniform_samples[:, idx]
                 )
-            param_distributions[param] = PARAM_DISTRIBUTIONS[param](*X.shape)
 
-        # for k in range()
-        rscv = RandomizedSearchCV(
-            estimator=regression_forest, param_distributions=param_distributions
-        )
-        rscv.fit(X=X, y=y)
-        # rscv.
+            errors = []
+            for draw in range(self.tune_n_draws):
+                params = {
+                    p: param_samples[draw, idx]
+                    for idx, p in enumerate(self.tune_params)
+                }
+                regression_forest.set_params(**params)
+                regression_forest.fit(
+                    X=X,
+                    y=y,
+                    sample_weight=sample_weight,
+                    cluster=cluster,
+                    compute_oob_predictions=True,
+                )
+                errors.append(
+                    np.nanmean(regression_forest.grf_forest_["debiased_error"])
+                )
 
-        # rsc
-        # here we do the tuning / randomized cv
+            if np.any(np.isnan(errors)):
+                raise ValueError(
+                    "unable to tune because of NaN-valued forest error estimates"
+                )
 
-        self.grf_forest_ = grf.regression_train(
-            np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),
-            self.outcome_index_,
-            self.sample_weight_index_,
-            use_sample_weights,
-            self.mtry_,
-            self.n_estimators,  # num_trees
-            self.min_node_size,
-            self.sample_fraction,
-            self.honesty,
-            self.honesty_fraction,
-            self.honesty_prune_leaves,
-            self.ci_group_size,
-            self.alpha,
-            self.imbalance_penalty,
-            cluster,
-            self.samples_per_cluster_,
-            False,  # compute_oob_predictions,
-            self._get_num_threads(),  # num_threads,
-            self.seed,
-        )
+            if np.std(errors) == 0 or np.std(errors) / np.mean(errors) < 1e-10:
+                raise ValueError(
+                    "unable to tune because of constant errors for forests"
+                )
+
+            variance_guess = np.var(errors) / 2
+            gp = GaussianProcessRegressor(alpha=variance_guess)
+            gp.fit(uniform_samples, errors)
+
+            opt_samples = random.uniform(
+                size=(self.tune_n_draws, len(self.tune_params))
+            )
+
+            model_surface = gp.predict(opt_samples)
+            tuned_params = np.zeros(shape=(self.tune_n_draws, len(self.tune_params)))
+            for idx, param in enumerate(self.tune_params):
+                tuned_params[:, idx] = param_distributions[param].dist(
+                    opt_samples[:, idx]
+                )
+
+            opt_idx = np.argmin(model_surface)
+            params = {
+                p: tuned_params[opt_idx, idx] for idx, p in enumerate(self.tune_params)
+            }
+            params.update(**{"n_estimators": self.tune_n_estimators * 4})
+            regression_forest.set_params(**params)
+            regression_forest.fit(X, y)
+            retrained_error = np.nanmean(
+                regression_forest.grf_forest_["debiased_error"]
+            )
+
+            default_params = {
+                "sample_fraction": 0.5,
+                "mtry": np.min(np.ceil(np.sqrt(X.shape[1]) + 20), X.shape[1]),
+                "min_node_size": 5,
+                "honesty_fraction": 0.5,
+                "honesty.prune.leaves": True,
+                "alpha": 0.05,
+                "imbalance_penalty": 0,
+            }
+            default_forest = clone(regression_forest)
+            default_forest.set_params(**default_params)
+            default_forest.fit(X, y)
+            default_error = np.nanmean(default_forest.grf_forest_["debiased_error"])
+
+            if default_error < retrained_error:
+                params = default_params
+                forest = default_forest
+            else:
+                params = params
+                forest = regression_forest
+        # endregion
+
+        # initialize boosting with the tuned forest
+        forest.fit(X, y, compute_oob_predictions=True)
+        current_pred = {
+            "predictions": forest.grf_forest_["predictions"],
+            "debiased_error": forest.grf_forest_["debiased_error"],
+            "excess_error": forest.grf_forest_["excess_error"],
+        }
+
+        y_hat = np.atleast_1d(np.squeeze(np.array(current_pred["predictions"])))
+        debiased_error = current_pred["debiased_error"]
+        boosted_forests = {
+            "forest": [forest],
+            "error": [np.mean(debiased_error)],
+        }
+
+        step = 1
+        while True:
+            y_residual = y - y_hat
+            if self.boost_steps is not None:
+                if step > self.boost_steps:
+                    break
+            elif step > self.boost_max_steps:
+                break
+            else:
+                forest_small = GRFRegressor(
+                    sample_fraction=params["sample_fraction"],
+                    mtry=params["mtry"],
+                    n_estimators=self.boost_trees_tune,
+                    n_jobs=self.n_jobs,
+                    min_node_size=params["min_node_size"],
+                    honesty=self.honesty,
+                    honesty_fraction=params["honesty_fraction"],
+                    honesty_prune_leaves=params["honesty_prune_leaves"],
+                    seed=self.seed,
+                    ci_group_size=self.ci_group_size,
+                    alpha=params["alpha"],
+                    imbalance_penalty=params["imbalance_penalty"],
+                    equalize_cluster_weights=self.equalize_cluster_weights,
+                )
+                forest_small.fit(
+                    X,
+                    y_residual,
+                    sample_weight=sample_weight,
+                    cluster=cluster,
+                    compute_oob_predictions=True,
+                )
+                step_error = forest_small.grf_forest_["debiased_error"]
+                if not np.nanmean(
+                    step_error
+                ) <= self.boost_error_reduction * np.nanmean(debiased_error):
+                    break
+
+            forest_residual = GRFRegressor(
+                sample_fraction=params["sample_fraction"],
+                mtry=params["mtry"],
+                n_estimators=self.n_estimators,
+                n_jobs=self.n_jobs,
+                min_node_size=params["min_node_size"],
+                honesty=self.honesty,
+                honesty_fraction=params["honesty_fraction"],
+                honesty_prune_leaves=params["honesty_prune_leaves"],
+                seed=self.seed,
+                ci_group_size=self.ci_group_size,
+                alpha=params["alpha"],
+                imbalance_penalty=params["imbalance_penalty"],
+                equalize_cluster_weights=self.equalize_cluster_weights,
+            )
+            forest_residual.fit(
+                X,
+                y_residual,
+                sample_weight=sample_weight,
+                cluster=cluster,
+                compute_oob_predictions=True,
+            )
+            current_pred = {
+                "predictions": forest_residual.grf_forest_["predictions"],
+                "debiased_error": forest_residual.grf_forest_["debiased_error"],
+                "excess_error": forest_residual.grf_forest_["excess_error"],
+            }
+            y_hat = y_hat + np.atleast_1d(
+                np.squeeze(np.array(current_pred["predictions"]))
+            )
+            debiased_error = current_pred["debiased_error"]
+            boosted_forests["forest"].append(forest_residual)
+            boosted_forests["error"].append(np.mean(debiased_error))
+        boosted_forests["predictions"] = y_hat
+        self.boosted_forests_ = boosted_forests
         return self
 
-    def predict(self, X):
+    def predict(self, X, boost_predict_steps=None):
         """Predict regression target for X.
 
         :param array2d X: prediction input features
+        :param int boost_predict_steps: number of boost prediction steps
         """
-        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
-
-    def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
         X = check_array(X)
+        num_forests = len(self.boosted_forests_["forest"])
+        if boost_predict_steps is None:
+            boost_predict_steps = num_forests
+        else:
+            boost_predict_steps = min(boost_predict_steps, num_forests)
 
-        result = grf.regression_predict(
-            self.grf_forest_,
-            np.asfortranarray([[]]),  # train_matrix
-            np.asfortranarray([[]]),  # sparse_train_matrix
-            self.outcome_index_,
-            np.asfortranarray(X.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_test_matrix
-            self._get_num_threads(),
-            estimate_variance,
-        )
-        return result
+        y_hat = 0
+        for k in range(boost_predict_steps):
+            result = grf.regression_predict(
+                self.boosted_forests_["forest"][k].grf_forest_,
+                np.asfortranarray([[]]),  # train_matrix
+                np.asfortranarray([[]]),  # sparse_train_matrix
+                self.outcome_index_,
+                np.asfortranarray(X.astype("float64")),  # test_matrix
+                np.asfortranarray([[]]),  # sparse_test_matrix
+                self._get_num_threads(),
+                False,  # estimate_variance
+            )
+            y = np.atleast_1d(np.squeeze(np.array(result["predictions"])))
+            y_hat = y_hat + y
+        return y_hat
 
 
 class GRFParamDistribution(ABC):
@@ -230,36 +378,50 @@ class GRFParamDistribution(ABC):
 
 class GRFMinNodeSizeDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return np.floor(
-            np.exp2(ss.uniform(*args, **kwds) * (np.log(self.X_rows) - np.log(2) - 4))
-        )
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return np.floor(np.exp2(uniform * (np.log(self.X_rows) - np.log(2) - 4)))
 
 
 class GRFSampleFractionDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return 0.05 + 0.45 * ss.uniform(*args, **kwds)
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return 0.05 + 0.45 * uniform
 
 
 class GRFMtryDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return np.ceil(
-            np.min([self.X_cols, np.sqrt(self.X_cols) + 20]) * ss.uniform(*args, **kwds)
-        )
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return np.ceil(np.min([self.X_cols, np.sqrt(self.X_cols) + 20]) * uniform)
 
 
 class GRFAlphaDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return ss.uniform(*args, **kwds) / 4
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return uniform / 4
 
 
 class GRFImbalancePenaltyDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return -np.log(ss.uniform(*args, **kwds))
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return -np.log(uniform)
 
 
 class GRFHonestyFractionDistribution(GRFParamDistribution):
     def rvs(self, *args, **kwds):
-        return 0.5 + 0.3 * ss.uniform(*args, **kwds)
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return 0.5 + 0.3 * uniform
 
 
 class GRFHonestyPruneLeavesDistribution(GRFParamDistribution):
@@ -268,7 +430,10 @@ class GRFHonestyPruneLeavesDistribution(GRFParamDistribution):
         self.choices = np.array([True, False])
 
     def rvs(self, *args, **kwds):
-        return self.choices[ss.bernoulli(*args, **kwds)]
+        return self.dist(ss.uniform(*args, **kwds))
+
+    def dist(self, uniform):
+        return self.choices[(uniform < 0.5).astype(int)]
 
 
 PARAM_DISTRIBUTIONS = {

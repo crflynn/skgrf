@@ -7,7 +7,7 @@
 - [ ] Probability forest (waiting on new release)
 - [x] Causal forest
 - [x] Instrumental forest
-- [ ] Boosted regressor
+- [x] Boosted regressor
 - [ ] Causal survival forest (waiting on new release)
 
 
