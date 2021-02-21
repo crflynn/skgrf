@@ -1,3 +1,4 @@
+import numpy as np
 import pickle
 import pytest
 import tempfile
@@ -25,6 +26,12 @@ class TestGRFRegressor:
         gfr = GRFRegressor()
         gfr.fit(boston_X, boston_y)
         pred = gfr.predict(boston_X)
+        assert len(pred) == boston_X.shape[0]
+
+    def test_predict_oob(self, boston_X, boston_y):
+        gfr = GRFRegressor()
+        gfr.fit(boston_X, boston_y, compute_oob_predictions=True)
+        pred = np.atleast_1d(np.squeeze(np.array(gfr.grf_forest_["predictions"])))
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):

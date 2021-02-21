@@ -77,7 +77,9 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.seed = seed
 
-    def fit(self, X, y, sample_weight=None, cluster=None):
+    def fit(
+        self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False
+    ):
         """Fit the grf forest using training data.
 
         :param array2d X: training input features
@@ -97,9 +99,9 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         else:
             use_sample_weights = False
 
-        cluster = self._check_cluster(X=X, cluster=cluster)
+        cluster_ = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
-            cluster=cluster, sample_weight=sample_weight
+            cluster=cluster_, sample_weight=sample_weight
         )
         self.mtry_ = self._check_mtry(X=X)
 
@@ -123,9 +125,9 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self.ci_group_size,
             self.alpha,
             self.imbalance_penalty,
-            cluster,
+            cluster_,
             self.samples_per_cluster_,
-            False,  # compute_oob_predictions,
+            compute_oob_predictions,
             self._get_num_threads(),  # num_threads,
             self.seed,
         )
