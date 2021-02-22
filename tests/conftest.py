@@ -138,3 +138,8 @@ def boost_error_reduction(request):
 @pytest.fixture(params=[10])
 def boost_trees_tune(request):
     return request.param
+
+
+@pytest.fixture(params=[None, 1])
+def boost_predict_steps(request):
+    return request.param
