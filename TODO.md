@@ -22,7 +22,7 @@ What should we do with respect to tuning? sklearn has search CV for tuning, wher
 - [x] Survival forest
 - [x] Local linear regressor
 - [ ] Probability forest (waiting on new release)
-- [ ] Causal forest
-- [ ] Instrumental forest
-- [ ] Boosted regressor
+- [x] Causal forest
+- [x] Instrumental forest
+- [x] Boosted regressor
 - [ ] Causal survival forest (waiting on new release)
