@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from abc import ABC
 from abc import abstractmethod
@@ -14,6 +16,9 @@ from sklearn.utils.validation import check_is_fitted
 from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 from skgrf.ensemble.regressor import GRFRegressor
+
+
+logger = logging.getLogger(__name__)
 
 
 class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
@@ -69,7 +74,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         imbalance_penalty=0,
         ci_group_size=2,
         tune_params=None,
-        tune_n_estimators=10,
+        tune_n_estimators=50,
         tune_n_reps=100,
         tune_n_draws=1000,
         boost_steps=None,
@@ -114,7 +119,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
 
         self._check_boost_error_reduction()
 
-        self._check_sample_fraction()
+        self._check_sample_fraction(oob=True)
         self._check_alpha()
 
         cluster_ = self._check_cluster(X=X, cluster=cluster)
@@ -142,8 +147,16 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             seed=self.seed,
         )
         if self.tune_params is None:
-            forest = regression_forest.fit(X, y)
-            params = forest.get_params(deep=True)
+            logger.debug("not tuning boosted forest")
+            regression_forest.fit(
+                X=X,
+                y=y,
+                sample_weight=sample_weight,
+                cluster=cluster,
+                compute_oob_predictions=True,
+            )
+            params = regression_forest.get_params(deep=True)
+            forest = regression_forest
         else:
             tunable_params = (
                 "sample_fraction",
@@ -220,30 +233,42 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             }
             params.update(**{"n_estimators": self.tune_n_estimators * 4})
             regression_forest.set_params(**params)
-            regression_forest.fit(X, y)
+            regression_forest.fit(
+                X,
+                y,
+                sample_weight=sample_weight,
+                cluster=cluster,
+                compute_oob_predictions=True,
+            )
             retrained_error = np.nanmean(
                 regression_forest.grf_forest_["debiased_error"]
             )
 
             default_params = {
                 "sample_fraction": 0.5,
-                "mtry": np.min(np.ceil(np.sqrt(X.shape[1]) + 20), X.shape[1]),
+                "mtry": min(np.ceil(np.sqrt(X.shape[1]) + 20), X.shape[1]),
                 "min_node_size": 5,
                 "honesty_fraction": 0.5,
-                "honesty.prune.leaves": True,
+                "honesty_prune_leaves": True,
                 "alpha": 0.05,
                 "imbalance_penalty": 0,
             }
             default_forest = clone(regression_forest)
             default_forest.set_params(**default_params)
-            default_forest.fit(X, y)
+            default_forest.fit(
+                X=X,
+                y=y,
+                sample_weight=sample_weight,
+                cluster=cluster,
+                compute_oob_predictions=True,
+            )
             default_error = np.nanmean(default_forest.grf_forest_["debiased_error"])
 
             if default_error < retrained_error:
-                params = default_params
+                params = default_forest.get_params()
                 forest = default_forest
             else:
-                params = params
+                params = regression_forest.get_params()
                 forest = regression_forest
         # endregion
 
@@ -287,8 +312,8 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
                     equalize_cluster_weights=self.equalize_cluster_weights,
                 )
                 forest_small.fit(
-                    X,
-                    y_residual,
+                    X=X,
+                    y=y_residual,
                     sample_weight=sample_weight,
                     cluster=cluster,
                     compute_oob_predictions=True,
@@ -332,7 +357,9 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             debiased_error = current_pred["debiased_error"]
             boosted_forests["forest"].append(forest_residual)
             boosted_forests["error"].append(np.mean(debiased_error))
+            step += 1
         # endregion
+
         boosted_forests["predictions"] = y_hat
         self.boosted_forests_ = boosted_forests
         return self

@@ -90,7 +90,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         X, y = check_X_y(X, y)
         self.n_features_ = X.shape[1]
 
-        self._check_sample_fraction()
+        self._check_sample_fraction(oob=compute_oob_predictions)
         self._check_alpha()
 
         if sample_weight is not None:

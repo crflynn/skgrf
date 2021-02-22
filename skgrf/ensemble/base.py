@@ -34,7 +34,7 @@ class GRFValidationMixin:
         else:
             return self.mtry
 
-    def _check_sample_fraction(self):
+    def _check_sample_fraction(self, oob=False):
         if hasattr(self, "ci_group_size") and self.ci_group_size >= 2:
             if self.sample_fraction <= 0 or self.sample_fraction > 0.5:
                 raise ValueError(
@@ -43,6 +43,10 @@ class GRFValidationMixin:
         if self.sample_fraction <= 0 or self.sample_fraction > 1:
             raise ValueError(
                 "sample fraction must be between 0 and 1 when ci_group_size == 1"
+            )
+        if oob and self.sample_fraction >= 1:
+            raise ValueError(
+                "sample fraction must be strictly less than 1 for oob predictions"
             )
 
     def _check_alpha(self):
