@@ -17,6 +17,8 @@ from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 from skgrf.ensemble.regressor import GRFRegressor
 
+logger = logging.getLogger(__name__)
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +47,20 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
     :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
         is required to provide confidence intervals.
+    :param list(str) tune_params: A list of parameter names on which to perform tuning.
+        Valid strings are "sample_fraction", "mtry", "min_node_size",
+        "honesty_fraction", "honesty_prune_leaves", "alpha", "imbalance_penalty".
+    :param int tune_n_estimators: The number of estimators to use in the tuning model.
+    :param int tune_n_reps: The number of forests used in the tuning model
+    :param int tune_n_draws: The number of random parameter values for tuning model
+        selection
+    :param int boost_steps: The number of boosting iterations
+    :param int boost_error_reduction: The percentage of previous step's error that
+        must be estimated by the current boost step
+    :param int boost_max_steps: The maximum number of boosting iterations
+    :param int boost_trees_tune: The number of trees used to test a new boosting step.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
-
-    # TODO rest of params
 
     :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -158,6 +170,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             params = regression_forest.get_params(deep=True)
             forest = regression_forest
         else:
+            logger.debug("tuning boosted forest")
             tunable_params = (
                 "sample_fraction",
                 "mtry",
@@ -273,7 +286,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         # endregion
 
         # region boosting with the tuned forest
-        forest.fit(X, y, compute_oob_predictions=True)
+        logger.debug("boosting forest")
         current_pred = {
             "predictions": forest.grf_forest_["predictions"],
             "debiased_error": forest.grf_forest_["debiased_error"],

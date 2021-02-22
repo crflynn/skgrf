@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
@@ -8,6 +9,8 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
+
+logger = logging.getLogger(__name__)
 
 
 class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
@@ -129,11 +132,13 @@ class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator
         self._check_reduced_form_weight()
 
         if y_hat is None:
+            logger.debug("estimating y_hat")
             y_hat = self._estimate_using_regression(
                 X=X, y=y, sample_weight=sample_weight, cluster=cluster
             )
 
         if w_hat is None:
+            logger.debug("estimating w_hat")
             w_hat = self._estimate_using_regression(
                 X=X, y=w, sample_weight=sample_weight, cluster=cluster
             )
@@ -143,6 +148,7 @@ class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator
             z_hat = w_hat
 
         if z_hat is None:
+            logger.debug("estimating z_hat")
             z_hat = self._estimate_using_regression(
                 X=X, y=z, sample_weight=sample_weight, cluster=cluster
             )
