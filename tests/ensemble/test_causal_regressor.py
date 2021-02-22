@@ -8,36 +8,124 @@ from sklearn.utils.validation import check_is_fitted
 from skgrf.ensemble import GRFCausalRegressor
 
 
-class TestGRFCausal:
+class TestGRFCausalRegressor:
     def test_init(self):
         _ = GRFCausalRegressor()
 
-    def test_fit(self, boston_X, boston_y):
+    def test_fit(self, causal_X, causal_y, causal_w):
         gfc = GRFCausalRegressor()
         with pytest.raises(NotFittedError):
             check_is_fitted(gfc)
-        gfc.fit(boston_X, boston_y, boston_y)
+        gfc.fit(causal_X, causal_y, causal_w)
         check_is_fitted(gfc)
         assert hasattr(gfc, "grf_forest_")
         assert hasattr(gfc, "mtry_")
 
-    def test_predict(self, boston_X, boston_y):
+    def test_predict(self, causal_X, causal_y, causal_w):
         gfc = GRFCausalRegressor()
-        gfc.fit(boston_X, boston_y, boston_y)
-        pred = gfc.predict(boston_X)
-        assert len(pred) == boston_X.shape[0]
+        gfc.fit(causal_X, causal_y, causal_w)
+        pred = gfc.predict(causal_X)
+        assert len(pred) == causal_X.shape[0]
 
-    def test_serialize(self, boston_X, boston_y):
+    def test_serialize(self, causal_X, causal_y, causal_w):
         tf = tempfile.TemporaryFile()
         gfc = GRFCausalRegressor()
-        gfc.fit(boston_X, boston_y, boston_y)
+        gfc.fit(causal_X, causal_y, causal_w)
         pickle.dump(gfc, tf)
         tf.seek(0)
         new_gfc = pickle.load(tf)
-        pred = new_gfc.predict(boston_X)
-        assert len(pred) == boston_X.shape[0]
+        pred = new_gfc.predict(causal_X)
+        assert len(pred) == causal_X.shape[0]
 
-    def test_clone(self, boston_X, boston_y):
+    def test_clone(self, causal_X, causal_y, causal_w):
         gfc = GRFCausalRegressor()
-        gfc.fit(boston_X, boston_y, boston_y)
+        gfc.fit(causal_X, causal_y, causal_w)
         clone(gfc)
+
+    def test_equalize_cluster_weights(
+        self,
+        causal_X,
+        causal_y,
+        causal_w,
+        causal_cluster,
+        equalize_cluster_weights,
+    ):
+        gcr = GRFCausalRegressor(equalize_cluster_weights=equalize_cluster_weights)
+        gcr.fit(causal_X, causal_y, causal_w, causal_w, cluster=causal_cluster)
+        if equalize_cluster_weights:
+            assert gcr.samples_per_cluster_ == 20
+        else:
+            assert gcr.samples_per_cluster_ == causal_y.shape[0] - 20
+
+        if equalize_cluster_weights:
+            with pytest.raises(ValueError):
+                gcr.fit(
+                    causal_X,
+                    causal_y,
+                    causal_w,
+                    causal_w,
+                    cluster=causal_cluster,
+                    sample_weight=causal_y,
+                )
+
+        gcr.fit(causal_X, causal_y, causal_w, causal_w, cluster=None)
+        assert gcr.samples_per_cluster_ == 0
+
+    def test_sample_fraction(
+        self, causal_X, causal_y, causal_w, sample_fraction
+    ):  # and ci_group_size
+        gcr = GRFCausalRegressor(sample_fraction=sample_fraction, ci_group_size=1)
+        if sample_fraction <= 0 or sample_fraction > 1:
+            with pytest.raises(ValueError):
+                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        else:
+            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+
+        gcr = GRFCausalRegressor(sample_fraction=sample_fraction, ci_group_size=2)
+        if sample_fraction <= 0 or sample_fraction > 0.5:
+            with pytest.raises(ValueError):
+                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        else:
+            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+
+    def test_mtry(self, causal_X, causal_y, causal_w, mtry):
+        gcr = GRFCausalRegressor(mtry=mtry)
+        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        if mtry is not None:
+            assert gcr.mtry_ == mtry
+        else:
+            assert gcr.mtry_ == 5
+
+    def test_honesty(self, causal_X, causal_y, causal_w, honesty):
+        gcr = GRFCausalRegressor(honesty=honesty)
+        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+
+    def test_honesty_fraction(self, causal_X, causal_y, causal_w, honesty_fraction):
+        gcr = GRFCausalRegressor(
+            honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True
+        )
+        if honesty_fraction <= 0 or honesty_fraction >= 1:
+            with pytest.raises(RuntimeError):
+                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        else:
+            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+
+    def test_honesty_prune_leaves(
+        self, causal_X, causal_y, causal_w, honesty_prune_leaves
+    ):
+        gcr = GRFCausalRegressor(
+            honesty=True, honesty_prune_leaves=honesty_prune_leaves
+        )
+        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+
+    def test_alpha(self, causal_X, causal_y, causal_w, alpha):
+        gcr = GRFCausalRegressor(alpha=alpha)
+        if alpha <= 0 or alpha >= 0.25:
+            with pytest.raises(ValueError):
+                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        else:
+            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+
+    def test_orthogonal_boosting(self, causal_X, causal_y, causal_w, orthogonal_boosting):
+        gcr = GRFCausalRegressor(orthogonal_boosting=orthogonal_boosting)
+        gcr.fit(causal_X, causal_y, causal_w)

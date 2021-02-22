@@ -4,9 +4,18 @@ from sklearn.datasets import load_boston
 from sklearn.datasets import load_iris
 from sksurv.datasets import load_veterans_lung_cancer
 
+from tests.fixtures.regression import synthetic_data
+
 _boston_X, _boston_y = load_boston(return_X_y=True)
 _iris_X, _iris_y = load_iris(return_X_y=True)
 _lung_X, _lung_y = load_veterans_lung_cancer()
+causal_data = synthetic_data()
+_causal_y = causal_data[0]
+_causal_X = causal_data[1]
+_causal_w = causal_data[2]  # treatment
+_causal_tau = causal_data[3]  # treatment effect
+_causal_y_hat = causal_data[4]  # expected outcome
+_causal_w_hat = causal_data[5]  # treatment propensity
 
 
 @pytest.fixture
@@ -50,6 +59,38 @@ def lung_y():
 @pytest.fixture
 def lung_cluster():
     cluster = np.zeros(_lung_y.shape)
+    cluster[20:] = 1
+    return cluster
+
+
+@pytest.fixture
+def causal_X():
+    return _causal_X
+
+
+@pytest.fixture
+def causal_y():
+    return _causal_y
+
+
+@pytest.fixture
+def causal_w():
+    return _causal_w
+
+
+@pytest.fixture
+def causal_y_hat():
+    return _causal_y_hat
+
+
+@pytest.fixture
+def causal_w_hat():
+    return _causal_w_hat
+
+
+@pytest.fixture
+def causal_cluster():
+    cluster = np.zeros(_causal_y.shape)
     cluster[20:] = 1
     return cluster
 
@@ -142,4 +183,9 @@ def boost_trees_tune(request):
 
 @pytest.fixture(params=[None, 1])
 def boost_predict_steps(request):
+    return request.param
+
+
+@pytest.fixture(params=[False, True])
+def orthogonal_boosting(request):
     return request.param

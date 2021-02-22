@@ -117,7 +117,7 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
             "alpha": self.alpha,
             "imbalance_penalty": self.imbalance_penalty,
             "ci_group_size": 1,
-            "tune_parameters": None,  # TODO ?
+            "tune_params": None,  # TODO ?
             "n_jobs": self.n_jobs,
             "seed": self.seed,
         }

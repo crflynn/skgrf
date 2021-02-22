@@ -8,7 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
 
 
-class TestGRFRegressor:
+class TestGRFBoostedRegressor:
     def test_init(self):
         _ = GRFBoostedRegressor()
 
