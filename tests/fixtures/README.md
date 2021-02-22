@@ -1,0 +1,1 @@
+This code is from [causalml](https://github.com/uber/causalml/blob/master/causalml/dataset/regression.py). We copy it here with license rather than adding causalml as a dependency to keep development dependencies light and with less chance of conflict or build issues.
