@@ -87,3 +87,54 @@ def honesty_prune_leaves(request):
 @pytest.fixture(params=[-0.1, 0, 0.05, 0.1, 0.2, 0.25, 0.3])
 def alpha(request):
     return request.param
+
+
+@pytest.fixture(
+    params=[
+        ["sample_fraction"],
+        ["mtry"],
+        ["min_node_size"],
+        ["honesty_fraction"],
+        ["honesty_prune_leaves"],
+        ["alpha"],
+        ["imbalance_penalty"],
+        ["invalid"],
+    ]
+)
+def tune_params(request):
+    return request.param
+
+
+@pytest.fixture(params=[50])
+def tune_n_estimators(request):
+    return request.param
+
+
+@pytest.fixture(params=[2])
+def tune_n_reps(request):
+    return request.param
+
+
+@pytest.fixture(params=[1, 5])
+def tune_n_draws(request):
+    return request.param
+
+
+@pytest.fixture(params=[2])
+def boost_steps(request):
+    return request.param
+
+
+@pytest.fixture(params=[2])
+def boost_max_steps(request):
+    return request.param
+
+
+@pytest.fixture(params=[-0.1, 0, 0.5, 1, 1.1])
+def boost_error_reduction(request):
+    return request.param
+
+
+@pytest.fixture(params=[10])
+def boost_trees_tune(request):
+    return request.param

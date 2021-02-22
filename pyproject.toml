@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skgrf"
-version = "0.1.0"
+version = "0.0.0"
 description = ""
 authors = ["flynn <crf204@gmail.com>"]
 build = "build.py"
