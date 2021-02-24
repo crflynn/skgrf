@@ -47,7 +47,7 @@ publish: clean sdist
 
 .PHONY: release
 release: clean sdist
-	ghr -u crflynn -r skgrf -c $(shell git rev-parse HEAD) -delete -b "release" -n $(shell poetry version | tail -c +10) $(shell poetry version | tail -c +10) dist/*.tar.gz
+	ghr -u crflynn -r skgrf -c $(shell git rev-parse HEAD) -delete -b "release" -n $(shell poetry version -s) $(shell poetry version -s) dist/*.tar.gz
 
 .PHONY: sdist
 sdist: copy
