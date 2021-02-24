@@ -22,6 +22,8 @@ skgrf
 
 The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs/grf/releases/tag/v1.2.0>`__ of ``grf``.
 
+``skgrf`` is still in development. Please create issues for any discrepancies or errors. PRs welcome.
+
 
 Installation
 ------------

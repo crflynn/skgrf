@@ -126,6 +126,8 @@ class TestGRFCausalRegressor:
         else:
             gcr.fit(causal_X, causal_y, causal_w, causal_w)
 
-    def test_orthogonal_boosting(self, causal_X, causal_y, causal_w, orthogonal_boosting):
+    def test_orthogonal_boosting(
+        self, causal_X, causal_y, causal_w, orthogonal_boosting
+    ):
         gcr = GRFCausalRegressor(orthogonal_boosting=orthogonal_boosting)
         gcr.fit(causal_X, causal_y, causal_w)
