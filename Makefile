@@ -58,6 +58,8 @@ setup:
 	git submodule init
 	git submodule update
 	asdf install
+	# pip 20.1 fails on generation of multiple .egg-info dirs
+	poetry run pip install pip==20.0.2
 	poetry install --no-root
 	poetry run python buildpre.py
 	poetry install

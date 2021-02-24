@@ -216,12 +216,12 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
 
             if np.any(np.isnan(errors)):
                 raise ValueError(
-                    "unable to tune because of NaN-valued forest error estimates"
+                    "unable to tune because of NaN-valued forest error estimates; consider more trees"
                 )
 
             if np.std(errors) == 0 or np.std(errors) / np.mean(errors) < 1e-10:
                 raise ValueError(
-                    "unable to tune because of constant errors for forests"
+                    "unable to tune because of constant errors for forests; consider more trees"
                 )
 
             variance_guess = np.var(errors) / 2
