@@ -34,6 +34,16 @@ Installation
 
     pip install skgrf
 
+Estimators
+----------
+
+* GRFBoostedRegressor
+* GRFCausalRegressor
+* GRFInstrumentalRegressor
+* GRFLocalLinearRegressor
+* GRFQuantileRegressor
+* GRFRegressor
+* GRFSurvival
 
 Usage
 -----
