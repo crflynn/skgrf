@@ -156,7 +156,7 @@ def tune_n_reps(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 5])
+@pytest.fixture(params=[1, 10])
 def tune_n_draws(request):
     return request.param
 
