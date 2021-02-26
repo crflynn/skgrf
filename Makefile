@@ -68,3 +68,7 @@ setup:
 test:
 	poetry run pytest --cov=skgrf --cov-report=html tests/
 	open htmlcov/index.html
+
+.PHONY: dtest
+dtest:
+	docker run -t skgrf run pytest
