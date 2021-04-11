@@ -680,9 +680,6 @@ cdef grf_.Forest* deserialize_forest(
 cdef serialize_forest(
     grf_.Forest* forest,
 ):
-    cdef vector[unique_ptr[grf_.Tree]] trees
-    cdef unique_ptr[grf_.Tree] tree
-
     result = dict()
     result["_ci_group_size"] = forest.get_ci_group_size()
     result["_num_variables"] = forest.get_num_variables()
@@ -699,19 +696,22 @@ cdef serialize_forest(
     result["_pv_values"] = []
     result["_pv_num_types"] = []
 
-    for t in range(num_trees):
-        tree = move(forest.get_trees_()[t])
-        result["_root_nodes"].append(deref(tree).get_root_node())
-        result["_child_nodes"].append(deref(tree).get_child_nodes())
-        result["_leaf_samples"].append(deref(tree).get_leaf_samples())
-        result["_split_vars"].append(deref(tree).get_split_vars())
-        result["_split_values"].append(deref(tree).get_split_values())
-        result["_drawn_samples"].append(deref(tree).get_drawn_samples())
-        result["_send_missing_left"].append(deref(tree).get_send_missing_left())
+    for k in range(num_trees):
+        # this is awkward but it avoids a compilation issue on linux
+        # related to overloading of get_trees_ :
+        # error: call of overloaded ‘move(__gnu_cxx::__alloc_traits<std::allocator<std::unique_ptr<grf::Tree> > >::value_type&)’ is ambiguous
+        #
+        # assigning the tree doesn't work because Tree lacks a nullary constructor
+        result["_root_nodes"].append(deref(forest.get_trees()[k]).get_root_node())
+        result["_child_nodes"].append(deref(forest.get_trees()[k]).get_child_nodes())
+        result["_leaf_samples"].append(deref(forest.get_trees()[k]).get_leaf_samples())
+        result["_split_vars"].append(deref(forest.get_trees()[k]).get_split_vars())
+        result["_split_values"].append(deref(forest.get_trees()[k]).get_split_values())
+        result["_drawn_samples"].append(deref(forest.get_trees()[k]).get_drawn_samples())
+        result["_send_missing_left"].append(deref(forest.get_trees()[k]).get_send_missing_left())
 
-        result["_pv_values"].append(deref(tree).get_prediction_values().get_all_values())
-        result["_pv_num_types"].append(deref(tree).get_prediction_values().get_num_types())
-
+        result["_pv_values"].append(deref(forest.get_trees()[k]).get_prediction_values().get_all_values())
+        result["_pv_num_types"].append(deref(forest.get_trees()[k]).get_prediction_values().get_num_types())
     return result
 
 
