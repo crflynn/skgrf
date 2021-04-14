@@ -1,13 +1,13 @@
 skgrf
 =====
 
-|actions| |travis| |rtd| |pypi| |pyversions|
+|actions| |wheels| |rtd| |pypi| |pyversions|
 
 .. |actions| image:: https://github.com/crflynn/skgrf/workflows/build/badge.svg
     :target: https://github.com/crflynn/skgrf/actions
 
-.. |travis| image:: https://img.shields.io/travis/crflynn/skgrf-wheels/main.svg?logo=travis&label=wheels
-    :target: https://travis-ci.org/crflynn/skgrf-wheels
+.. |wheels| image:: https://github.com/crflynn/skgrf-wheels/workflows/wheels/badge.svg
+    :target: https://github.com/crflynn/skgrf-wheels/actions
 
 .. |rtd| image:: https://img.shields.io/readthedocs/skgrf.svg
     :target: http://skgrf.readthedocs.io/en/latest/
