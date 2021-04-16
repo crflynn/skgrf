@@ -230,13 +230,14 @@ class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator
             y=y,
             sample_weight=sample_weight,
         )
+        sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
         n_estimators = max(50, int(self.n_estimators / 4))
         regression_forest = grf.regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
             np.asfortranarray([[]]),
             self.outcome_index_,
             self.sample_weight_index_,
-            sample_weight is not None,  # use_sample_weights
+            use_sample_weight,
             self.mtry_,
             n_estimators,  # num_trees
             5,  # min_node_size
