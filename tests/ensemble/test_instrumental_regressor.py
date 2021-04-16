@@ -127,3 +127,7 @@ class TestGRFInstrumentalRegressor:
                 gfi.fit(causal_X, causal_y, causal_w, causal_w)
         else:
             gfi.fit(causal_X, causal_y, causal_w, causal_w)
+
+    # cant use this because of extra required fit params
+    # def test_check_estimator(self):
+    #     check_estimator(GRFInstrumentalRegressor())

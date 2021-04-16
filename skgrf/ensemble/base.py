@@ -104,3 +104,9 @@ class GRFValidationMixin:
             n_cols += 1
             concats.append(np.atleast_2d(sample_weight).T)
         return np.concatenate(concats, axis=1)
+
+    def _check_num_samples(self, X):
+        if len(X) * self.sample_fraction < 1:
+            raise ValueError(
+                "The sample fraction is too small, resulting in less than 1 sample for fitting."
+            )
