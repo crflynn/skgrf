@@ -1,7 +1,6 @@
-import pathlib
-
 import numpy as np
 import pandas as pd
+import pathlib
 import pytest
 from scipy.io.arff import loadarff
 from sklearn.datasets import load_boston
@@ -12,7 +11,7 @@ from tests.fixtures.causalml.regression import synthetic_data
 
 def load_veterans_lung_cancer():
     this_file = pathlib.Path(__file__)
-    data_file = this_file.parent / "fixtures" / "veteran.arff"
+    data_file = this_file.parent / "fixtures" / "sksurv" / "veteran.arff"
     data = loadarff(data_file)
     df = pd.DataFrame(data=data[0], columns=list(data[1].names()))
     df["y"] = list(zip(df["Status"] == b"dead", df["Survival_in_days"]))
