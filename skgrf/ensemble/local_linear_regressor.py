@@ -1,13 +1,12 @@
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.utils import check_X_y
-from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.utils.validation import check_sample_weight
 
 
 class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
@@ -51,7 +50,8 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
+    :ivar int n_features_in\_: The number of features (columns) from the fit input
+        ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
@@ -107,17 +107,14 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = check_X_y(X, y)
-        self.n_features_ = X.shape[1]
+        X, y = self._validate_data(X, y)
+        self._check_num_samples(X)
+        self._check_n_features(X, reset=True)
 
         self._check_sample_fraction()
         self._check_alpha()
 
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
-            use_sample_weights = True
-        else:
-            use_sample_weights = False
+        sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
 
         cluster = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
@@ -161,7 +158,7 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
             self.ll_split_variables_,
             self.ll_split_cutoff_,
             self.overall_beta_,
-            use_sample_weights,
+            use_sample_weight,
             self.mtry_,
             self.n_estimators,  # num_trees
             self.min_node_size,
@@ -189,6 +186,7 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
     def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
         X = check_array(X)
+        self._check_n_features(X, reset=False)
 
         result = grf.ll_regression_predict(
             self.grf_forest_,
@@ -204,3 +202,11 @@ class GRFLocalLinearRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator)
             estimate_variance,  # estimate variance
         )
         return result
+
+    def _more_tags(self):
+        return {
+            "requires_y": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
+            },
+        }

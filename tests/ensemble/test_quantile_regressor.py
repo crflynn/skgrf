@@ -3,6 +3,7 @@ import pytest
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFQuantileRegressor
@@ -112,3 +113,6 @@ class TestGRFQuantileRegressor:
                 gqr.fit(boston_X, boston_y)
         else:
             gqr.fit(boston_X, boston_y)
+
+    def test_check_estimator(self):
+        check_estimator(GRFQuantileRegressor(quantiles=[0.2]))

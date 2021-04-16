@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -43,7 +42,8 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
+    :ivar int n_features_in\_: The number of features (columns) from the fit input
+        ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
@@ -96,8 +96,9 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         if self.quantiles is None:
             raise ValueError("quantiles must be set")
 
-        X, y = check_X_y(X, y)
-        self.n_features_ = X.shape[1]
+        X, y = self._validate_data(X, y)
+        self._check_num_samples(X)
+        self._check_n_features(X, reset=True)
 
         self._check_sample_fraction()
         self._check_alpha()
@@ -145,6 +146,7 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     def _predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
+        self._check_n_features(X, reset=False)
 
         result = grf.quantile_predict(
             self.grf_forest_,
@@ -157,3 +159,6 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self._get_num_threads(),  # num_threads
         )
         return result
+
+    def _more_tags(self):
+        return {"requires_y": True, "poor_score": True}

@@ -3,6 +3,7 @@ import pytest
 import tempfile
 from sklearn import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
@@ -161,3 +162,6 @@ class TestGRFBoostedRegressor:
                 gbr.fit(boston_X, boston_y)
         else:
             gbr.fit(boston_X, boston_y)
+
+    def test_check_estimator(self):
+        check_estimator(GRFBoostedRegressor())

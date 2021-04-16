@@ -37,7 +37,8 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
+    :ivar int n_features_in\_: The number of features (columns) from the fit input
+        ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
@@ -105,6 +106,9 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
+        X, y = self._validate_data(X, y)
+        self._check_num_samples(X)
+
         boost_params = {
             "n_estimators": max(50, int(self.n_estimators / 4)),
             "equalize_cluster_weights": self.equalize_cluster_weights,

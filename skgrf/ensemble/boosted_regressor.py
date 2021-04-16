@@ -8,13 +8,13 @@ from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.base import clone
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
 from skgrf.ensemble.base import GRFValidationMixin
 from skgrf.ensemble.regressor import GRFRegressor
+from skgrf.utils.validation import check_sample_weight
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,8 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar int n_features\_: The number of features (columns) from the fit input ``X``.
+    :ivar int n_features_in\_: The number of features (columns) from the fit input
+        ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
@@ -125,13 +126,15 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = check_X_y(X, y)
-        self.n_features_ = X.shape[1]
+        X, y = self._validate_data(X, y)
+        self._check_n_features(X, reset=True)
 
         self._check_boost_error_reduction()
 
         self._check_sample_fraction(oob=True)
         self._check_alpha()
+
+        sample_weight, _ = check_sample_weight(sample_weight, X)
 
         cluster_ = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
@@ -384,6 +387,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         """
         check_is_fitted(self)
         X = check_array(X)
+        self._check_n_features(X, reset=False)
         num_forests = len(self.boosted_forests_["forest"])
         if boost_predict_steps is None:
             boost_predict_steps = num_forests
@@ -406,6 +410,14 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             y_hat = y_hat + y
         return y_hat
 
+    def _more_tags(self):
+        return {
+            "requires_y": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
+            },
+        }
+
 
 # region random parameter tuning functions
 class GRFParamDistribution(ABC):
@@ -414,12 +426,12 @@ class GRFParamDistribution(ABC):
         self.X_cols = X_cols
 
     @abstractmethod
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         raise NotImplementedError()
 
 
 class GRFMinNodeSizeDistribution(GRFParamDistribution):
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):
@@ -427,7 +439,7 @@ class GRFMinNodeSizeDistribution(GRFParamDistribution):
 
 
 class GRFSampleFractionDistribution(GRFParamDistribution):
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):
@@ -435,7 +447,7 @@ class GRFSampleFractionDistribution(GRFParamDistribution):
 
 
 class GRFMtryDistribution(GRFParamDistribution):
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):
@@ -443,7 +455,7 @@ class GRFMtryDistribution(GRFParamDistribution):
 
 
 class GRFAlphaDistribution(GRFParamDistribution):
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):
@@ -451,7 +463,7 @@ class GRFAlphaDistribution(GRFParamDistribution):
 
 
 class GRFImbalancePenaltyDistribution(GRFParamDistribution):
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):
@@ -459,7 +471,7 @@ class GRFImbalancePenaltyDistribution(GRFParamDistribution):
 
 
 class GRFHonestyFractionDistribution(GRFParamDistribution):
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):
@@ -471,7 +483,7 @@ class GRFHonestyPruneLeavesDistribution(GRFParamDistribution):
         super().__init__(X_rows, X_cols)
         self.choices = np.array([True, False])
 
-    def rvs(self, *args, **kwds):
+    def rvs(self, *args, **kwds):  # pragma: no cover
         return self.dist(ss.uniform(*args, **kwds))
 
     def dist(self, uniform):

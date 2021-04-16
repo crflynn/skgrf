@@ -106,3 +106,12 @@ class TestGRFSurvival:
                 gfs.fit(lung_X, lung_y)
         else:
             gfs.fit(lung_X, lung_y)
+
+    def test_get_tags(self):
+        rfs = GRFSurvival()
+        tags = rfs._get_tags()
+        assert tags["requires_y"]
+
+    # cant use this because of special fit y
+    # def test_check_estimator(self):
+    #     check_estimator(GRFSurvival())
