@@ -39,9 +39,7 @@ Sphinx = "^3.3.1"
 Cython = "^3.0a5"
 pytest-cov = "^2.10.1"
 sphinx-rtd-theme = "^0.5.1"
-cvxopt = "1.2.5"  # have to pin this, wont install latest
-scikit-survival = "^0.14.0"
-scikit-learn = "0.23.2" # sksurv is strict with sklearn
+pandas = "^1.0.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython", "numpy"]
