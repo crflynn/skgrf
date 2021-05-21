@@ -36,9 +36,15 @@ class TestGRFRegressor:
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
-        tf = tempfile.TemporaryFile()
         gfr = GRFRegressor()
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(gfr, tf)
+        tf.seek(0)
+        gfr = pickle.load(tf)
         gfr.fit(boston_X, boston_y)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(gfr, tf)
         tf.seek(0)
         new_gfr = pickle.load(tf)

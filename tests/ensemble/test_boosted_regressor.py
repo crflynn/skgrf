@@ -29,9 +29,15 @@ class TestGRFBoostedRegressor:
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
-        tf = tempfile.TemporaryFile()
         gbr = GRFBoostedRegressor()
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(gbr, tf)
+        tf.seek(0)
+        gbr = pickle.load(tf)
         gbr.fit(boston_X, boston_y)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(gbr, tf)
         tf.seek(0)
         new_gbr = pickle.load(tf)

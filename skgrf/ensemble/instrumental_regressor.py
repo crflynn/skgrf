@@ -6,13 +6,13 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
 logger = logging.getLogger(__name__)
 
 
-class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+class GRFInstrumentalRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     r"""GRF Instrumental regression implementation for sci-kit learn.
 
     Provides a sklearn instrumental regression to the GRF C++ library using Cython.
@@ -188,6 +188,7 @@ class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator
             self._get_num_threads(),  # num_threads,
             self.seed,
         )
+        self._ensure_ptr()
         return self
 
     def predict(self, X):
@@ -201,9 +202,10 @@ class GRFInstrumentalRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
+        self._ensure_ptr()
 
         result = grf.instrumental_predict(
-            self.grf_forest_,
+            self.grf_forest_cpp_,
             np.asfortranarray([[]]),  # train_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,

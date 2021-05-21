@@ -45,6 +45,18 @@ cdef class DataNumpy:
         return deref(self.c_data).set(col, row, value, error)
 
 
+cdef class GRFForest:
+    """Cython wrapper for forest pointer.
+
+    Holds a reference to the forest so that we don't have to
+    deserialize on each predict call.
+    """
+    cdef grf_.Forest* forest
+
+    def __cinit__(self, dict forest_object):
+        self.forest = deserialize_forest(forest_object)
+
+
 cpdef regression_train(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
@@ -104,7 +116,7 @@ cpdef regression_train(
 
 
 cpdef regression_predict(
-    dict forest_object,
+    GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
@@ -113,7 +125,6 @@ cpdef regression_predict(
     unsigned int num_threads,
     bool estimate_variance,
 ):
-    cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
@@ -122,9 +133,8 @@ cpdef regression_predict(
 
     test_data = DataNumpy(test_matrix)
 
-    forest = deserialize_forest(forest_object)
     predictions = predictor.predict(
-        deref(forest),
+        deref(forest_wrapper.forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         estimate_variance,
@@ -192,7 +202,7 @@ cpdef quantile_train(
 
 
 cpdef quantile_predict(
-    dict forest_object,
+    GRFForest forest_wrapper,
     vector[double] quantiles,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
@@ -201,7 +211,6 @@ cpdef quantile_predict(
     np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
 ):
-    cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
@@ -210,9 +219,8 @@ cpdef quantile_predict(
 
     test_data = DataNumpy(test_matrix)
 
-    forest = deserialize_forest(forest_object)
     predictions = predictor.predict(
-        deref(forest),
+        deref(forest_wrapper.forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         False,  # estimate_variance
@@ -280,7 +288,7 @@ cpdef survival_train(
 
 
 cpdef survival_predict(
-    dict forest_object,
+    GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
@@ -292,7 +300,6 @@ cpdef survival_predict(
     unsigned int num_threads,
     size_t num_failures,
 ):
-    cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures))
@@ -304,9 +311,8 @@ cpdef survival_predict(
 
     test_data = DataNumpy(test_matrix)
 
-    forest = deserialize_forest(forest_object)
     predictions = predictor.predict(
-        deref(forest),
+        deref(forest_wrapper.forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         False,  # estimate_variance
@@ -382,7 +388,7 @@ cpdef ll_regression_train(
 
 
 cpdef ll_regression_predict(
-    dict forest_object,
+    GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
@@ -394,7 +400,6 @@ cpdef ll_regression_predict(
     unsigned int num_threads,
     bool estimate_variance,
 ):
-    cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(
@@ -410,9 +415,8 @@ cpdef ll_regression_predict(
 
     test_data = DataNumpy(test_matrix)
 
-    forest = deserialize_forest(forest_object)
     predictions = predictor.predict(
-        deref(forest),
+        deref(forest_wrapper.forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         estimate_variance,
@@ -489,7 +493,7 @@ cpdef instrumental_train(
 
 
 cpdef instrumental_predict(
-    dict forest_object,
+    GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
@@ -500,7 +504,6 @@ cpdef instrumental_predict(
     unsigned int num_threads,
     bool estimate_variance,
 ):
-    cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(
@@ -515,9 +518,8 @@ cpdef instrumental_predict(
 
     test_data = DataNumpy(test_matrix)
 
-    forest = deserialize_forest(forest_object)
     predictions = predictor.predict(
-        deref(forest),
+        deref(forest_wrapper.forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         estimate_variance,
@@ -593,7 +595,7 @@ cpdef causal_train(
 
 
 cpdef causal_predict(
-    dict forest_object,
+    GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
     np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
@@ -603,7 +605,6 @@ cpdef causal_predict(
     unsigned int num_threads,
     bool estimate_variance,
 ):
-    cdef grf_.Forest* forest
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(
@@ -618,9 +619,8 @@ cpdef causal_predict(
 
     test_data = DataNumpy(test_matrix)
 
-    forest = deserialize_forest(forest_object)
     predictions = predictor.predict(
-        deref(forest),
+        deref(forest_wrapper.forest),
         deref(train_data.c_data),
         deref(test_data.c_data),
         estimate_variance,

@@ -29,9 +29,15 @@ class TestGRFLocalLinearRegressor:
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
-        tf = tempfile.TemporaryFile()
         glr = GRFLocalLinearRegressor(ll_split_cutoff=0)
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(glr, tf)
+        tf.seek(0)
+        glr = pickle.load(tf)
         glr.fit(boston_X, boston_y)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(glr, tf)
         tf.seek(0)
         new_glr = pickle.load(tf)

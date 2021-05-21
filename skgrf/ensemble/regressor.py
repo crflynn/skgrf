@@ -5,11 +5,11 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+class GRFRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     r"""GRF Regression implementation for sci-kit learn.
 
     Provides a sklearn regressor interface to the GRF C++ library using Cython.
@@ -128,6 +128,7 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self._get_num_threads(),  # num_threads,
             self.seed,
         )
+        self._ensure_ptr()
         return self
 
     def predict(self, X):
@@ -141,9 +142,10 @@ class GRFRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
+        self._ensure_ptr()
 
         result = grf.regression_predict(
-            self.grf_forest_,
+            self.grf_forest_cpp_,
             np.asfortranarray([[]]),  # train_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,

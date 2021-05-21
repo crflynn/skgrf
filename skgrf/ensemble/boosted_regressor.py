@@ -12,17 +12,14 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.base import GRFMixin
 from skgrf.ensemble.regressor import GRFRegressor
 from skgrf.utils.validation import check_sample_weight
 
 logger = logging.getLogger(__name__)
 
 
-logger = logging.getLogger(__name__)
-
-
-class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+class GRFBoostedRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     r"""GRF Boosted Regression implementation for sci-kit learn.
 
     Provides a sklearn regressor interface to the GRF C++ library using Cython.
@@ -63,7 +60,7 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
 
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
-    :ivar dict grf_forest\_: The returned result object from calling C++ grf.
+    :ivar dict boosted_forests\_: The boosted regression forests.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
     :ivar list samples_per_cluster\_: The number of samples to train per cluster.
@@ -395,9 +392,10 @@ class GRFBoostedRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             boost_predict_steps = min(boost_predict_steps, num_forests)
 
         y_hat = 0
-        for k in range(boost_predict_steps):
+        for forest in self.boosted_forests_["forest"][:boost_predict_steps]:
+            forest._ensure_ptr()
             result = grf.regression_predict(
-                self.boosted_forests_["forest"][k].grf_forest_,
+                forest.grf_forest_cpp_,
                 np.asfortranarray([[]]),  # train_matrix
                 np.asfortranarray([[]]),  # sparse_train_matrix
                 self.outcome_index_,
