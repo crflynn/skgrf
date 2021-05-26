@@ -1,27 +1,32 @@
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
-from skgrf.ensemble import GRFRegressor
+from skgrf.ensemble import GRFSurvival
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
-    r"""GRF Tree Regression implementation for sci-kit learn.
+class GRFTreeSurvival(GRFMixin, BaseEstimator):
+    r"""GRF Tree Survival implementation for sci-kit learn.
 
-    Provides a sklearn tree regressor interface to the GRF C++ library using Cython.
+    Provides a sklearn tree survival interface to the GRF C++ library using Cython.
+
+    .. warning::
+
+        Because the training dataset is required for prediction, the training dataset
+        is recorded onto the estimator instance. This means that serializing this
+        estimator will result in a file at least as large as the serialized training
+        dataset.
 
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
         the smallest cluster. If ``True``, sample weights should not be passed on
         fitting.
-    :param float sample_fraction: Fraction of samples used in each tree. If
-        ``ci_group_size`` > 1, the max allowed fraction is 0.5
+    :param float sample_fraction: Fraction of samples used in each tree.
     :param int mtry: The number of features to split on each node. The default is
         ``sqrt(p) + 20`` where ``p`` is the number of features.
     :param int min_node_size: The minimum number of observations in each tree leaf.
@@ -30,7 +35,6 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     :param bool honesty_prune_leaves: Prune estimation sample tree such that no leaves
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
-    :param float imbalance_penalty: Penalty applied to imbalanced splits.
     :param int seed: Random seed value.
 
     :ivar int n_features_in\_: The number of features (columns) from the fit input
@@ -38,10 +42,10 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
-    :ivar list samples_per_cluster\_: The number of samples to train per cluster.
-    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
-    :ivar int n_classes\_: The number of unique class labels from the fit input
-        ``cluster``.
+    :ivar int censor_index\_: The index of the grf train matrix holding the censoring.
+    :ivar array1d failure_times_\_: An array of unique failure times from the training
+        set.
+    :ivar int num_failures_\_: The length of the ``failure_times`` array.
     """
 
     def __init__(
@@ -54,7 +58,6 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
-        imbalance_penalty=0.0,
         seed=42,
     ):
         self.equalize_cluster_weights = equalize_cluster_weights
@@ -65,14 +68,13 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.honesty_fraction = honesty_fraction
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
-        self.imbalance_penalty = imbalance_penalty
         self.seed = seed
 
     @classmethod
-    def from_forest(cls, forest: GRFRegressor, idx: int):
+    def from_forest(cls, forest: GRFSurvival, idx: int):
         """Extract a tree from a forest.
 
-        :param GRFRegressor forest: A trained GRFRegressor instance
+        :param GRFSurvival forest: A trained GRFSurvival instance
         :param int idx: The tree index from the forest to extract.
         """
         # Even though we have a tree object, we keep the exact same dictionary structure
@@ -89,7 +91,6 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             honesty_fraction=forest.honesty_fraction,
             honesty_prune_leaves=forest.honesty_prune_leaves,
             alpha=forest.alpha,
-            imbalance_penalty=forest.imbalance_penalty,
             seed=forest.seed,
         )
         # forest
@@ -110,41 +111,56 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         instance.samples_per_cluster_ = forest.samples_per_cluster_
         instance.mtry_ = forest.mtry_
         instance.sample_weight_index_ = forest.sample_weight_index_
+        instance.censor_index_ = forest.censor_index_
+        instance.num_failures_ = forest.num_failures_
+        # data
+        instance.train_ = forest.train_
         return instance
 
-    def fit(
-        self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False
-    ):
-        """Fit the grf forest using training data.
+    def fit(self, X, y, sample_weight=None, cluster=None):
+        """Fit the grf tree using training data.
 
         :param array2d X: training input features
-        :param array1d y: training input targets
+        :param array1d y: training input targets, rows of (bool, float) representing
+            (survival, time)
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = self._validate_data(X, y)
+        X = check_array(X)
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
+        y = np.array(y.tolist())
 
-        self._check_sample_fraction(oob=compute_oob_predictions)
+        self._check_sample_fraction()
         self._check_alpha()
+
+        cluster = self._check_cluster(X=X, cluster=cluster)
+        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
+            cluster=cluster, sample_weight=sample_weight
+        )
 
         sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
 
-        cluster_ = self._check_cluster(X=X, cluster=cluster)
-        self.samples_per_cluster_ = self._check_equalize_cluster_weights(
-            cluster=cluster_, sample_weight=sample_weight
-        )
         self.mtry_ = self._check_mtry(X=X)
 
-        train_matrix = self._create_train_matrices(
-            X=X, y=y, sample_weight=sample_weight
-        )
+        # Extract the failure times from the training targets
+        self.failure_times_ = np.sort(np.unique(y[:, 1][y[:, 0] == 1]))
+        self.num_failures_ = len(self.failure_times_)
 
-        self.grf_forest_ = grf.regression_train(
+        # Relabel the failure times to consecutive integers
+        y_times_relabeled = np.searchsorted(self.failure_times_, y[:, 1])
+        y_censor = y[:, 0]
+
+        train_matrix = self._create_train_matrices(
+            X, y_times_relabeled, sample_weight=sample_weight, censor=y_censor
+        )
+        self.train_ = train_matrix
+
+        self.grf_forest_ = grf.survival_train(
             np.asfortranarray(train_matrix.astype("float64")),
             np.asfortranarray([[]]),
             self.outcome_index_,
+            self.censor_index_,
             self.sample_weight_index_,
             use_sample_weight,
             self.mtry_,
@@ -154,40 +170,58 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
-            1,  # ci_group_size
             self.alpha,
-            self.imbalance_penalty,
-            cluster_,
+            self.num_failures_,
+            cluster,
             self.samples_per_cluster_,
-            compute_oob_predictions,
-            1,  # num_threads
+            False,  # compute_oob_predictions,
+            1,  # num_threads,
             self.seed,
         )
         self._ensure_ptr()
         return self
 
+    def predict_cumulative_hazard_function(self, X):
+        """Predict cumulative hazard function.
+
+        :param array2d X: prediction input features
+        """
+        surv = self.predict_survival_function(X)
+        return -np.log(surv)
+
     def predict(self, X):
-        """Predict regression target for X.
+        """Predict risk score.
+
+        :param array2d X: prediction input features
+        """
+        chf = self.predict_cumulative_hazard_function(X)
+        return chf.sum(1)
+
+    def predict_survival_function(self, X):
+        """Predict survival function.
 
         :param array2d X: prediction input features
         """
         return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
 
-    def _predict(self, X, estimate_variance=False):
+    def _predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 
-        result = grf.regression_predict(
+        result = grf.survival_predict(
             self.grf_forest_cpp_,
-            np.asfortranarray([[]]),  # train_matrix
+            np.asfortranarray(self.train_.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
+            self.censor_index_,
+            self.sample_weight_index_,
+            False,  # use_sample_weights
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
             1,  # num_threads
-            estimate_variance,
+            self.num_failures_,
         )
         return result
 

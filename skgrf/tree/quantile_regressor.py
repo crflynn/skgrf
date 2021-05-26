@@ -6,12 +6,14 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
+from skgrf.ensemble import GRFQuantileRegressor
 
 
-class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
-    r"""GRF Quantile Regression implementation for sci-kit learn.
+class GRFTreeQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
+    r"""GRF Tree Quantile Regression implementation for sci-kit learn.
 
-    Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.
+    Provides a sklearn tree quantile regressor interface to the GRF C++ library using
+    Cython.
 
     .. warning::
 
@@ -20,7 +22,6 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         estimator will result in a file at least as large as the serialized training
         dataset.
 
-    :param int n_estimators: The number of tree regressors to train
     :param list(float) quantiles: A list of quantiles on which to predict.
     :param bool regression_splitting: Use regression splits instead of splitting
         specially for quantiles.
@@ -39,7 +40,6 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
-    :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
     :ivar int n_features_in\_: The number of features (columns) from the fit input
@@ -56,7 +56,6 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
 
     def __init__(
         self,
-        n_estimators=100,
         quantiles=None,
         regression_splitting=False,
         equalize_cluster_weights=False,
@@ -68,10 +67,8 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_prune_leaves=True,
         alpha=0.05,
         imbalance_penalty=0,
-        n_jobs=-1,
         seed=42,
     ):
-        self.n_estimators = n_estimators
         self.quantiles = quantiles
         self.regression_splitting = regression_splitting
         self.equalize_cluster_weights = equalize_cluster_weights
@@ -83,11 +80,58 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
-        self.n_jobs = n_jobs
         self.seed = seed
 
+    @classmethod
+    def from_forest(cls, forest: GRFQuantileRegressor, idx: int):
+        """Extract a tree from a forest.
+
+        :param GRFQuantileRegressor forest: A trained GRFQuantileRegressor instance
+        :param int idx: The tree index from the forest to extract.
+        """
+        # Even though we have a tree object, we keep the exact same dictionary structure
+        # that exists in the forests, so that we can reuse the Cython entrypoints.
+        # We also copy over some instance attributes from the trained forest.
+
+        # params
+        instance = cls(
+            quantiles=forest.quantiles,
+            regression_splitting=forest.regression_splitting,
+            equalize_cluster_weights=forest.equalize_cluster_weights,
+            sample_fraction=forest.sample_fraction,
+            mtry=forest.mtry,
+            min_node_size=forest.min_node_size,
+            honesty=forest.honesty,
+            honesty_fraction=forest.honesty_fraction,
+            honesty_prune_leaves=forest.honesty_prune_leaves,
+            alpha=forest.alpha,
+            imbalance_penalty=forest.imbalance_penalty,
+            seed=forest.seed,
+        )
+        # forest
+        grf_forest = {}
+        for k, v in forest.grf_forest_.items():
+            if isinstance(v, list):
+                grf_forest[k] = [forest.grf_forest_[k][idx]]
+            else:
+                grf_forest[k] = v
+        grf_forest["_num_trees"] = 1
+        instance.grf_forest_ = grf_forest
+        instance._ensure_ptr()
+        # vars
+        instance.outcome_index_ = forest.outcome_index_
+        instance.n_features_in_ = forest.n_features_in_
+        instance.classes_ = forest.classes_
+        instance.n_classes_ = forest.n_classes_
+        instance.samples_per_cluster_ = forest.samples_per_cluster_
+        instance.mtry_ = forest.mtry_
+        instance.sample_weight_index_ = forest.sample_weight_index_
+        # data
+        instance.train_ = forest.train_
+        return instance
+
     def fit(self, X, y, cluster=None):
-        """Fit the grf quantile forest using training data.
+        """Fit the grf tree quantile regressor using training data.
 
         :param array2d X: training input features
         :param array1d y: training input targets
@@ -119,7 +163,7 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             self.mtry_,
-            self.n_estimators,  # num_trees
+            1,  # num_trees
             self.min_node_size,
             self.sample_fraction,
             self.honesty,
@@ -131,7 +175,7 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             cluster,
             self.samples_per_cluster_,
             False,  # compute_oob_predictions,
-            self._get_num_threads(),  # num_threads
+            1,  # num_threads
             self.seed,
         )
         self._ensure_ptr()
@@ -158,7 +202,7 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
-            self._get_num_threads(),  # num_threads
+            1,  # num_threads
         )
         return result
 

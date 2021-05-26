@@ -4,8 +4,8 @@ from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFMixin
+from skgrf import grf
+from skgrf.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
 
@@ -58,7 +58,7 @@ class GRFRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
-        imbalance_penalty=0,
+        imbalance_penalty=0.0,
         ci_group_size=2,
         n_jobs=-1,
         seed=42,

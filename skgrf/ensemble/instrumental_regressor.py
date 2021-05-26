@@ -5,8 +5,8 @@ from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFMixin
+from skgrf import grf
+from skgrf.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
 logger = logging.getLogger(__name__)
