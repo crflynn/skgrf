@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_array
@@ -5,8 +7,10 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
-from skgrf.ensemble import GRFSurvival
 from skgrf.utils.validation import check_sample_weight
+
+if TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble import GRFSurvival
 
 
 class GRFTreeSurvival(GRFMixin, BaseEstimator):
@@ -71,7 +75,7 @@ class GRFTreeSurvival(GRFMixin, BaseEstimator):
         self.seed = seed
 
     @classmethod
-    def from_forest(cls, forest: GRFSurvival, idx: int):
+    def from_forest(cls, forest: "GRFSurvival", idx: int):
         """Extract a tree from a forest.
 
         :param GRFSurvival forest: A trained GRFSurvival instance

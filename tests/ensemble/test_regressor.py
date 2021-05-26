@@ -8,6 +8,7 @@ from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFRegressor
+from skgrf.tree import GRFTreeRegressor
 
 
 class TestGRFRegressor:
@@ -128,3 +129,13 @@ class TestGRFRegressor:
 
     def test_check_estimator(self):
         check_estimator(GRFRegressor())
+
+    def test_estimators_(self, boston_X, boston_y):
+        gfr = GRFRegressor(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = gfr.estimators_
+        gfr.fit(boston_X, boston_y)
+        estimators = gfr.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeRegressor)
+        check_is_fitted(estimators[0])

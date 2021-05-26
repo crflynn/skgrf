@@ -7,6 +7,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFSurvival
+from skgrf.tree import GRFTreeSurvival
 
 
 class TestGRFSurvival:
@@ -114,10 +115,20 @@ class TestGRFSurvival:
             gfs.fit(lung_X, lung_y)
 
     def test_get_tags(self):
-        rfs = GRFSurvival()
-        tags = rfs._get_tags()
+        gfs = GRFSurvival()
+        tags = gfs._get_tags()
         assert tags["requires_y"]
 
     # cant use this because of special fit y
     # def test_check_estimator(self):
     #     check_estimator(GRFSurvival())
+
+    def test_estimators_(self, lung_X, lung_y):
+        gfs = GRFSurvival(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = gfs.estimators_
+        gfs.fit(lung_X, lung_y)
+        estimators = gfs.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeSurvival)
+        check_is_fitted(estimators[0])

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
@@ -6,7 +8,9 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
-from skgrf.ensemble import GRFQuantileRegressor
+
+if TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble import GRFQuantileRegressor
 
 
 class GRFTreeQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
@@ -83,7 +87,7 @@ class GRFTreeQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.seed = seed
 
     @classmethod
-    def from_forest(cls, forest: GRFQuantileRegressor, idx: int):
+    def from_forest(cls, forest: "GRFQuantileRegressor", idx: int):
         """Extract a tree from a forest.
 
         :param GRFQuantileRegressor forest: A trained GRFQuantileRegressor instance

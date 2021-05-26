@@ -1,10 +1,12 @@
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
+from skgrf.tree import GRFTreeSurvival
 from skgrf.utils.validation import check_sample_weight
 
 
@@ -74,6 +76,19 @@ class GRFSurvival(GRFMixin, BaseEstimator):
         self.alpha = alpha
         self.n_jobs = n_jobs
         self.seed = seed
+
+    @property
+    def estimators_(self):
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute 'estimators_'"
+            ) from None
+        return [
+            GRFTreeSurvival.from_forest(self, idx=idx)
+            for idx in range(self.n_estimators)
+        ]
 
     def fit(self, X, y, sample_weight=None, cluster=None):
         """Fit the grf forest using training data.

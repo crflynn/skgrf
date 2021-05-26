@@ -7,6 +7,7 @@ from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFQuantileRegressor
+from skgrf.tree import GRFTreeQuantileRegressor
 
 
 class TestGRFQuantileRegressor:
@@ -122,3 +123,13 @@ class TestGRFQuantileRegressor:
 
     def test_check_estimator(self):
         check_estimator(GRFQuantileRegressor(quantiles=[0.2]))
+
+    def test_estimators_(self, boston_X, boston_y):
+        gqr = GRFQuantileRegressor(n_estimators=10, quantiles=[0.2])
+        with pytest.raises(AttributeError):
+            _ = gqr.estimators_
+        gqr.fit(boston_X, boston_y)
+        estimators = gqr.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeQuantileRegressor)
+        check_is_fitted(estimators[0])
