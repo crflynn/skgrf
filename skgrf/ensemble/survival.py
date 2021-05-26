@@ -4,11 +4,11 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFSurvival(GRFValidationMixin, BaseEstimator):
+class GRFSurvival(GRFMixin, BaseEstimator):
     r"""GRF Survival implementation for sci-kit learn.
 
     Provides a sklearn survival interface to the GRF C++ library using Cython.
@@ -136,6 +136,7 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
             self._get_num_threads(),  # num_threads,
             self.seed,
         )
+        self._ensure_ptr()
         return self
 
     def predict_cumulative_hazard_function(self, X):
@@ -165,9 +166,10 @@ class GRFSurvival(GRFValidationMixin, BaseEstimator):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
+        self._ensure_ptr()
 
         result = grf.survival_predict(
-            self.grf_forest_,
+            self.grf_forest_cpp_,
             np.asfortranarray(self.train_.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,

@@ -28,9 +28,15 @@ class TestGRFInstrumentalRegressor:
         assert len(pred) == causal_X.shape[0]
 
     def test_serialize(self, causal_X, causal_y, causal_w):
-        tf = tempfile.TemporaryFile()
         gfi = GRFInstrumentalRegressor()
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(gfi, tf)
+        tf.seek(0)
+        gfi = pickle.load(tf)
         gfi.fit(causal_X, causal_y, causal_w, causal_w)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(gfi, tf)
         tf.seek(0)
         new_gfi = pickle.load(tf)

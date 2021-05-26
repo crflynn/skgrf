@@ -28,9 +28,15 @@ class TestGRFCausalRegressor:
         assert len(pred) == causal_X.shape[0]
 
     def test_serialize(self, causal_X, causal_y, causal_w):
-        tf = tempfile.TemporaryFile()
         gfc = GRFCausalRegressor(n_estimators=100)
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(gfc, tf)
+        tf.seek(0)
+        gfc = pickle.load(tf)
         gfc.fit(causal_X, causal_y, causal_w)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(gfc, tf)
         tf.seek(0)
         new_gfc = pickle.load(tf)
