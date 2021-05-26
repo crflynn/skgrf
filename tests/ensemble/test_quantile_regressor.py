@@ -33,10 +33,16 @@ class TestGRFQuantileRegressor:
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
-        tf = tempfile.TemporaryFile()
         gqr = GRFQuantileRegressor()
         gqr.quantiles = [0.2, 0.5, 0.8]
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(gqr, tf)
+        tf.seek(0)
+        gqr = pickle.load(tf)
         gqr.fit(boston_X, boston_y)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(gqr, tf)
         tf.seek(0)
         new_gqr = pickle.load(tf)

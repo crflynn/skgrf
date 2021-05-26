@@ -5,10 +5,10 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFValidationMixin
+from skgrf.ensemble.base import GRFMixin
 
 
-class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
+class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     r"""GRF Quantile Regression implementation for sci-kit learn.
 
     Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.
@@ -134,6 +134,7 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
             self._get_num_threads(),  # num_threads
             self.seed,
         )
+        self._ensure_ptr()
         return self
 
     def predict(self, X):
@@ -147,9 +148,10 @@ class GRFQuantileRegressor(GRFValidationMixin, RegressorMixin, BaseEstimator):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
+        self._ensure_ptr()
 
         result = grf.quantile_predict(
-            self.grf_forest_,
+            self.grf_forest_cpp_,
             self.quantiles,
             np.asfortranarray(self.train_.astype("float64")),
             np.asfortranarray([[]]),  # sparse_train_matrix

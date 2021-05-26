@@ -29,9 +29,15 @@ class TestGRFSurvival:
         assert len(pred) == lung_X.shape[0]
 
     def test_serialize(self, lung_X, lung_y):
-        tf = tempfile.TemporaryFile()
         gfs = GRFSurvival()
+        # not fitted
+        tf = tempfile.TemporaryFile()
+        pickle.dump(gfs, tf)
+        tf.seek(0)
+        gfs = pickle.load(tf)
         gfs.fit(lung_X, lung_y)
+        # fitted
+        tf = tempfile.TemporaryFile()
         pickle.dump(gfs, tf)
         tf.seek(0)
         new_gfs = pickle.load(tf)

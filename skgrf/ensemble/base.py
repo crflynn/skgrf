@@ -1,7 +1,37 @@
 import numpy as np
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted
+
+from skgrf.ensemble import grf
 
 
-class GRFValidationMixin:
+class GRFMixin:
+    def __getstate__(self):
+        """Serialize.
+
+        The GRFForest pointer ref is not serializable, so
+        we must pop it off of state here.
+        """
+        self.__dict__.pop("grf_forest_cpp_", None)
+        return self.__dict__
+
+    def __setstate__(self, state):
+        """Deserialize.
+
+        Unpickle and ensure that we deserialize the forest
+        to a C++ pointer, so that predictions are fast.
+        """
+        self.__dict__ = state
+        try:
+            check_is_fitted(self)
+            self._ensure_ptr()
+        except NotFittedError:
+            pass
+
+    def _ensure_ptr(self):
+        if hasattr(self, "grf_forest_") and not hasattr(self, "grf_forest_cpp_"):
+            self.grf_forest_cpp_ = grf.GRFForest(self.grf_forest_)
+
     def _check_cluster(self, X, cluster):
         """Validate cluster definitions against training data."""
         if cluster is None:
