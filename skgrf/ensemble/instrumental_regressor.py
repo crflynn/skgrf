@@ -2,11 +2,13 @@ import logging
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
+from skgrf.tree.instrumental_regressor import GRFTreeInstrumentalRegressor
 from skgrf.utils.validation import check_sample_weight
 
 logger = logging.getLogger(__name__)
@@ -87,6 +89,19 @@ class GRFInstrumentalRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.stabilize_splits = stabilize_splits
         self.n_jobs = n_jobs
         self.seed = seed
+
+    @property
+    def estimators_(self):
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute 'estimators_'"
+            ) from None
+        return [
+            GRFTreeInstrumentalRegressor.from_forest(self, idx=idx)
+            for idx in range(self.n_estimators)
+        ]
 
     def fit(
         self,

@@ -7,6 +7,7 @@ from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFLocalLinearRegressor
+from skgrf.tree import GRFTreeLocalLinearRegressor
 
 
 class TestGRFLocalLinearRegressor:
@@ -123,3 +124,13 @@ class TestGRFLocalLinearRegressor:
 
     def test_check_estimator(self):
         check_estimator(GRFLocalLinearRegressor())
+
+    def test_estimators_(self, boston_X, boston_y):
+        glr = GRFLocalLinearRegressor(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = glr.estimators_
+        glr.fit(boston_X, boston_y)
+        estimators = glr.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeLocalLinearRegressor)
+        check_is_fitted(estimators[0])

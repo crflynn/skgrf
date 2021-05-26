@@ -24,8 +24,7 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         ``True``, the number of samples drawn from each cluster is equal to the size of
         the smallest cluster. If ``True``, sample weights should not be passed on
         fitting.
-    :param float sample_fraction: Fraction of samples used in each tree. If
-        ``ci_group_size`` > 1, the max allowed fraction is 0.5
+    :param float sample_fraction: Fraction of samples used in each tree.
     :param int mtry: The number of features to split on each node. The default is
         ``sqrt(p) + 20`` where ``p`` is the number of features.
     :param int min_node_size: The minimum number of observations in each tree leaf.

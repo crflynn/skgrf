@@ -1,11 +1,13 @@
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
+from skgrf.tree import GRFTreeLocalLinearRegressor
 from skgrf.utils.validation import check_sample_weight
 
 
@@ -99,6 +101,19 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.seed = seed
 
+    @property
+    def estimators_(self):
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute 'estimators_'"
+            ) from None
+        return [
+            GRFTreeLocalLinearRegressor.from_forest(self, idx=idx)
+            for idx in range(self.n_estimators)
+        ]
+
     def fit(self, X, y, sample_weight=None, cluster=None):
         """Fit the grf forest using training data.
 
@@ -127,6 +142,8 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
 
         if self.ll_split_variables is None:
             self.ll_split_variables_ = list(range(X.shape[1]))
+        else:
+            self.ll_split_variables_ = self.ll_split_variables
 
         # calculate overall beta
         if self.ll_split_cutoff is None:

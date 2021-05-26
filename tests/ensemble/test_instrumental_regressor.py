@@ -6,6 +6,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFInstrumentalRegressor
+from skgrf.tree import GRFTreeInstrumentalRegressor
 
 
 class TestGRFInstrumentalRegressor:
@@ -137,3 +138,13 @@ class TestGRFInstrumentalRegressor:
     # cant use this because of extra required fit params
     # def test_check_estimator(self):
     #     check_estimator(GRFInstrumentalRegressor())
+
+    def test_estimators_(self, causal_X, causal_y, causal_w):
+        gfi = GRFInstrumentalRegressor(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = gfi.estimators_
+        gfi.fit(causal_X, causal_y, causal_w, causal_w)
+        estimators = gfi.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeInstrumentalRegressor)
+        check_is_fitted(estimators[0])
