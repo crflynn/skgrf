@@ -7,7 +7,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble.survival import GRFSurvival
-from skgrf.tree import GRFTreeSurvival
+from skgrf.tree.survival import GRFTreeSurvival
 
 
 class TestGRFTreeSurvival:

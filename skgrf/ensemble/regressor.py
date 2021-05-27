@@ -38,6 +38,7 @@ class GRFRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
+    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.

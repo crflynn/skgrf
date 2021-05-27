@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+import typing as t
 
 import logging
 import numpy as np
@@ -11,7 +11,7 @@ from skgrf import grf
 from skgrf.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
-if TYPE_CHECKING:  # pragma: no cover
+if t.TYPE_CHECKING:  # pragma: no cover
     from skgrf.ensemble import GRFInstrumentalRegressor
 
 logger = logging.getLogger(__name__)

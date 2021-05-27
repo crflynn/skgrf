@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+import typing as t
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -10,7 +10,8 @@ from skgrf import grf
 from skgrf.base import GRFMixin
 from skgrf.utils.validation import check_sample_weight
 
-if TYPE_CHECKING:  # pragma: no cover
+if t.TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble import GRFBoostedRegressor
     from skgrf.ensemble import GRFRegressor
 
 
@@ -72,7 +73,7 @@ class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.seed = seed
 
     @classmethod
-    def from_forest(cls, forest: "GRFRegressor", idx: int):
+    def from_forest(cls, forest: "t.Union[GRFRegressor, GRFBoostedRegressor", idx: int):
         """Extract a tree from a forest.
 
         :param GRFRegressor forest: A trained GRFRegressor instance

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+import typing as t
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 from skgrf import grf
 from skgrf.base import GRFMixin
 
-if TYPE_CHECKING:  # pragma: no cover
+if t.TYPE_CHECKING:  # pragma: no cover
     from skgrf.ensemble import GRFQuantileRegressor
 
 

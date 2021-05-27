@@ -1,3 +1,4 @@
+from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
 from skgrf.tree.instrumental_regressor import GRFTreeInstrumentalRegressor
 from skgrf.tree.local_linear_regressor import GRFTreeLocalLinearRegressor
 from skgrf.tree.quantile_regressor import GRFTreeQuantileRegressor

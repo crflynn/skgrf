@@ -5,7 +5,8 @@ from sklearn import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFCausalRegressor
+from skgrf.ensemble.causal_regressor import GRFCausalRegressor
+from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
 
 
 class TestGRFCausalRegressor:
@@ -152,3 +153,13 @@ class TestGRFCausalRegressor:
     # cant use this because of extra required fit params
     # def test_check_estimator(self):
     #     check_estimator(GRFCausalRegressor())
+
+    def test_estimators_(self, causal_X, causal_y, causal_w):
+        gcr = GRFCausalRegressor(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = gcr.estimators_
+        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        estimators = gcr.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeCausalRegressor)
+        check_is_fitted(estimators[0])

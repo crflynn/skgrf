@@ -38,6 +38,9 @@ The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs
     ensemble/forest_quantile_regressor
     ensemble/forest_regressor
     ensemble/forest_survival
+    tree/tree_causal_regressor
+    tree/tree_instrumental_regressor
+    tree/tree_local_linear_regressor
     tree/tree_quantile_regressor
     tree/tree_regressor
     tree/tree_survival

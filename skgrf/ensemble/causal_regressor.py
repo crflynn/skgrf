@@ -1,4 +1,6 @@
 import logging
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
 from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
@@ -37,6 +39,7 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
+    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -84,6 +87,22 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
             seed=seed,
         )
         self.orthogonal_boosting = orthogonal_boosting
+
+    @property
+    def estimators_(self):
+        # avoiding circular import
+        from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
+
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute 'estimators_'"
+            ) from None
+        return [
+            GRFTreeCausalRegressor.from_forest(self, idx=idx)
+            for idx in range(self.n_estimators)
+        ]
 
     # noinspection PyMethodOverriding
     def fit(
