@@ -1,20 +1,18 @@
 import typing as t
 
 import numpy as np
-from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
-from skgrf.base import GRFMixin
 from skgrf.tree.base import BaseGRFTree
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from skgrf.ensemble.quantile_regressor import GRFQuantileRegressor
 
 
-class GRFTreeQuantileRegressor(BaseGRFTree, GRFMixin, RegressorMixin, BaseEstimator):
+class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
     r"""GRF Tree Quantile Regression implementation for sci-kit learn.
 
     Provides a sklearn tree quantile regressor interface to the GRF C++ library using

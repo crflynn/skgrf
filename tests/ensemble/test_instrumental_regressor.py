@@ -152,3 +152,15 @@ class TestGRFInstrumentalRegressor:
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeInstrumentalRegressor)
         check_is_fitted(estimators[0])
+
+    def test_get_split_frequencies(self, causal_X, causal_y, causal_w):
+        forest = GRFInstrumentalRegressor()
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
+        sf = forest.get_split_frequencies()
+        assert sf.shape[1] == causal_X.shape[1]
+
+    def test_get_feature_importances(self, causal_X, causal_y, causal_w):
+        forest = GRFInstrumentalRegressor()
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
+        fi = forest.get_feature_importances()
+        assert len(fi) == causal_X.shape[1]

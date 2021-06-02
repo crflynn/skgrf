@@ -133,3 +133,15 @@ class TestGRFQuantileRegressor:
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeQuantileRegressor)
         check_is_fitted(estimators[0])
+
+    def test_get_split_frequencies(self, boston_X, boston_y):
+        forest = GRFQuantileRegressor(quantiles=[0.2])
+        forest.fit(boston_X, boston_y)
+        sf = forest.get_split_frequencies()
+        assert sf.shape[1] == boston_X.shape[1]
+
+    def test_get_feature_importances(self, boston_X, boston_y):
+        forest = GRFQuantileRegressor(quantiles=[0.2])
+        forest.fit(boston_X, boston_y)
+        fi = forest.get_feature_importances()
+        assert len(fi) == boston_X.shape[1]

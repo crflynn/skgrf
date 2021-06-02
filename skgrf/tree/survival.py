@@ -1,12 +1,10 @@
 import typing as t
 
 import numpy as np
-from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
-from skgrf.base import GRFMixin
 from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
@@ -14,7 +12,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from skgrf.ensemble.survival import GRFSurvival
 
 
-class GRFTreeSurvival(BaseGRFTree, GRFMixin, BaseEstimator):
+class GRFTreeSurvival(BaseGRFTree):
     r"""GRF Tree Survival implementation for sci-kit learn.
 
     Provides a sklearn tree survival interface to the GRF C++ library using Cython.

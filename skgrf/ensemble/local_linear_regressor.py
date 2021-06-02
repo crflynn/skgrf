@@ -1,17 +1,16 @@
 import numpy as np
-from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
-from skgrf.base import GRFMixin
+from skgrf.ensemble.base import BaseGRFForest
 from skgrf.tree.local_linear_regressor import GRFTreeLocalLinearRegressor
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
+class GRFLocalLinearRegressor(BaseGRFForest, RegressorMixin):
     r"""GRF Local Linear Regression implementation for sci-kit learn.
 
     Provides a sklearn regressor interface to the GRF C++ library using Cython.

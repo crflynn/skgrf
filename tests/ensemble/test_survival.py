@@ -132,3 +132,15 @@ class TestGRFSurvival:
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeSurvival)
         check_is_fitted(estimators[0])
+
+    def test_get_split_frequencies(self, lung_X, lung_y):
+        forest = GRFSurvival()
+        forest.fit(lung_X, lung_y)
+        sf = forest.get_split_frequencies()
+        assert sf.shape[1] == lung_X.shape[1]
+
+    def test_get_feature_importances(self, lung_X, lung_y):
+        forest = GRFSurvival()
+        forest.fit(lung_X, lung_y)
+        fi = forest.get_feature_importances()
+        assert len(fi) == lung_X.shape[1]

@@ -1,13 +1,11 @@
 import typing as t
 
 import numpy as np
-from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
-from skgrf.base import GRFMixin
 from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
@@ -15,7 +13,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from skgrf.ensemble.local_linear_regressor import GRFLocalLinearRegressor
 
 
-class GRFTreeLocalLinearRegressor(BaseGRFTree, GRFMixin, RegressorMixin, BaseEstimator):
+class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
     r"""GRF Tree Local Linear Regression implementation for sci-kit learn.
 
     Provides a sklearn tree regressor interface to the GRF C++ library using Cython.
