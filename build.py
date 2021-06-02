@@ -12,12 +12,9 @@ top = os.path.dirname(os.path.abspath(__file__))
 # requires running buildpre.py to find src in this location
 include_dirs = [
     top,
-    os.path.join(top, "skgrf", "ensemble"),
-    *[d[0] for d in os.walk(os.path.join(top, "skgrf", "ensemble", "grf", "src"))],
-    *[
-        d[0]
-        for d in os.walk(os.path.join(top, "skgrf", "ensemble", "grf", "third_party"))
-    ],
+    os.path.join(top, "skgrf"),
+    *[d[0] for d in os.walk(os.path.join(top, "skgrf", "grf", "src"))],
+    *[d[0] for d in os.walk(os.path.join(top, "skgrf", "grf", "third_party"))],
     np.get_include(),
 ]
 

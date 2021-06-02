@@ -1,30 +1,25 @@
+import typing as t
+
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
+from skgrf.tree.base import BaseGRFTree
+from skgrf.utils.validation import check_sample_weight
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble.regressor import GRFRegressor
 
 
-class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
-    r"""GRF Quantile Regression implementation for sci-kit learn.
+class GRFTreeRegressor(BaseGRFTree, GRFMixin, RegressorMixin, BaseEstimator):
+    r"""GRF Tree Regression implementation for sci-kit learn.
 
-    Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.
+    Provides a sklearn tree regressor interface to the GRF C++ library using Cython.
 
-    .. warning::
-
-        Because the training dataset is required for prediction, the training dataset
-        is recorded onto the estimator instance. This means that serializing this
-        estimator will result in a file at least as large as the serialized training
-        dataset.
-
-    :param int n_estimators: The number of tree regressors to train
-    :param list(float) quantiles: A list of quantiles on which to predict.
-    :param bool regression_splitting: Use regression splits instead of splitting
-        specially for quantiles.
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
@@ -40,10 +35,8 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
-    :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -53,14 +46,10 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     :ivar list classes\_: The class labels determined from the fit input ``cluster``.
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``cluster``.
-    :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
     """
 
     def __init__(
         self,
-        n_estimators=100,
-        quantiles=None,
-        regression_splitting=False,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -69,13 +58,9 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
-        imbalance_penalty=0,
-        n_jobs=-1,
+        imbalance_penalty=0.0,
         seed=42,
     ):
-        self.n_estimators = n_estimators
-        self.quantiles = quantiles
-        self.regression_splitting = regression_splitting
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
         self.mtry = mtry
@@ -85,100 +70,135 @@ class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
-        self.n_jobs = n_jobs
         self.seed = seed
 
-    @property
-    def estimators_(self):
-        # avoiding circular import
-        from skgrf.tree.quantile_regressor import GRFTreeQuantileRegressor
+    @classmethod
+    def from_forest(cls, forest: "t.Union[GRFRegressor, GRFBoostedRegressor", idx: int):
+        """Extract a tree from a forest.
 
-        try:
-            check_is_fitted(self)
-        except NotFittedError:
-            raise AttributeError(
-                f"{self.__class__.__name__} object has no attribute 'estimators_'"
-            ) from None
-        return [
-            GRFTreeQuantileRegressor.from_forest(self, idx=idx)
-            for idx in range(self.n_estimators)
-        ]
+        :param GRFRegressor forest: A trained GRFRegressor instance
+        :param int idx: The tree index from the forest to extract.
+        """
+        # Even though we have a tree object, we keep the exact same dictionary structure
+        # that exists in the forests, so that we can reuse the Cython entrypoints.
+        # We also copy over some instance attributes from the trained forest.
 
-    def fit(self, X, y, cluster=None):
-        """Fit the grf quantile forest using training data.
+        # params
+        instance = cls(
+            equalize_cluster_weights=forest.equalize_cluster_weights,
+            sample_fraction=forest.sample_fraction,
+            mtry=forest.mtry,
+            min_node_size=forest.min_node_size,
+            honesty=forest.honesty,
+            honesty_fraction=forest.honesty_fraction,
+            honesty_prune_leaves=forest.honesty_prune_leaves,
+            alpha=forest.alpha,
+            imbalance_penalty=forest.imbalance_penalty,
+            seed=forest.seed,
+        )
+        # forest
+        grf_forest = {}
+        for k, v in forest.grf_forest_.items():
+            if isinstance(v, list):
+                grf_forest[k] = [forest.grf_forest_[k][idx]]
+            else:
+                grf_forest[k] = v
+        grf_forest["_num_trees"] = 1
+        instance.grf_forest_ = grf_forest
+        instance._ensure_ptr()
+        # vars
+        instance.outcome_index_ = forest.outcome_index_
+        instance.n_features_in_ = forest.n_features_in_
+        instance.classes_ = forest.classes_
+        instance.n_classes_ = forest.n_classes_
+        instance.samples_per_cluster_ = forest.samples_per_cluster_
+        instance.mtry_ = forest.mtry_
+        instance.sample_weight_index_ = forest.sample_weight_index_
+        return instance
+
+    def fit(
+        self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False
+    ):
+        """Fit the grf forest using training data.
 
         :param array2d X: training input features
         :param array1d y: training input targets
+        :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        if self.quantiles is None:
-            raise ValueError("quantiles must be set")
-
         X, y = self._validate_data(X, y)
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
 
-        self._check_sample_fraction()
+        self._check_sample_fraction(oob=compute_oob_predictions)
         self._check_alpha()
 
-        cluster = self._check_cluster(X=X, cluster=cluster)
+        sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
+
+        cluster_ = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
-            cluster=cluster, sample_weight=None
+            cluster=cluster_, sample_weight=sample_weight
         )
         self.mtry_ = self._check_mtry(X=X)
 
-        train_matrix = self._create_train_matrices(X, y)
-        self.train_ = train_matrix
+        train_matrix = self._create_train_matrices(
+            X=X, y=y, sample_weight=sample_weight
+        )
 
-        self.grf_forest_ = grf.quantile_train(
-            self.quantiles,
-            self.regression_splitting,
+        self.grf_forest_ = grf.regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),  # sparse_train_matrix
+            np.asfortranarray([[]]),
             self.outcome_index_,
+            self.sample_weight_index_,
+            use_sample_weight,
             self.mtry_,
-            self.n_estimators,  # num_trees
+            1,  # num_trees
             self.min_node_size,
             self.sample_fraction,
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
-            1,  # ci_group_size,
+            1,  # ci_group_size
             self.alpha,
             self.imbalance_penalty,
-            cluster,
+            cluster_,
             self.samples_per_cluster_,
-            False,  # compute_oob_predictions,
-            self._get_num_threads(),  # num_threads
+            compute_oob_predictions,
+            1,  # num_threads
             self.seed,
         )
         self._ensure_ptr()
         return self
 
     def predict(self, X):
-        """Predict quantile regression target(s) for X.
+        """Predict regression target for X.
 
         :param array2d X: prediction input features
         """
         return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
 
-    def _predict(self, X):
+    def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 
-        result = grf.quantile_predict(
+        result = grf.regression_predict(
             self.grf_forest_cpp_,
-            self.quantiles,
-            np.asfortranarray(self.train_.astype("float64")),
+            np.asfortranarray([[]]),  # train_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
-            self._get_num_threads(),  # num_threads
+            1,  # num_threads
+            estimate_variance,
         )
         return result
 
     def _more_tags(self):
-        return {"requires_y": True, "poor_score": True}
+        return {
+            "requires_y": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
+            },
+        }

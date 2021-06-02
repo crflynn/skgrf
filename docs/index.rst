@@ -28,17 +28,22 @@ skgrf
 The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs/grf/releases/tag/v1.2.0>`__ of ``grf``. Refer to the `GRF docs <https://grf-labs.github.io/grf/REFERENCE.html>`__ for detailed references.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :caption: Contents:
+    :maxdepth: 2
 
-   grf_boosted_regressor
-   grf_causal_regressor
-   grf_instrumental_regressor
-   grf_local_linear_regressor
-   grf_quantile_regressor
-   grf_regressor
-   grf_survival
-
+    ensemble/forest_boosted_regressor
+    ensemble/forest_causal_regressor
+    ensemble/forest_instrumental_regressor
+    ensemble/forest_local_linear_regressor
+    ensemble/forest_quantile_regressor
+    ensemble/forest_regressor
+    ensemble/forest_survival
+    tree/tree_causal_regressor
+    tree/tree_instrumental_regressor
+    tree/tree_local_linear_regressor
+    tree/tree_quantile_regressor
+    tree/tree_regressor
+    tree/tree_survival
 
 
 Installation

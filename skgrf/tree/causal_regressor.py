@@ -1,19 +1,20 @@
-import logging
-from sklearn.exceptions import NotFittedError
-from sklearn.utils.validation import check_is_fitted
+import typing as t
 
-from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
-from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
+import logging
+
+from skgrf.tree.instrumental_regressor import GRFTreeInstrumentalRegressor
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble import GRFCausalRegressor
 
 logger = logging.getLogger(__name__)
 
 
-class GRFCausalRegressor(GRFInstrumentalRegressor):
-    r"""GRF Causal regression implementation for sci-kit learn.
+class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
+    r"""GRF Tree Causal regression implementation for sci-kit learn.
 
-    Provides a sklearn causal regressor to the GRF C++ library using Cython.
+    Provides a sklearn tree causal regressor to the GRF C++ library using Cython.
 
-    :param int n_estimators: The number of tree regressors to train
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
@@ -30,16 +31,14 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
-    :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
-        is required to provide confidence intervals.
     :param bool orthogonal_boosting: When ``y_hat`` or ``w_hat`` are ``None``, they
         are estimated using boosted regression forests. (Not yet implemented)
     :param bool stabilize_splits: Whether or not the instrument should be taken into
         account when determining the imbalance of a split.
-    :param int n_jobs: The number of threads. Default is number of CPU cores.
+    :param int n_jobs: The number of threads. Default is number of CPU cores. Only used
+        for target estimation.
     :param int seed: Random seed value.
 
-    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -53,7 +52,6 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
 
     def __init__(
         self,
-        n_estimators=2000,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -63,14 +61,12 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         honesty_prune_leaves=True,
         alpha=0.05,
         imbalance_penalty=0,
-        ci_group_size=2,
         stabilize_splits=True,
         orthogonal_boosting=False,
         n_jobs=-1,
         seed=42,
     ):
         super().__init__(
-            n_estimators=n_estimators,
             equalize_cluster_weights=equalize_cluster_weights,
             sample_fraction=sample_fraction,
             mtry=mtry,
@@ -80,7 +76,6 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
             honesty_prune_leaves=honesty_prune_leaves,
             alpha=alpha,
             imbalance_penalty=imbalance_penalty,
-            ci_group_size=ci_group_size,
             reduced_form_weight=0,
             stabilize_splits=stabilize_splits,
             n_jobs=n_jobs,
@@ -88,21 +83,54 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         )
         self.orthogonal_boosting = orthogonal_boosting
 
-    @property
-    def estimators_(self):
-        # avoiding circular import
-        from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
+    @classmethod
+    def from_forest(cls, forest: "GRFCausalRegressor", idx: int):
+        """Extract a tree from a forest.
 
-        try:
-            check_is_fitted(self)
-        except NotFittedError:
-            raise AttributeError(
-                f"{self.__class__.__name__} object has no attribute 'estimators_'"
-            ) from None
-        return [
-            GRFTreeCausalRegressor.from_forest(self, idx=idx)
-            for idx in range(self.n_estimators)
-        ]
+        :param GRFLocalLinearRegressor forest: A trained GRFLocalLinearRegressor
+            instance
+        :param int idx: The tree index from the forest to extract.
+        """
+        # Even though we have a tree object, we keep the exact same dictionary structure
+        # that exists in the forests, so that we can reuse the Cython entrypoints.
+        # We also copy over some instance attributes from the trained forest.
+
+        # params
+        instance = cls(
+            equalize_cluster_weights=forest.equalize_cluster_weights,
+            sample_fraction=forest.sample_fraction,
+            mtry=forest.mtry,
+            min_node_size=forest.min_node_size,
+            honesty=forest.honesty,
+            honesty_fraction=forest.honesty_fraction,
+            honesty_prune_leaves=forest.honesty_prune_leaves,
+            alpha=forest.alpha,
+            imbalance_penalty=forest.imbalance_penalty,
+            stabilize_splits=forest.stabilize_splits,
+            n_jobs=forest.n_jobs,
+            seed=forest.seed,
+        )
+        # forest
+        grf_forest = {}
+        for k, v in forest.grf_forest_.items():
+            if isinstance(v, list):
+                grf_forest[k] = [forest.grf_forest_[k][idx]]
+            else:
+                grf_forest[k] = v
+        grf_forest["_num_trees"] = 1
+        instance.grf_forest_ = grf_forest
+        instance._ensure_ptr()
+        # vars
+        instance.outcome_index_ = forest.outcome_index_
+        instance.treatment_index_ = forest.treatment_index_
+        instance.instrument_index_ = forest.instrument_index_
+        instance.n_features_in_ = forest.n_features_in_
+        instance.classes_ = forest.classes_
+        instance.n_classes_ = forest.n_classes_
+        instance.samples_per_cluster_ = forest.samples_per_cluster_
+        instance.mtry_ = forest.mtry_
+        instance.sample_weight_index_ = forest.sample_weight_index_
+        return instance
 
     # noinspection PyMethodOverriding
     def fit(
@@ -125,11 +153,14 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
+        # avoiding circular import
+        from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
+
         X, y = self._validate_data(X, y)
         self._check_num_samples(X)
 
         boost_params = {
-            "n_estimators": max(50, int(self.n_estimators / 4)),
+            "n_estimators": 500,
             "equalize_cluster_weights": self.equalize_cluster_weights,
             "sample_fraction": self.sample_fraction,
             "mtry": self.mtry,

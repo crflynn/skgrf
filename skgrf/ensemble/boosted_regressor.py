@@ -11,8 +11,8 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFMixin
+from skgrf import grf
+from skgrf.base import GRFMixin
 from skgrf.ensemble.regressor import GRFRegressor
 from skgrf.utils.validation import check_sample_weight
 

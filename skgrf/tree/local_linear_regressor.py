@@ -1,20 +1,24 @@
+import typing as t
+
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
-from skgrf.tree.local_linear_regressor import GRFTreeLocalLinearRegressor
+from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble.local_linear_regressor import GRFLocalLinearRegressor
 
-class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
-    r"""GRF Local Linear Regression implementation for sci-kit learn.
 
-    Provides a sklearn regressor interface to the GRF C++ library using Cython.
+class GRFTreeLocalLinearRegressor(BaseGRFTree, GRFMixin, RegressorMixin, BaseEstimator):
+    r"""GRF Tree Local Linear Regression implementation for sci-kit learn.
+
+    Provides a sklearn tree regressor interface to the GRF C++ library using Cython.
 
     .. warning::
 
@@ -23,7 +27,6 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         estimator will result in a file at least as large as the serialized training
         dataset.
 
-    :param int n_estimators: The number of tree regressors to train
     :param bool ll_split_weight_penalty: Use a covariance ridge penalty if using local
         linear splits.
     :param float ll_split_lambda: Ridge penalty for splitting.
@@ -36,8 +39,7 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         ``True``, the number of samples drawn from each cluster is equal to the size of
         the smallest cluster. If ``True``, sample weights should not be passed on
         fitting.
-    :param float sample_fraction: Fraction of samples used in each tree. If
-        ``ci_group_size`` > 1, the max allowed fraction is 0.5
+    :param float sample_fraction: Fraction of samples used in each tree.
     :param int mtry: The number of features to split on each node. The default is
         ``sqrt(p) + 20`` where ``p`` is the number of features.
     :param int min_node_size: The minimum number of observations in each tree leaf.
@@ -47,12 +49,8 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
-    :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
-        is required to provide confidence intervals.
-    :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -66,7 +64,6 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
 
     def __init__(
         self,
-        n_estimators=100,
         ll_split_weight_penalty=False,
         ll_split_lambda=0.1,
         ll_split_variables=None,
@@ -80,11 +77,8 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_prune_leaves=True,
         alpha=0.05,
         imbalance_penalty=0,
-        ci_group_size=2,
-        n_jobs=-1,
         seed=42,
     ):
-        self.n_estimators = n_estimators
         self.ll_split_weight_penalty = ll_split_weight_penalty
         self.ll_split_lambda = ll_split_lambda
         self.ll_split_variables = ll_split_variables
@@ -98,22 +92,61 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
-        self.ci_group_size = ci_group_size
-        self.n_jobs = n_jobs
         self.seed = seed
 
-    @property
-    def estimators_(self):
-        try:
-            check_is_fitted(self)
-        except NotFittedError:
-            raise AttributeError(
-                f"{self.__class__.__name__} object has no attribute 'estimators_'"
-            ) from None
-        return [
-            GRFTreeLocalLinearRegressor.from_forest(self, idx=idx)
-            for idx in range(self.n_estimators)
-        ]
+    @classmethod
+    def from_forest(cls, forest: "GRFLocalLinearRegressor", idx: int):
+        """Extract a tree from a forest.
+
+        :param GRFLocalLinearRegressor forest: A trained GRFLocalLinearRegressor
+            instance
+        :param int idx: The tree index from the forest to extract.
+        """
+        # Even though we have a tree object, we keep the exact same dictionary structure
+        # that exists in the forests, so that we can reuse the Cython entrypoints.
+        # We also copy over some instance attributes from the trained forest.
+
+        # params
+        instance = cls(
+            ll_split_weight_penalty=forest.ll_split_weight_penalty,
+            ll_split_lambda=forest.ll_split_lambda,
+            ll_split_variables=forest.ll_split_variables,
+            ll_split_cutoff=forest.ll_split_cutoff,
+            equalize_cluster_weights=forest.equalize_cluster_weights,
+            sample_fraction=forest.sample_fraction,
+            mtry=forest.mtry,
+            min_node_size=forest.min_node_size,
+            honesty=forest.honesty,
+            honesty_fraction=forest.honesty_fraction,
+            honesty_prune_leaves=forest.honesty_prune_leaves,
+            alpha=forest.alpha,
+            imbalance_penalty=forest.imbalance_penalty,
+            seed=forest.seed,
+        )
+        # forest
+        grf_forest = {}
+        for k, v in forest.grf_forest_.items():
+            if isinstance(v, list):
+                grf_forest[k] = [forest.grf_forest_[k][idx]]
+            else:
+                grf_forest[k] = v
+        grf_forest["_num_trees"] = 1
+        instance.grf_forest_ = grf_forest
+        instance._ensure_ptr()
+        # vars
+        instance.outcome_index_ = forest.outcome_index_
+        instance.n_features_in_ = forest.n_features_in_
+        instance.classes_ = forest.classes_
+        instance.n_classes_ = forest.n_classes_
+        instance.samples_per_cluster_ = forest.samples_per_cluster_
+        instance.mtry_ = forest.mtry_
+        instance.sample_weight_index_ = forest.sample_weight_index_
+        instance.ll_split_variables_ = forest.ll_split_variables_
+        instance.ll_split_cutoff_ = forest.ll_split_cutoff_
+        instance.overall_beta_ = forest.overall_beta_
+        # data
+        instance.train_ = forest.train_
+        return instance
 
     def fit(self, X, y, sample_weight=None, cluster=None):
         """Fit the grf forest using training data.
@@ -178,18 +211,18 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             self.overall_beta_,
             use_sample_weight,
             self.mtry_,
-            self.n_estimators,  # num_trees
+            1,  # num_trees
             self.min_node_size,
             self.sample_fraction,
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
-            self.ci_group_size,
+            1,
             self.alpha,
             self.imbalance_penalty,
             cluster,
             self.samples_per_cluster_,
-            self._get_num_threads(),  # num_threads,
+            1,  # num_threads,
             self.seed,
         )
         self._ensure_ptr()
@@ -218,7 +251,7 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             [self.ll_split_lambda],  # ll_lambda
             self.ll_split_weight_penalty,  # ll_weight_penalty
             self.ll_split_variables_,  # linear_correction_variables
-            self._get_num_threads(),
+            1,  # num_threads
             estimate_variance,  # estimate variance
         )
         return result

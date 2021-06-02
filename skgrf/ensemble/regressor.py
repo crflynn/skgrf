@@ -1,11 +1,13 @@
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import grf
-from skgrf.ensemble.base import GRFMixin
+from skgrf import grf
+from skgrf.base import GRFMixin
+from skgrf.tree.regressor import GRFTreeRegressor
 from skgrf.utils.validation import check_sample_weight
 
 
@@ -36,6 +38,7 @@ class GRFRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
+    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
@@ -58,7 +61,7 @@ class GRFRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
-        imbalance_penalty=0,
+        imbalance_penalty=0.0,
         ci_group_size=2,
         n_jobs=-1,
         seed=42,
@@ -76,6 +79,19 @@ class GRFRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.ci_group_size = ci_group_size
         self.n_jobs = n_jobs
         self.seed = seed
+
+    @property
+    def estimators_(self):
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute 'estimators_'"
+            ) from None
+        return [
+            GRFTreeRegressor.from_forest(self, idx=idx)
+            for idx in range(self.n_estimators)
+        ]
 
     def fit(
         self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False

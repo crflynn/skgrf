@@ -1,20 +1,23 @@
+import typing as t
+
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.base import RegressorMixin
-from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
-from skgrf.tree.local_linear_regressor import GRFTreeLocalLinearRegressor
+from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from skgrf.ensemble.survival import GRFSurvival
 
-class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
-    r"""GRF Local Linear Regression implementation for sci-kit learn.
 
-    Provides a sklearn regressor interface to the GRF C++ library using Cython.
+class GRFTreeSurvival(BaseGRFTree, GRFMixin, BaseEstimator):
+    r"""GRF Tree Survival implementation for sci-kit learn.
+
+    Provides a sklearn tree survival interface to the GRF C++ library using Cython.
 
     .. warning::
 
@@ -23,21 +26,12 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         estimator will result in a file at least as large as the serialized training
         dataset.
 
-    :param int n_estimators: The number of tree regressors to train
-    :param bool ll_split_weight_penalty: Use a covariance ridge penalty if using local
-        linear splits.
-    :param float ll_split_lambda: Ridge penalty for splitting.
-    :param list(int) ll_split_variables: Linear correction variables for splitting. Uses
-        all variables if not specified.
-    :param float ll_split_cutoff: Leaf size after which the overall beta is used. If
-        unspecified, default is sqrt of num samples. Passing 0 means no cutoff.
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
         the smallest cluster. If ``True``, sample weights should not be passed on
         fitting.
-    :param float sample_fraction: Fraction of samples used in each tree. If
-        ``ci_group_size`` > 1, the max allowed fraction is 0.5
+    :param float sample_fraction: Fraction of samples used in each tree.
     :param int mtry: The number of features to split on each node. The default is
         ``sqrt(p) + 20`` where ``p`` is the number of features.
     :param int min_node_size: The minimum number of observations in each tree leaf.
@@ -46,31 +40,21 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     :param bool honesty_prune_leaves: Prune estimation sample tree such that no leaves
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
-    :param float imbalance_penalty: Penalty applied to imbalanced splits.
-    :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
-        is required to provide confidence intervals.
-    :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
-    :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
         ``X``.
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
-    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
-    :ivar int n_classes\_: The number of unique class labels from the fit input
-        ``cluster``.
-    :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
+    :ivar int censor_index\_: The index of the grf train matrix holding the censoring.
+    :ivar array1d failure_times_\_: An array of unique failure times from the training
+        set.
+    :ivar int num_failures_\_: The length of the ``failure_times`` array.
     """
 
     def __init__(
         self,
-        n_estimators=100,
-        ll_split_weight_penalty=False,
-        ll_split_lambda=0.1,
-        ll_split_variables=None,
-        ll_split_cutoff=None,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -79,16 +63,8 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
-        imbalance_penalty=0,
-        ci_group_size=2,
-        n_jobs=-1,
         seed=42,
     ):
-        self.n_estimators = n_estimators
-        self.ll_split_weight_penalty = ll_split_weight_penalty
-        self.ll_split_lambda = ll_split_lambda
-        self.ll_split_variables = ll_split_variables
-        self.ll_split_cutoff = ll_split_cutoff
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
         self.mtry = mtry
@@ -97,129 +73,160 @@ class GRFLocalLinearRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         self.honesty_fraction = honesty_fraction
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
-        self.imbalance_penalty = imbalance_penalty
-        self.ci_group_size = ci_group_size
-        self.n_jobs = n_jobs
         self.seed = seed
 
-    @property
-    def estimators_(self):
-        try:
-            check_is_fitted(self)
-        except NotFittedError:
-            raise AttributeError(
-                f"{self.__class__.__name__} object has no attribute 'estimators_'"
-            ) from None
-        return [
-            GRFTreeLocalLinearRegressor.from_forest(self, idx=idx)
-            for idx in range(self.n_estimators)
-        ]
+    @classmethod
+    def from_forest(cls, forest: "GRFSurvival", idx: int):
+        """Extract a tree from a forest.
+
+        :param GRFSurvival forest: A trained GRFSurvival instance
+        :param int idx: The tree index from the forest to extract.
+        """
+        # Even though we have a tree object, we keep the exact same dictionary structure
+        # that exists in the forests, so that we can reuse the Cython entrypoints.
+        # We also copy over some instance attributes from the trained forest.
+
+        # params
+        instance = cls(
+            equalize_cluster_weights=forest.equalize_cluster_weights,
+            sample_fraction=forest.sample_fraction,
+            mtry=forest.mtry,
+            min_node_size=forest.min_node_size,
+            honesty=forest.honesty,
+            honesty_fraction=forest.honesty_fraction,
+            honesty_prune_leaves=forest.honesty_prune_leaves,
+            alpha=forest.alpha,
+            seed=forest.seed,
+        )
+        # forest
+        grf_forest = {}
+        for k, v in forest.grf_forest_.items():
+            if isinstance(v, list):
+                grf_forest[k] = [forest.grf_forest_[k][idx]]
+            else:
+                grf_forest[k] = v
+        grf_forest["_num_trees"] = 1
+        instance.grf_forest_ = grf_forest
+        instance._ensure_ptr()
+        # vars
+        instance.outcome_index_ = forest.outcome_index_
+        instance.n_features_in_ = forest.n_features_in_
+        instance.classes_ = forest.classes_
+        instance.n_classes_ = forest.n_classes_
+        instance.samples_per_cluster_ = forest.samples_per_cluster_
+        instance.mtry_ = forest.mtry_
+        instance.sample_weight_index_ = forest.sample_weight_index_
+        instance.censor_index_ = forest.censor_index_
+        instance.num_failures_ = forest.num_failures_
+        # data
+        instance.train_ = forest.train_
+        return instance
 
     def fit(self, X, y, sample_weight=None, cluster=None):
-        """Fit the grf forest using training data.
+        """Fit the grf tree using training data.
 
         :param array2d X: training input features
-        :param array1d y: training input targets
+        :param array1d y: training input targets, rows of (bool, float) representing
+            (survival, time)
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = self._validate_data(X, y)
+        X = check_array(X)
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
+        y = np.array(y.tolist())
 
         self._check_sample_fraction()
         self._check_alpha()
-
-        sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
 
         cluster = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
             cluster=cluster, sample_weight=sample_weight
         )
+
+        sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
+
         self.mtry_ = self._check_mtry(X=X)
 
-        train_matrix = self._create_train_matrices(X, y, sample_weight=sample_weight)
+        # Extract the failure times from the training targets
+        self.failure_times_ = np.sort(np.unique(y[:, 1][y[:, 0] == 1]))
+        self.num_failures_ = len(self.failure_times_)
+
+        # Relabel the failure times to consecutive integers
+        y_times_relabeled = np.searchsorted(self.failure_times_, y[:, 1])
+        y_censor = y[:, 0]
+
+        train_matrix = self._create_train_matrices(
+            X, y_times_relabeled, sample_weight=sample_weight, censor=y_censor
+        )
         self.train_ = train_matrix
 
-        if self.ll_split_variables is None:
-            self.ll_split_variables_ = list(range(X.shape[1]))
-        else:
-            self.ll_split_variables_ = self.ll_split_variables
-
-        # calculate overall beta
-        if self.ll_split_cutoff is None:
-            self.ll_split_cutoff_ = int(X.shape[0] ** 0.5)
-        else:
-            self.ll_split_cutoff_ = self.ll_split_cutoff
-
-        if self.ll_split_cutoff_ > 0:
-            J = np.eye(X.shape[1] + 1)
-            J[0, 0] = 0
-            D = np.concatenate([np.ones((X.shape[0], 1)), X], axis=1)
-            self.overall_beta_ = (
-                np.linalg.solve(
-                    D.T @ D + self.ll_split_lambda * J, np.eye(X.shape[1] + 1)
-                )
-                @ D.T
-                @ y
-            )
-        else:
-            self.overall_beta_ = np.empty((0,), dtype=float, order="F")
-
-        self.grf_forest_ = grf.ll_regression_train(
+        self.grf_forest_ = grf.survival_train(
             np.asfortranarray(train_matrix.astype("float64")),
             np.asfortranarray([[]]),
             self.outcome_index_,
+            self.censor_index_,
             self.sample_weight_index_,
-            self.ll_split_lambda,
-            self.ll_split_weight_penalty,
-            self.ll_split_variables_,
-            self.ll_split_cutoff_,
-            self.overall_beta_,
             use_sample_weight,
             self.mtry_,
-            self.n_estimators,  # num_trees
+            1,  # num_trees
             self.min_node_size,
             self.sample_fraction,
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
-            self.ci_group_size,
             self.alpha,
-            self.imbalance_penalty,
+            self.num_failures_,
             cluster,
             self.samples_per_cluster_,
-            self._get_num_threads(),  # num_threads,
+            False,  # compute_oob_predictions,
+            1,  # num_threads,
             self.seed,
         )
         self._ensure_ptr()
         return self
 
+    def predict_cumulative_hazard_function(self, X):
+        """Predict cumulative hazard function.
+
+        :param array2d X: prediction input features
+        """
+        surv = self.predict_survival_function(X)
+        return -np.log(surv)
+
     def predict(self, X):
-        """Predict regression target for X.
+        """Predict risk score.
+
+        :param array2d X: prediction input features
+        """
+        chf = self.predict_cumulative_hazard_function(X)
+        return chf.sum(1)
+
+    def predict_survival_function(self, X):
+        """Predict survival function.
 
         :param array2d X: prediction input features
         """
         return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
 
-    def _predict(self, X, estimate_variance=False):
+    def _predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 
-        result = grf.ll_regression_predict(
+        result = grf.survival_predict(
             self.grf_forest_cpp_,
             np.asfortranarray(self.train_.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
+            self.censor_index_,
+            self.sample_weight_index_,
+            False,  # use_sample_weights
             np.asfortranarray(X.astype("float64")),  # test_matrix
             np.asfortranarray([[]]),  # sparse_test_matrix
-            [self.ll_split_lambda],  # ll_lambda
-            self.ll_split_weight_penalty,  # ll_weight_penalty
-            self.ll_split_variables_,  # linear_correction_variables
-            self._get_num_threads(),
-            estimate_variance,  # estimate variance
+            1,  # num_threads
+            self.num_failures_,
         )
         return result
 

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import grf
+from skgrf import grf
 
 
 class GRFMixin:

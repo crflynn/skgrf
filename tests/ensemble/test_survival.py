@@ -6,7 +6,8 @@ from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFSurvival
+from skgrf.ensemble.survival import GRFSurvival
+from skgrf.tree.survival import GRFTreeSurvival
 
 
 class TestGRFSurvival:
@@ -14,110 +15,120 @@ class TestGRFSurvival:
         _ = GRFSurvival()
 
     def test_fit(self, lung_X, lung_y):
-        gfs = GRFSurvival()
+        forest = GRFSurvival()
         with pytest.raises(NotFittedError):
-            check_is_fitted(gfs)
-        gfs.fit(lung_X, lung_y)
-        check_is_fitted(gfs)
-        assert hasattr(gfs, "grf_forest_")
-        assert hasattr(gfs, "mtry_")
+            check_is_fitted(forest)
+        forest.fit(lung_X, lung_y)
+        check_is_fitted(forest)
+        assert hasattr(forest, "grf_forest_")
+        assert hasattr(forest, "mtry_")
 
     def test_predict(self, lung_X, lung_y):
-        gfs = GRFSurvival()
-        gfs.fit(lung_X, lung_y)
-        pred = gfs.predict(lung_X)
+        forest = GRFSurvival()
+        forest.fit(lung_X, lung_y)
+        pred = forest.predict(lung_X)
         assert len(pred) == lung_X.shape[0]
 
     def test_serialize(self, lung_X, lung_y):
-        gfs = GRFSurvival()
+        forest = GRFSurvival()
         # not fitted
         tf = tempfile.TemporaryFile()
-        pickle.dump(gfs, tf)
+        pickle.dump(forest, tf)
         tf.seek(0)
-        gfs = pickle.load(tf)
-        gfs.fit(lung_X, lung_y)
+        forest = pickle.load(tf)
+        forest.fit(lung_X, lung_y)
         # fitted
         tf = tempfile.TemporaryFile()
-        pickle.dump(gfs, tf)
+        pickle.dump(forest, tf)
         tf.seek(0)
-        new_gfs = pickle.load(tf)
-        pred = new_gfs.predict(lung_X)
+        new_forest = pickle.load(tf)
+        pred = new_forest.predict(lung_X)
         assert len(pred) == lung_X.shape[0]
 
     def test_clone(self, lung_X, lung_y):
-        gfs = GRFSurvival()
-        gfs.fit(lung_X, lung_y)
-        clone(gfs)
+        forest = GRFSurvival()
+        forest.fit(lung_X, lung_y)
+        clone(forest)
 
     def test_equalize_cluster_weights(
         self, lung_X, lung_y, lung_cluster, equalize_cluster_weights
     ):
-        gfs = GRFSurvival(equalize_cluster_weights=equalize_cluster_weights)
-        gfs.fit(lung_X, lung_y, cluster=lung_cluster)
+        forest = GRFSurvival(equalize_cluster_weights=equalize_cluster_weights)
+        forest.fit(lung_X, lung_y, cluster=lung_cluster)
         if equalize_cluster_weights:
-            assert gfs.samples_per_cluster_ == 20
+            assert forest.samples_per_cluster_ == 20
         else:
-            assert gfs.samples_per_cluster_ == lung_y.shape[0] - 20
+            assert forest.samples_per_cluster_ == lung_y.shape[0] - 20
 
         if equalize_cluster_weights:
             with pytest.raises(ValueError):
-                gfs.fit(
+                forest.fit(
                     lung_X,
                     lung_y,
                     cluster=lung_cluster,
                     sample_weight=np.ones(lung_y.shape),
                 )
 
-        gfs.fit(lung_X, lung_y, cluster=None)
-        assert gfs.samples_per_cluster_ == 0
+        forest.fit(lung_X, lung_y, cluster=None)
+        assert forest.samples_per_cluster_ == 0
 
     def test_sample_fraction(self, lung_X, lung_y, sample_fraction):
-        gfs = GRFSurvival(sample_fraction=sample_fraction)
+        forest = GRFSurvival(sample_fraction=sample_fraction)
         if sample_fraction <= 0 or sample_fraction > 1:
             with pytest.raises(ValueError):
-                gfs.fit(lung_X, lung_y)
+                forest.fit(lung_X, lung_y)
         else:
-            gfs.fit(lung_X, lung_y)
+            forest.fit(lung_X, lung_y)
 
     def test_mtry(self, lung_X, lung_y, mtry):
-        gfs = GRFSurvival(mtry=mtry)
-        gfs.fit(lung_X, lung_y)
+        forest = GRFSurvival(mtry=mtry)
+        forest.fit(lung_X, lung_y)
         if mtry is not None:
-            assert gfs.mtry_ == mtry
+            assert forest.mtry_ == mtry
         else:
-            assert gfs.mtry_ == 3
+            assert forest.mtry_ == 3
 
     def test_honesty(self, lung_X, lung_y, honesty):
-        gfs = GRFSurvival(honesty=honesty)
-        gfs.fit(lung_X, lung_y)
+        forest = GRFSurvival(honesty=honesty)
+        forest.fit(lung_X, lung_y)
 
     def test_honesty_fraction(self, lung_X, lung_y, honesty_fraction):
-        gfs = GRFSurvival(
+        forest = GRFSurvival(
             honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True
         )
         if honesty_fraction <= 0 or honesty_fraction >= 1:
             with pytest.raises(RuntimeError):
-                gfs.fit(lung_X, lung_y)
+                forest.fit(lung_X, lung_y)
         else:
-            gfs.fit(lung_X, lung_y)
+            forest.fit(lung_X, lung_y)
 
     def test_honesty_prune_leaves(self, lung_X, lung_y, honesty_prune_leaves):
-        gfs = GRFSurvival(honesty=True, honesty_prune_leaves=honesty_prune_leaves)
-        gfs.fit(lung_X, lung_y)
+        forest = GRFSurvival(honesty=True, honesty_prune_leaves=honesty_prune_leaves)
+        forest.fit(lung_X, lung_y)
 
     def test_alpha(self, lung_X, lung_y, alpha):
-        gfs = GRFSurvival(alpha=alpha)
+        forest = GRFSurvival(alpha=alpha)
         if alpha <= 0 or alpha >= 0.25:
             with pytest.raises(ValueError):
-                gfs.fit(lung_X, lung_y)
+                forest.fit(lung_X, lung_y)
         else:
-            gfs.fit(lung_X, lung_y)
+            forest.fit(lung_X, lung_y)
 
     def test_get_tags(self):
-        rfs = GRFSurvival()
-        tags = rfs._get_tags()
+        forest = GRFSurvival()
+        tags = forest._get_tags()
         assert tags["requires_y"]
 
     # cant use this because of special fit y
     # def test_check_estimator(self):
     #     check_estimator(GRFSurvival())
+
+    def test_estimators_(self, lung_X, lung_y):
+        forest = GRFSurvival(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = forest.estimators_
+        forest.fit(lung_X, lung_y)
+        estimators = forest.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeSurvival)
+        check_is_fitted(estimators[0])

@@ -9,7 +9,7 @@ from libcpp.memory cimport unique_ptr
 from libcpp.utility cimport move
 from libcpp.vector cimport vector
 
-from skgrf.ensemble cimport grf_
+from skgrf cimport grf_
 
 
 cdef class DataNumpy:

@@ -5,7 +5,8 @@ from sklearn import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFCausalRegressor
+from skgrf.ensemble.causal_regressor import GRFCausalRegressor
+from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
 
 
 class TestGRFCausalRegressor:
@@ -56,18 +57,18 @@ class TestGRFCausalRegressor:
         causal_cluster,
         equalize_cluster_weights,
     ):
-        gcr = GRFCausalRegressor(
+        forest = GRFCausalRegressor(
             n_estimators=100, equalize_cluster_weights=equalize_cluster_weights
         )
-        gcr.fit(causal_X, causal_y, causal_w, causal_w, cluster=causal_cluster)
+        forest.fit(causal_X, causal_y, causal_w, causal_w, cluster=causal_cluster)
         if equalize_cluster_weights:
-            assert gcr.samples_per_cluster_ == 20
+            assert forest.samples_per_cluster_ == 20
         else:
-            assert gcr.samples_per_cluster_ == causal_y.shape[0] - 20
+            assert forest.samples_per_cluster_ == causal_y.shape[0] - 20
 
         if equalize_cluster_weights:
             with pytest.raises(ValueError):
-                gcr.fit(
+                forest.fit(
                     causal_X,
                     causal_y,
                     causal_w,
@@ -76,44 +77,44 @@ class TestGRFCausalRegressor:
                     sample_weight=causal_y,
                 )
 
-        gcr.fit(causal_X, causal_y, causal_w, causal_w, cluster=None)
-        assert gcr.samples_per_cluster_ == 0
+        forest.fit(causal_X, causal_y, causal_w, causal_w, cluster=None)
+        assert forest.samples_per_cluster_ == 0
 
     def test_sample_fraction(
         self, causal_X, causal_y, causal_w, sample_fraction
     ):  # and ci_group_size
-        gcr = GRFCausalRegressor(
+        forest = GRFCausalRegressor(
             n_estimators=100, sample_fraction=sample_fraction, ci_group_size=1
         )
         if sample_fraction <= 0 or sample_fraction > 1:
             with pytest.raises(ValueError):
-                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+                forest.fit(causal_X, causal_y, causal_w, causal_w)
         else:
-            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+            forest.fit(causal_X, causal_y, causal_w, causal_w)
 
-        gcr = GRFCausalRegressor(
+        forest = GRFCausalRegressor(
             n_estimators=100, sample_fraction=sample_fraction, ci_group_size=2
         )
         if sample_fraction <= 0 or sample_fraction > 0.5:
             with pytest.raises(ValueError):
-                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+                forest.fit(causal_X, causal_y, causal_w, causal_w)
         else:
-            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+            forest.fit(causal_X, causal_y, causal_w, causal_w)
 
     def test_mtry(self, causal_X, causal_y, causal_w, mtry):
-        gcr = GRFCausalRegressor(n_estimators=100, mtry=mtry)
-        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        forest = GRFCausalRegressor(n_estimators=100, mtry=mtry)
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
         if mtry is not None:
-            assert gcr.mtry_ == mtry
+            assert forest.mtry_ == mtry
         else:
-            assert gcr.mtry_ == 5
+            assert forest.mtry_ == 5
 
     def test_honesty(self, causal_X, causal_y, causal_w, honesty):
-        gcr = GRFCausalRegressor(n_estimators=100, honesty=honesty)
-        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        forest = GRFCausalRegressor(n_estimators=100, honesty=honesty)
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
 
     def test_honesty_fraction(self, causal_X, causal_y, causal_w, honesty_fraction):
-        gcr = GRFCausalRegressor(
+        forest = GRFCausalRegressor(
             n_estimators=100,
             honesty=True,
             honesty_fraction=honesty_fraction,
@@ -121,34 +122,44 @@ class TestGRFCausalRegressor:
         )
         if honesty_fraction <= 0 or honesty_fraction >= 1:
             with pytest.raises(RuntimeError):
-                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+                forest.fit(causal_X, causal_y, causal_w, causal_w)
         else:
-            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+            forest.fit(causal_X, causal_y, causal_w, causal_w)
 
     def test_honesty_prune_leaves(
         self, causal_X, causal_y, causal_w, honesty_prune_leaves
     ):
-        gcr = GRFCausalRegressor(
+        forest = GRFCausalRegressor(
             n_estimators=100, honesty=True, honesty_prune_leaves=honesty_prune_leaves
         )
-        gcr.fit(causal_X, causal_y, causal_w, causal_w)
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
 
     def test_alpha(self, causal_X, causal_y, causal_w, alpha):
-        gcr = GRFCausalRegressor(n_estimators=100, alpha=alpha)
+        forest = GRFCausalRegressor(n_estimators=100, alpha=alpha)
         if alpha <= 0 or alpha >= 0.25:
             with pytest.raises(ValueError):
-                gcr.fit(causal_X, causal_y, causal_w, causal_w)
+                forest.fit(causal_X, causal_y, causal_w, causal_w)
         else:
-            gcr.fit(causal_X, causal_y, causal_w, causal_w)
+            forest.fit(causal_X, causal_y, causal_w, causal_w)
 
     def test_orthogonal_boosting(
         self, causal_X, causal_y, causal_w, orthogonal_boosting
     ):
-        gcr = GRFCausalRegressor(
+        forest = GRFCausalRegressor(
             n_estimators=100, orthogonal_boosting=orthogonal_boosting
         )
-        gcr.fit(causal_X, causal_y, causal_w)
+        forest.fit(causal_X, causal_y, causal_w)
 
     # cant use this because of extra required fit params
     # def test_check_estimator(self):
     #     check_estimator(GRFCausalRegressor())
+
+    def test_estimators_(self, causal_X, causal_y, causal_w):
+        forest = GRFCausalRegressor(n_estimators=10)
+        with pytest.raises(AttributeError):
+            _ = forest.estimators_
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
+        estimators = forest.estimators_
+        assert len(estimators) == 10
+        assert isinstance(estimators[0], GRFTreeCausalRegressor)
+        check_is_fitted(estimators[0])
