@@ -30,7 +30,6 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.6.1"
 scikit-learn = "*"
-requests = "^2.25.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
