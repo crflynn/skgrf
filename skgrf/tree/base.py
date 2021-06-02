@@ -1,10 +1,15 @@
 import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.tree._tree import csr_matrix
+from sklearn.utils.validation import check_is_fitted
+
+from skgrf.base import GRFMixin
 
 
-class BaseGRFTree:
+class BaseGRFTree(GRFMixin, BaseEstimator):
     def get_depth(self):
         """Calculate the maximum depth of the tree."""
+        check_is_fitted(self)
         left = self.grf_forest_["_child_nodes"][0][0]
         right = self.grf_forest_["_child_nodes"][0][1]
         root_node = self.grf_forest_["_root_nodes"][0]
@@ -20,6 +25,7 @@ class BaseGRFTree:
 
     def get_n_leaves(self):
         """Calculate the number of leaves of the tree."""
+        check_is_fitted(self)
         left = self.grf_forest_["_child_nodes"][0][0]
         right = self.grf_forest_["_child_nodes"][0][1]
         root_node = self.grf_forest_["_root_nodes"][0]
@@ -37,6 +43,7 @@ class BaseGRFTree:
 
         :param array2d X: training input features
         """
+        check_is_fitted(self)
         return np.apply_along_axis(self._apply, 1, X)
 
     def _apply(self, x, idx=None):
@@ -65,6 +72,7 @@ class BaseGRFTree:
 
         :param array2d X: training input features
         """
+        check_is_fitted(self)
         if hasattr(X, "values"):  # pd.Dataframe
             Xvalues = X.values
         else:

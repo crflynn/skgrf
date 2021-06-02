@@ -503,3 +503,13 @@ cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
     cdef ForestTrainer regression_trainer()
     cdef ForestTrainer survival_trainer()
 
+
+cdef extern from "./grf/src/analysis/SplitFrequencyComputer.cpp":
+    pass
+
+cdef extern from "./grf/src/analysis/SplitFrequencyComputer.h" namespace "grf":
+    cdef cppclass SplitFrequencyComputer:
+        vector[vector[size_t]] compute(
+            const Forest& forest,
+            size_t max_depth
+        )

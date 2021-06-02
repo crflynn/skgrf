@@ -1,15 +1,14 @@
 import numpy as np
-from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
-from skgrf.base import GRFMixin
+from skgrf.ensemble.base import BaseGRFForest
 
 
-class GRFQuantileRegressor(GRFMixin, RegressorMixin, BaseEstimator):
+class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
     r"""GRF Quantile Regression implementation for sci-kit learn.
 
     Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.

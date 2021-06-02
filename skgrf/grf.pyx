@@ -814,3 +814,13 @@ cdef create_excess_error_matrix(
         result.append(values)
 
     return result
+
+
+cpdef compute_split_frequencies(
+    GRFForest forest_wrapper,
+    size_t max_depth,
+):
+    cdef grf_.SplitFrequencyComputer computer
+
+    split_frequencies = computer.compute(deref(forest_wrapper.forest), max_depth)
+    return split_frequencies

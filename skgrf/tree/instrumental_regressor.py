@@ -2,13 +2,11 @@ import typing as t
 
 import logging
 import numpy as np
-from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
-from skgrf.base import GRFMixin
 from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
@@ -18,9 +16,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-class GRFTreeInstrumentalRegressor(
-    BaseGRFTree, GRFMixin, RegressorMixin, BaseEstimator
-):
+class GRFTreeInstrumentalRegressor(BaseGRFTree, RegressorMixin):
     r"""GRF Tree Instrumental regression implementation for sci-kit learn.
 
     Provides a sklearn tree instrumental regression to the GRF C++ library using Cython.
