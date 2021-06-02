@@ -1,8 +1,10 @@
+import numpy as np
 import pickle
 import pytest
 import tempfile
 from sklearn import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.tree._tree import csr_matrix
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFCausalRegressor
@@ -143,3 +145,27 @@ class TestGRFTreeCausalRegressor:
         gfi.fit(causal_X, causal_y, causal_w)
         tree = GRFTreeCausalRegressor.from_forest(forest=gfi, idx=0)
         tree.predict(causal_X)
+
+    # region base
+    def test_get_depth(self, causal_X, causal_y, causal_w):
+        gfi = GRFTreeCausalRegressor()
+        gfi.fit(causal_X, causal_y, causal_w)
+        assert gfi.get_depth() == 8
+
+    def test_get_n_leaves(self, causal_X, causal_y, causal_w):
+        gfi = GRFTreeCausalRegressor()
+        gfi.fit(causal_X, causal_y, causal_w)
+        assert gfi.get_n_leaves() == 12
+
+    def test_apply(self, causal_X, causal_y, causal_w):
+        gfi = GRFTreeCausalRegressor()
+        gfi.fit(causal_X, causal_y, causal_w)
+        np.testing.assert_equal(gfi.apply(causal_X[:3, :]), [9, 9, 9])
+
+    def test_decision_path(self, causal_X, causal_y, causal_w):
+        gfi = GRFTreeCausalRegressor()
+        gfi.fit(causal_X, causal_y, causal_w)
+        paths = gfi.decision_path(causal_X)
+        assert isinstance(paths, csr_matrix)
+
+    # endregion

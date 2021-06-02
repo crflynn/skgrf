@@ -4,6 +4,7 @@ import pytest
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.tree._tree import csr_matrix
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble.survival import GRFSurvival
@@ -129,3 +130,28 @@ class TestGRFTreeSurvival:
         gfs.fit(lung_X, lung_y)
         tree = GRFTreeSurvival.from_forest(forest=gfs, idx=0)
         tree.predict(lung_X)
+
+    # region base
+    def test_get_depth(self, lung_X, lung_y):
+        gfs = GRFTreeSurvival()
+        gfs.fit(lung_X, lung_y)
+        assert gfs.get_depth() == 6
+
+    def test_get_n_leaves(self, lung_X, lung_y):
+        gfs = GRFTreeSurvival()
+        gfs.fit(lung_X, lung_y)
+        assert gfs.get_n_leaves() == 11
+
+    def test_apply(self, lung_X, lung_y):
+        gfs = GRFTreeSurvival()
+        gfs.fit(lung_X, lung_y)
+        np.testing.assert_equal(gfs.apply(lung_X[:3]), [22, 22, 22])
+
+    def test_decision_path(self, lung_X, lung_y):
+        gfs = GRFTreeSurvival()
+        gfs.quantiles = [0.2]
+        gfs.fit(lung_X, lung_y)
+        paths = gfs.decision_path(lung_X)
+        assert isinstance(paths, csr_matrix)
+
+    # endregion

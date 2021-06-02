@@ -1,8 +1,10 @@
+import numpy as np
 import pickle
 import pytest
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.tree._tree import csr_matrix
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
@@ -125,3 +127,27 @@ class TestGRFTreeLocalLinearRegressor:
         glr.fit(boston_X, boston_y)
         tree = GRFTreeLocalLinearRegressor.from_forest(forest=glr, idx=0)
         tree.predict(boston_X)
+
+    # region base
+    def test_get_depth(self, boston_X, boston_y):
+        glr = GRFTreeLocalLinearRegressor()
+        glr.fit(boston_X, boston_y)
+        assert glr.get_depth() == 13
+
+    def test_get_n_leaves(self, boston_X, boston_y):
+        glr = GRFTreeLocalLinearRegressor()
+        glr.fit(boston_X, boston_y)
+        assert glr.get_n_leaves() == 35
+
+    def test_apply(self, boston_X, boston_y):
+        glr = GRFTreeLocalLinearRegressor()
+        glr.fit(boston_X, boston_y)
+        np.testing.assert_equal(glr.apply(boston_X[:3, :]), [4, 4, 4])
+
+    def test_decision_path(self, boston_X, boston_y):
+        glr = GRFTreeLocalLinearRegressor()
+        glr.fit(boston_X, boston_y)
+        paths = glr.decision_path(boston_X)
+        assert isinstance(paths, csr_matrix)
+
+    # endregion

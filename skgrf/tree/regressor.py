@@ -8,14 +8,14 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
+from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble import GRFBoostedRegressor
-    from skgrf.ensemble import GRFRegressor
+    from skgrf.ensemble.regressor import GRFRegressor
 
 
-class GRFTreeRegressor(GRFMixin, RegressorMixin, BaseEstimator):
+class GRFTreeRegressor(BaseGRFTree, GRFMixin, RegressorMixin, BaseEstimator):
     r"""GRF Tree Regression implementation for sci-kit learn.
 
     Provides a sklearn tree regressor interface to the GRF C++ library using Cython.

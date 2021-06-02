@@ -1,8 +1,10 @@
+import numpy as np
 import pickle
 import pytest
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.tree._tree import csr_matrix
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
@@ -132,3 +134,31 @@ class TestGRFTreeQuantileRegressor:
         gqr.fit(boston_X, boston_y)
         tree = GRFTreeQuantileRegressor.from_forest(forest=gqr, idx=0)
         tree.predict(boston_X)
+
+    # region base
+    def test_get_depth(self, boston_X, boston_y):
+        gqr = GRFTreeQuantileRegressor()
+        gqr.quantiles = [0.2]
+        gqr.fit(boston_X, boston_y)
+        assert gqr.get_depth() == 11
+
+    def test_get_n_leaves(self, boston_X, boston_y):
+        gqr = GRFTreeQuantileRegressor()
+        gqr.quantiles = [0.2]
+        gqr.fit(boston_X, boston_y)
+        assert gqr.get_n_leaves() == 34
+
+    def test_apply(self, boston_X, boston_y):
+        gqr = GRFTreeQuantileRegressor()
+        gqr.quantiles = [0.2]
+        gqr.fit(boston_X, boston_y)
+        np.testing.assert_equal(gqr.apply(boston_X[:3, :]), [20, 43, 43])
+
+    def test_decision_path(self, boston_X, boston_y):
+        gqr = GRFTreeQuantileRegressor()
+        gqr.quantiles = [0.2]
+        gqr.fit(boston_X, boston_y)
+        paths = gqr.decision_path(boston_X)
+        assert isinstance(paths, csr_matrix)
+
+    # endregion

@@ -4,6 +4,7 @@ import pytest
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.tree._tree import csr_matrix
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
@@ -129,3 +130,27 @@ class TestGRFTreeRegressor:
         gfr.fit(boston_X, boston_y)
         tree = GRFTreeRegressor.from_forest(forest=gfr, idx=0)
         tree.predict(boston_X)
+
+    # region base
+    def test_get_depth(self, boston_X, boston_y):
+        gfr = GRFTreeRegressor()
+        gfr.fit(boston_X, boston_y)
+        assert gfr.get_depth() == 12
+
+    def test_get_n_leaves(self, boston_X, boston_y):
+        gfr = GRFTreeRegressor()
+        gfr.fit(boston_X, boston_y)
+        assert gfr.get_n_leaves() == 33
+
+    def test_apply(self, boston_X, boston_y):
+        gfr = GRFTreeRegressor()
+        gfr.fit(boston_X, boston_y)
+        np.testing.assert_equal(gfr.apply(boston_X[:3, :]), [9, 9, 9])
+
+    def test_decision_path(self, boston_X, boston_y):
+        gfr = GRFTreeRegressor()
+        gfr.fit(boston_X, boston_y)
+        paths = gfr.decision_path(boston_X)
+        assert isinstance(paths, csr_matrix)
+
+    # endregion

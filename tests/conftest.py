@@ -8,6 +8,8 @@ from sklearn.datasets import load_iris
 
 from tests.fixtures.causalml.regression import synthetic_data
 
+np.random.seed(42)  # ensure deterministic synthetic data
+
 
 def load_veterans_lung_cancer():
     this_file = pathlib.Path(__file__)
