@@ -4,6 +4,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
 from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
+from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +91,6 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
 
     @property
     def estimators_(self):
-        # avoiding circular import
-        from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
-
         try:
             check_is_fitted(self)
         except NotFittedError:
@@ -103,6 +101,14 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
             GRFTreeCausalRegressor.from_forest(self, idx=idx)
             for idx in range(self.n_estimators)
         ]
+
+    def get_estimator(self, idx):
+        """Extract a single estimator tree from the forest.
+
+        :param int idx: The index of the tree to extract.
+        """
+        check_is_fitted(self)
+        return GRFTreeCausalRegressor.from_forest(self, idx=idx)
 
     # noinspection PyMethodOverriding
     def fit(

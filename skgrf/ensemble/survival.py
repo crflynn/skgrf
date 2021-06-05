@@ -6,6 +6,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.ensemble.base import BaseGRFForest
+from skgrf.tree.survival import GRFTreeSurvival
 from skgrf.utils.validation import check_sample_weight
 
 
@@ -79,9 +80,6 @@ class GRFSurvival(BaseGRFForest, BaseEstimator):
 
     @property
     def estimators_(self):
-        # avoiding circular import
-        from skgrf.tree.survival import GRFTreeSurvival
-
         try:
             check_is_fitted(self)
         except NotFittedError:
@@ -92,6 +90,14 @@ class GRFSurvival(BaseGRFForest, BaseEstimator):
             GRFTreeSurvival.from_forest(self, idx=idx)
             for idx in range(self.n_estimators)
         ]
+
+    def get_estimator(self, idx):
+        """Extract a single estimator tree from the forest.
+
+        :param int idx: The index of the tree to extract.
+        """
+        check_is_fitted(self)
+        return GRFTreeSurvival.from_forest(self, idx=idx)
 
     def fit(self, X, y, sample_weight=None, cluster=None):
         """Fit the grf forest using training data.

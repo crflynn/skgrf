@@ -6,6 +6,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.ensemble.base import BaseGRFForest
+from skgrf.tree.quantile_regressor import GRFTreeQuantileRegressor
 
 
 class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
@@ -89,9 +90,6 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
 
     @property
     def estimators_(self):
-        # avoiding circular import
-        from skgrf.tree.quantile_regressor import GRFTreeQuantileRegressor
-
         try:
             check_is_fitted(self)
         except NotFittedError:
@@ -102,6 +100,14 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
             GRFTreeQuantileRegressor.from_forest(self, idx=idx)
             for idx in range(self.n_estimators)
         ]
+
+    def get_estimator(self, idx):
+        """Extract a single estimator tree from the forest.
+
+        :param int idx: The index of the tree to extract.
+        """
+        check_is_fitted(self)
+        return GRFTreeQuantileRegressor.from_forest(self, idx=idx)
 
     def fit(self, X, y, cluster=None):
         """Fit the grf quantile forest using training data.

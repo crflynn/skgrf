@@ -103,6 +103,14 @@ class GRFInstrumentalRegressor(BaseGRFForest, RegressorMixin):
             for idx in range(self.n_estimators)
         ]
 
+    def get_estimator(self, idx):
+        """Extract a single estimator tree from the forest.
+
+        :param int idx: The index of the tree to extract.
+        """
+        check_is_fitted(self)
+        return GRFTreeInstrumentalRegressor.from_forest(self, idx=idx)
+
     def fit(
         self,
         X,

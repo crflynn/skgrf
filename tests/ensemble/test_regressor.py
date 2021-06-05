@@ -141,6 +141,17 @@ class TestGRFRegressor:
         assert isinstance(estimators[0], GRFTreeRegressor)
         check_is_fitted(estimators[0])
 
+    def test_get_estimator(self, boston_X, boston_y):
+        forest = GRFRegressor(n_estimators=10)
+        with pytest.raises(NotFittedError):
+            _ = forest.get_estimator(idx=0)
+        forest.fit(boston_X, boston_y)
+        estimator = forest.get_estimator(0)
+        check_is_fitted(estimator)
+        assert isinstance(estimator, GRFTreeRegressor)
+        with pytest.raises(IndexError):
+            _ = forest.get_estimator(idx=20)
+
     def test_get_split_frequencies(self, boston_X, boston_y):
         forest = GRFRegressor()
         forest.fit(boston_X, boston_y)

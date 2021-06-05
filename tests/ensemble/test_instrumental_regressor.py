@@ -154,6 +154,17 @@ class TestGRFInstrumentalRegressor:
         assert isinstance(estimators[0], GRFTreeInstrumentalRegressor)
         check_is_fitted(estimators[0])
 
+    def test_get_estimator(self, causal_X, causal_y, causal_w):
+        forest = GRFInstrumentalRegressor(n_estimators=10)
+        with pytest.raises(NotFittedError):
+            _ = forest.get_estimator(idx=0)
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
+        estimator = forest.get_estimator(0)
+        check_is_fitted(estimator)
+        assert isinstance(estimator, GRFTreeInstrumentalRegressor)
+        with pytest.raises(IndexError):
+            _ = forest.get_estimator(idx=20)
+
     def test_get_split_frequencies(self, causal_X, causal_y, causal_w):
         forest = GRFInstrumentalRegressor()
         forest.fit(causal_X, causal_y, causal_w, causal_w)
