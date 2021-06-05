@@ -135,6 +135,17 @@ class TestGRFQuantileRegressor:
         assert isinstance(estimators[0], GRFTreeQuantileRegressor)
         check_is_fitted(estimators[0])
 
+    def test_get_estimator(self, boston_X, boston_y):
+        forest = GRFQuantileRegressor(n_estimators=10, quantiles=[0.2])
+        with pytest.raises(NotFittedError):
+            _ = forest.get_estimator(idx=0)
+        forest.fit(boston_X, boston_y)
+        estimator = forest.get_estimator(0)
+        check_is_fitted(estimator)
+        assert isinstance(estimator, GRFTreeQuantileRegressor)
+        with pytest.raises(IndexError):
+            _ = forest.get_estimator(idx=20)
+
     def test_get_split_frequencies(self, boston_X, boston_y):
         forest = GRFQuantileRegressor(quantiles=[0.2])
         forest.fit(boston_X, boston_y)

@@ -142,6 +142,17 @@ class TestGRFLocalLinearRegressor:
         assert isinstance(estimators[0], GRFTreeLocalLinearRegressor)
         check_is_fitted(estimators[0])
 
+    def test_get_estimator(self, boston_X, boston_y):
+        forest = GRFLocalLinearRegressor(n_estimators=10)
+        with pytest.raises(NotFittedError):
+            _ = forest.get_estimator(idx=0)
+        forest.fit(boston_X, boston_y)
+        estimator = forest.get_estimator(0)
+        check_is_fitted(estimator)
+        assert isinstance(estimator, GRFTreeLocalLinearRegressor)
+        with pytest.raises(IndexError):
+            _ = forest.get_estimator(idx=20)
+
     def test_get_split_frequencies(self, boston_X, boston_y):
         forest = GRFLocalLinearRegressor()
         forest.fit(boston_X, boston_y)

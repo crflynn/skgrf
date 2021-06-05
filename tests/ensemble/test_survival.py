@@ -134,6 +134,17 @@ class TestGRFSurvival:
         assert isinstance(estimators[0], GRFTreeSurvival)
         check_is_fitted(estimators[0])
 
+    def test_get_estimator(self, lung_X, lung_y):
+        forest = GRFSurvival(n_estimators=10)
+        with pytest.raises(NotFittedError):
+            _ = forest.get_estimator(idx=0)
+        forest.fit(lung_X, lung_y)
+        estimator = forest.get_estimator(0)
+        check_is_fitted(estimator)
+        assert isinstance(estimator, GRFTreeSurvival)
+        with pytest.raises(IndexError):
+            _ = forest.get_estimator(idx=20)
+
     def test_get_split_frequencies(self, lung_X, lung_y):
         forest = GRFSurvival()
         forest.fit(lung_X, lung_y)
