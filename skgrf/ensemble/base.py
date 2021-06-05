@@ -2,6 +2,7 @@ import multiprocessing
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.tree._tree import csr_matrix
+from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
@@ -44,6 +45,8 @@ class BaseGRFForest(GRFMixin, BaseEstimator):
         :param bool oob_prediction: whether to calculate weights out of bag
         """
         check_is_fitted(self)
+        X = check_array(X)
+        self._check_n_features(X, reset=False)
         self._ensure_ptr()
         num_threads = self._get_num_threads()
         # this function doesn't accept 0, so we replace 0 with the real cpu count
