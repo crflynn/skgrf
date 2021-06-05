@@ -1,5 +1,6 @@
 from libcpp.memory cimport bool
 from libcpp.memory cimport unique_ptr
+from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
 
 
@@ -126,6 +127,12 @@ cdef extern from "./grf/src/prediction/collector/SampleWeightComputer.cpp":
 cdef extern from "./grf/src/prediction/collector/SampleWeightComputer.h" namespace "grf":
     cdef cppclass SampleWeightComputer:
         SampleWeightComputer() except +
+        unordered_map[size_t, double] compute_weights(
+            size_t sample,
+            const Forest& forest,
+            const vector[vector[size_t]]& leaf_nodes_by_tree,
+            const vector[vector[bool]]& valid_trees_by_sample,
+        ) const
 
 
 cdef extern from "./grf/src/prediction/collector/TreeTraverser.cpp":
@@ -133,7 +140,17 @@ cdef extern from "./grf/src/prediction/collector/TreeTraverser.cpp":
 
 cdef extern from "./grf/src/prediction/collector/TreeTraverser.h" namespace "grf":
     cdef cppclass TreeTraverser:
-        TreeTraverser() except +
+        TreeTraverser(unsigned int num_threads) except +
+        vector[vector[size_t]] get_leaf_nodes(
+            const Forest& forest,
+            const Data& data,
+            bool oob_prediction
+        ) const
+        vector[vector[bool]] get_valid_trees_by_sample(
+            const Forest& forest,
+            const Data& data,
+            bool oob_prediction
+        ) const
 
 
 cdef extern from "./grf/src/prediction/CustomPredictionStrategy.cpp":
