@@ -4,6 +4,7 @@ import pytest
 import tempfile
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble.survival import GRFSurvival
@@ -144,3 +145,16 @@ class TestGRFSurvival:
         forest.fit(lung_X, lung_y)
         fi = forest.get_feature_importances()
         assert len(fi) == lung_X.shape[1]
+
+    def test_get_kernel_weights(self, lung_X, lung_y):
+        X_train, X_test, y_train, y_test = train_test_split(
+            lung_X, lung_y, test_size=0.33, random_state=42
+        )
+        forest = GRFSurvival()
+        forest.fit(X_train, y_train)
+        weights = forest.get_kernel_weights(X_test)
+        assert weights.shape[0] == X_test.shape[0]
+        assert weights.shape[1] == X_train.shape[0]
+        oob_weights = forest.get_kernel_weights(X_train, True)
+        assert oob_weights.shape[0] == X_train.shape[0]
+        assert oob_weights.shape[1] == X_train.shape[0]

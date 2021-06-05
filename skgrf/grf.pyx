@@ -4,8 +4,10 @@ import sys
 
 cimport numpy as np
 from cython.operator cimport dereference as deref
+from cython.operator cimport postincrement as postinc
 from libcpp.memory cimport bool
 from libcpp.memory cimport unique_ptr
+from libcpp.unordered_map cimport unordered_map
 from libcpp.utility cimport move
 from libcpp.vector cimport vector
 
@@ -821,6 +823,38 @@ cpdef compute_split_frequencies(
     size_t max_depth,
 ):
     cdef grf_.SplitFrequencyComputer computer
+    return computer.compute(deref(forest_wrapper.forest), max_depth)
 
-    split_frequencies = computer.compute(deref(forest_wrapper.forest), max_depth)
-    return split_frequencies
+
+cpdef compute_kernel_weights(
+    GRFForest forest_wrapper,
+    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
+    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
+    int num_threads,
+    bool oob_prediction,
+):
+    cdef grf_.SampleWeightComputer computer
+    cdef unordered_map[size_t, double] calculated_weights
+    cdef unordered_map[size_t, double].iterator it
+
+    test_data = DataNumpy(test_matrix)
+
+    tree_traverser = new grf_.TreeTraverser(num_threads)
+    leaf_nodes_by_tree = tree_traverser.get_leaf_nodes(deref(forest_wrapper.forest), deref(test_data.c_data), oob_prediction)
+    trees_by_sample = tree_traverser.get_valid_trees_by_sample(deref(forest_wrapper.forest), deref(test_data.c_data), oob_prediction)
+
+    samples = []
+    neighbors = []
+    weights = []
+    for sample in range(test_matrix.shape[0]):
+        calculated_weights = computer.compute_weights(sample, deref(forest_wrapper.forest), leaf_nodes_by_tree, trees_by_sample)
+        it = calculated_weights.begin()
+        while (it != calculated_weights.end()):
+            samples.append(sample)
+            neighbors.append(deref(it).first)
+            weights.append(deref(it).second)
+            postinc(it)
+
+    return samples, neighbors, weights
+
+

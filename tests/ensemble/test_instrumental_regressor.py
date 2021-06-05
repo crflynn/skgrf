@@ -3,6 +3,7 @@ import pytest
 import tempfile
 from sklearn import clone
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFInstrumentalRegressor
@@ -164,3 +165,16 @@ class TestGRFInstrumentalRegressor:
         forest.fit(causal_X, causal_y, causal_w, causal_w)
         fi = forest.get_feature_importances()
         assert len(fi) == causal_X.shape[1]
+
+    def test_get_kernel_weights(self, causal_X, causal_y, causal_w):
+        X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
+            causal_X, causal_y, causal_w, test_size=0.33, random_state=42
+        )
+        forest = GRFInstrumentalRegressor()
+        forest.fit(X_train, y_train, w_train, w_train)
+        weights = forest.get_kernel_weights(X_test)
+        assert weights.shape[0] == X_test.shape[0]
+        assert weights.shape[1] == X_train.shape[0]
+        oob_weights = forest.get_kernel_weights(X_train, True)
+        assert oob_weights.shape[0] == X_train.shape[0]
+        assert oob_weights.shape[1] == X_train.shape[0]
