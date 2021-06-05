@@ -649,22 +649,22 @@ cdef grf_.Forest* deserialize_forest(
     cdef grf_.Tree* tree
     cdef unique_ptr[grf_.Tree] treeptr
 
-    cdef size_t num_trees = forest_object["_num_trees"]
+    cdef size_t num_trees = forest_object["num_trees"]
 
     trees.reserve(num_trees)
 
     for t in range(num_trees):
         tree = new grf_.Tree(
-            forest_object["_root_nodes"][t],
-            forest_object["_child_nodes"][t],
-            forest_object["_leaf_samples"][t],
-            forest_object["_split_vars"][t],
-            forest_object["_split_values"][t],
-            forest_object["_drawn_samples"][t],
-            forest_object["_send_missing_left"][t],
+            forest_object["root_nodes"][t],
+            forest_object["child_nodes"][t],
+            forest_object["leaf_samples"][t],
+            forest_object["split_vars"][t],
+            forest_object["split_values"][t],
+            forest_object["drawn_samples"][t],
+            forest_object["send_missing_left"][t],
             grf_.PredictionValues(
-                forest_object["_pv_values"][t],
-                forest_object["_pv_num_types"][t]
+                forest_object["pv_values"][t],
+                forest_object["pv_num_types"][t]
             ),
         )
         treeptr.reset(tree)
@@ -673,8 +673,8 @@ cdef grf_.Forest* deserialize_forest(
         )
     forest = new grf_.Forest(
         trees,
-        forest_object["_num_variables"],
-        forest_object["_ci_group_size"]
+        forest_object["num_variables"],
+        forest_object["ci_group_size"]
     )
     return forest
 
@@ -683,20 +683,20 @@ cdef serialize_forest(
     grf_.Forest* forest,
 ):
     result = dict()
-    result["_ci_group_size"] = forest.get_ci_group_size()
-    result["_num_variables"] = forest.get_num_variables()
+    result["ci_group_size"] = forest.get_ci_group_size()
+    result["num_variables"] = forest.get_num_variables()
     num_trees = forest.get_trees().size()
-    result["_num_trees"] = num_trees
+    result["num_trees"] = num_trees
 
-    result["_root_nodes"] = []
-    result["_child_nodes"] = []
-    result["_leaf_samples"] = []
-    result["_split_vars"] = []
-    result["_split_values"] = []
-    result["_drawn_samples"] = []
-    result["_send_missing_left"] = []
-    result["_pv_values"] = []
-    result["_pv_num_types"] = []
+    result["root_nodes"] = []
+    result["child_nodes"] = []
+    result["leaf_samples"] = []
+    result["split_vars"] = []
+    result["split_values"] = []
+    result["drawn_samples"] = []
+    result["send_missing_left"] = []
+    result["pv_values"] = []
+    result["pv_num_types"] = []
 
     for k in range(num_trees):
         # this is awkward but it avoids a compilation issue on linux
@@ -704,16 +704,16 @@ cdef serialize_forest(
         # error: call of overloaded ‘move(__gnu_cxx::__alloc_traits<std::allocator<std::unique_ptr<grf::Tree> > >::value_type&)’ is ambiguous
         #
         # assigning the tree doesn't work because Tree lacks a nullary constructor
-        result["_root_nodes"].append(deref(forest.get_trees()[k]).get_root_node())
-        result["_child_nodes"].append(deref(forest.get_trees()[k]).get_child_nodes())
-        result["_leaf_samples"].append(deref(forest.get_trees()[k]).get_leaf_samples())
-        result["_split_vars"].append(deref(forest.get_trees()[k]).get_split_vars())
-        result["_split_values"].append(deref(forest.get_trees()[k]).get_split_values())
-        result["_drawn_samples"].append(deref(forest.get_trees()[k]).get_drawn_samples())
-        result["_send_missing_left"].append(deref(forest.get_trees()[k]).get_send_missing_left())
+        result["root_nodes"].append(deref(forest.get_trees()[k]).get_root_node())
+        result["child_nodes"].append(deref(forest.get_trees()[k]).get_child_nodes())
+        result["leaf_samples"].append(deref(forest.get_trees()[k]).get_leaf_samples())
+        result["split_vars"].append(deref(forest.get_trees()[k]).get_split_vars())
+        result["split_values"].append(deref(forest.get_trees()[k]).get_split_values())
+        result["drawn_samples"].append(deref(forest.get_trees()[k]).get_drawn_samples())
+        result["send_missing_left"].append(deref(forest.get_trees()[k]).get_send_missing_left())
 
-        result["_pv_values"].append(deref(forest.get_trees()[k]).get_prediction_values().get_all_values())
-        result["_pv_num_types"].append(deref(forest.get_trees()[k]).get_prediction_values().get_num_types())
+        result["pv_values"].append(deref(forest.get_trees()[k]).get_prediction_values().get_all_values())
+        result["pv_num_types"].append(deref(forest.get_trees()[k]).get_prediction_values().get_num_types())
     return result
 
 

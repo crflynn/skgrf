@@ -24,6 +24,7 @@ class TestGRFTreeLocalLinearRegressor:
         check_is_fitted(tree)
         assert hasattr(tree, "grf_forest_")
         assert hasattr(tree, "mtry_")
+        assert tree.grf_forest_["num_trees"] == 1
 
     def test_predict(self, boston_X, boston_y):
         tree = GRFTreeLocalLinearRegressor(ll_split_cutoff=0)
