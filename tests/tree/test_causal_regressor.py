@@ -16,40 +16,41 @@ class TestGRFTreeCausalRegressor:
         _ = GRFTreeCausalRegressor()
 
     def test_fit(self, causal_X, causal_y, causal_w):
-        gfc = GRFTreeCausalRegressor()
+        tree = GRFTreeCausalRegressor()
         with pytest.raises(NotFittedError):
-            check_is_fitted(gfc)
-        gfc.fit(causal_X, causal_y, causal_w)
-        check_is_fitted(gfc)
-        assert hasattr(gfc, "grf_forest_")
-        assert hasattr(gfc, "mtry_")
+            check_is_fitted(tree)
+        tree.fit(causal_X, causal_y, causal_w)
+        check_is_fitted(tree)
+        assert hasattr(tree, "grf_forest_")
+        assert hasattr(tree, "mtry_")
+        assert tree.grf_forest_["num_trees"] == 1
 
     def test_predict(self, causal_X, causal_y, causal_w):
-        gfc = GRFTreeCausalRegressor()
-        gfc.fit(causal_X, causal_y, causal_w)
-        pred = gfc.predict(causal_X)
+        tree = GRFTreeCausalRegressor()
+        tree.fit(causal_X, causal_y, causal_w)
+        pred = tree.predict(causal_X)
         assert len(pred) == causal_X.shape[0]
 
     def test_serialize(self, causal_X, causal_y, causal_w):
-        gfc = GRFTreeCausalRegressor()
+        tree = GRFTreeCausalRegressor()
         # not fitted
         tf = tempfile.TemporaryFile()
-        pickle.dump(gfc, tf)
+        pickle.dump(tree, tf)
         tf.seek(0)
-        gfc = pickle.load(tf)
-        gfc.fit(causal_X, causal_y, causal_w)
+        tree = pickle.load(tf)
+        tree.fit(causal_X, causal_y, causal_w)
         # fitted
         tf = tempfile.TemporaryFile()
-        pickle.dump(gfc, tf)
+        pickle.dump(tree, tf)
         tf.seek(0)
-        new_gfc = pickle.load(tf)
-        pred = new_gfc.predict(causal_X)
+        new_tree = pickle.load(tf)
+        pred = new_tree.predict(causal_X)
         assert len(pred) == causal_X.shape[0]
 
     def test_clone(self, causal_X, causal_y, causal_w):
-        gfc = GRFTreeCausalRegressor()
-        gfc.fit(causal_X, causal_y, causal_w)
-        clone(gfc)
+        tree = GRFTreeCausalRegressor()
+        tree.fit(causal_X, causal_y, causal_w)
+        clone(tree)
 
     def test_equalize_cluster_weights(
         self,

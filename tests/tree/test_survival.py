@@ -23,7 +23,7 @@ class TestGRFTreeSurvival:
         check_is_fitted(tree)
         assert hasattr(tree, "grf_forest_")
         assert hasattr(tree, "mtry_")
-        assert tree.grf_forest_["_num_trees"] == 1
+        assert tree.grf_forest_["num_trees"] == 1
 
     def test_predict(self, lung_X, lung_y):
         tree = GRFTreeSurvival()

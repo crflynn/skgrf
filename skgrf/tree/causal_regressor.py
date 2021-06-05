@@ -117,7 +117,7 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
                 grf_forest[k] = [forest.grf_forest_[k][idx]]
             else:
                 grf_forest[k] = v
-        grf_forest["_num_trees"] = 1
+        grf_forest["num_trees"] = 1
         instance.grf_forest_ = grf_forest
         instance._ensure_ptr()
         # vars
