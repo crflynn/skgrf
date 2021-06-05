@@ -1,18 +1,23 @@
-import os
 import shutil
+from pathlib import Path
 
-top = os.path.dirname(os.path.abspath(__file__))
+top = Path(__file__).parent
 
 
 def copy_grf_source():
-    """Copy the ranger cpp source, following symlinks."""
-    src = os.path.join(top, "grf", "core")
-    dst = os.path.join(top, "skgrf", "grf")
+    """Copy the grf cpp source, following symlinks."""
+    grf = top / "grf"
+    src = grf / "core"
+    dst = top / "skgrf" / "grf"
     try:
         shutil.rmtree(dst)
     except FileNotFoundError:
         pass
     shutil.copytree(src, dst, symlinks=False)
+
+    additional_files = ["COPYING", "README.md", "REFERENCE.md"]
+    for f in additional_files:
+        shutil.copyfile((grf / f).absolute(), (dst / f).absolute())
 
 
 copy_grf_source()
