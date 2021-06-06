@@ -91,7 +91,7 @@ class BaseGRFTree(GRFMixin, BaseEstimator):
         if self.grf_forest_["child_nodes"][0][0][idx] == 0:
             return []
         varid = self.grf_forest_["split_vars"][0][idx]
-        val = self.grf_forest_["split_vars"][0][idx]
+        val = self.grf_forest_["split_values"][0][idx]
         x_val = x[varid]
         if np.isnan(x_val) or x_val is None:
             if self.grf_forest_["send_missing_left"][0][idx]:
@@ -104,3 +104,50 @@ class BaseGRFTree(GRFMixin, BaseEstimator):
             else:
                 idx = self.grf_forest_["child_nodes"][0][1][idx]
         return [idx] + self._decision_path(x, idx)
+
+    @property
+    def tree_(self):
+        """The low-level tree object, but really there is none, so returns `self`."""
+        return self  # sklearn compat
+
+    @property
+    def max_depth(self):
+        """Max depth of the tree."""
+        return self.get_depth()
+
+    @property
+    def children_left(self):
+        """Left children nodes."""
+        # sklearn uses -1, grf uses 0
+        return np.array(
+            [-1 if n == 0 else n for n in self.grf_forest_["child_nodes"][0][0]]
+        )
+
+    @property
+    def children_right(self):
+        """Right children nodes."""
+        # sklearn uses -1, grf uses 0
+        return np.array(
+            [-1 if n == 0 else n for n in self.grf_forest_["child_nodes"][0][1]]
+        )
+
+    @property
+    def children_default(self):
+        """Left children nodes for missing data."""
+        children_left = self.children_left
+        children_right = self.children_right
+        children_default = [
+            children_left[idx] if val else children_right[idx]
+            for idx, val in enumerate(self.grf_forest_["send_missing_left"][0])
+        ]
+        return np.array(children_default)
+
+    @property
+    def feature(self):
+        """Variables on which nodes split."""
+        return np.array(self.grf_forest_["split_vars"][0])
+
+    @property
+    def threshold(self):
+        """Threshold values on which nodes split."""
+        return np.array(self.grf_forest_["split_values"][0])

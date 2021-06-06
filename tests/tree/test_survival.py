@@ -162,4 +162,16 @@ class TestGRFTreeSurvival:
         assert isinstance(paths, csr_matrix)
         assert paths.shape[0] == len(lung_X)
 
+    def test_tree_interface(self, lung_X, lung_y):
+        tree = GRFTreeSurvival()
+        tree.fit(lung_X, lung_y)
+        # access attributes the way we would expect to in sklearn
+        tree_ = tree.tree_
+        children_left = tree_.children_left
+        children_right = tree_.children_right
+        children_default = tree_.children_default
+        feature = tree_.feature
+        threshold = tree_.threshold
+        max_depth = tree_.max_depth
+
     # endregion
