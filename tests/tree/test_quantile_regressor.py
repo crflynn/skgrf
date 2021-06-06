@@ -169,4 +169,17 @@ class TestGRFTreeQuantileRegressor:
         assert isinstance(paths, csr_matrix)
         assert paths.shape[0] == len(boston_X)
 
+    def test_tree_interface(self, boston_X, boston_y):
+        tree = GRFTreeQuantileRegressor()
+        tree.quantiles = [0.2]
+        tree.fit(boston_X, boston_y)
+        # access attributes the way we would expect to in sklearn
+        tree_ = tree.tree_
+        children_left = tree_.children_left
+        children_right = tree_.children_right
+        children_default = tree_.children_default
+        feature = tree_.feature
+        threshold = tree_.threshold
+        max_depth = tree_.max_depth
+
     # endregion
