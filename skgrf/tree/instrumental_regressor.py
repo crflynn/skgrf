@@ -133,6 +133,7 @@ class GRFTreeInstrumentalRegressor(BaseGRFTree, RegressorMixin):
         instance.samples_per_cluster_ = forest.samples_per_cluster_
         instance.mtry_ = forest.mtry_
         instance.sample_weight_index_ = forest.sample_weight_index_
+        instance._set_tree()
         return instance
 
     def fit(
@@ -236,6 +237,7 @@ class GRFTreeInstrumentalRegressor(BaseGRFTree, RegressorMixin):
             self.seed,
         )
         self._ensure_ptr()
+        self._set_tree()
         return self
 
     def predict(self, X):
