@@ -118,7 +118,6 @@ class GRFTreeSurvival(BaseGRFTree):
         instance.num_failures_ = forest.num_failures_
         # data
         instance.train_ = forest.train_
-        instance._set_tree()
         return instance
 
     def fit(self, X, y, sample_weight=None, cluster=None):
@@ -183,7 +182,6 @@ class GRFTreeSurvival(BaseGRFTree):
             self.seed,
         )
         self._ensure_ptr()
-        self._set_tree()
         return self
 
     def predict_cumulative_hazard_function(self, X):

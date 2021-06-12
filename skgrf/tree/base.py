@@ -7,17 +7,17 @@ from skgrf.base import GRFMixin
 
 
 class BaseGRFTree(GRFMixin, BaseEstimator):
-    def _set_tree(self):
-        self.tree_ = Tree(grf_forest=self.grf_forest_)
+    @property
+    def tree_(self):
+        check_is_fitted(self)
+        return Tree(grf_forest=self.grf_forest_)
 
     def get_depth(self):
         """Calculate the maximum depth of the tree."""
-        check_is_fitted(self)
         return self.tree_.get_depth()
 
     def get_n_leaves(self):
         """Calculate the number of leaves of the tree."""
-        check_is_fitted(self)
         return self.tree_.get_n_leaves()
 
     def apply(self, X):
@@ -25,7 +25,6 @@ class BaseGRFTree(GRFMixin, BaseEstimator):
 
         :param array2d X: training input features
         """
-        check_is_fitted(self)
         return self.tree_.apply(X)
 
     def decision_path(self, X):
@@ -33,7 +32,6 @@ class BaseGRFTree(GRFMixin, BaseEstimator):
 
         :param array2d X: training input features
         """
-        check_is_fitted(self)
         return self.tree_.decision_path(X)
 
 

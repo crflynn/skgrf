@@ -142,7 +142,6 @@ class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
         instance.ll_split_variables_ = forest.ll_split_variables_
         instance.ll_split_cutoff_ = forest.ll_split_cutoff_
         instance.overall_beta_ = forest.overall_beta_
-        instance._set_tree()
         # data
         instance.train_ = forest.train_
         return instance
@@ -225,7 +224,6 @@ class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
             self.seed,
         )
         self._ensure_ptr()
-        self._set_tree()
         return self
 
     def predict(self, X):

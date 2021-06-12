@@ -130,7 +130,6 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
         instance.samples_per_cluster_ = forest.samples_per_cluster_
         instance.mtry_ = forest.mtry_
         instance.sample_weight_index_ = forest.sample_weight_index_
-        instance._set_tree()
         return instance
 
     # noinspection PyMethodOverriding
