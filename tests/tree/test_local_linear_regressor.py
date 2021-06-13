@@ -170,5 +170,7 @@ class TestGRFTreeLocalLinearRegressor:
         feature = tree_.feature
         threshold = tree_.threshold
         max_depth = tree_.max_depth
+        n_node_samples = tree_.n_node_samples
+        weighted_n_node_samples = tree_.weighted_n_node_samples
 
     # endregion

@@ -140,3 +140,12 @@ class GRFMixin:
             raise ValueError(
                 "The sample fraction is too small, resulting in less than 1 sample for fitting."
             )
+
+    def _set_sample_weights(self, sample_weight):
+        self.grf_forest_["leaf_weights"] = []
+        for tree in self.grf_forest_["leaf_samples"]:
+            self.grf_forest_["leaf_weights"].append([])
+            for node in tree:
+                self.grf_forest_["leaf_weights"][-1].append(
+                    sum([sample_weight[idx] for idx in node])
+                )

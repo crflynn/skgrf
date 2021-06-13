@@ -166,6 +166,9 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
             self.seed,
         )
         self._ensure_ptr()
+        self._set_sample_weights(
+            sample_weight if sample_weight is not None else np.ones(len(X))
+        )
         return self
 
     def predict(self, X):
