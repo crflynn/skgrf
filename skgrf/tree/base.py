@@ -43,7 +43,7 @@ class Tree:
         """Calculate the maximum depth of the tree."""
         left = self.grf_forest["child_nodes"][0][0]
         right = self.grf_forest["child_nodes"][0][1]
-        root_node = self.grf_forest["root_nodes"][0]
+        root_node = self._root_node_index
         return self._get_depth(left, right, root_node)
 
     def _get_depth(self, left, right, idx):
@@ -58,7 +58,7 @@ class Tree:
         """Calculate the number of leaves of the tree."""
         left = self.grf_forest["child_nodes"][0][0]
         right = self.grf_forest["child_nodes"][0][1]
-        root_node = self.grf_forest["root_nodes"][0]
+        root_node = self._root_node_index
         return self._get_n_leaves(left, right, root_node)
 
     def _get_n_leaves(self, left, right, idx):
@@ -77,7 +77,7 @@ class Tree:
 
     def _apply(self, x, idx=None):
         if idx is None:
-            idx = self.grf_forest["root_nodes"][0]
+            idx = self._root_node_index
             return self._apply(x, idx)
         if self.grf_forest["child_nodes"][0][0][idx] == 0:
             return idx
@@ -114,7 +114,7 @@ class Tree:
 
     def _decision_path(self, x, idx=None):
         if idx is None:
-            idx = self.grf_forest["root_nodes"][0]
+            idx = self._root_node_index
             return [idx] + self._decision_path(x, idx)
         if self.grf_forest["child_nodes"][0][0][idx] == 0:
             return []
@@ -174,3 +174,42 @@ class Tree:
     def threshold(self):
         """Threshold values on which nodes split."""
         return np.array(self.grf_forest["split_values"][0])
+
+    @property
+    def n_node_samples(self):
+        """The number of samples reaching each node."""
+        n_samples = [len(node) for node in self.grf_forest["leaf_samples"][0]]
+        self._get_n_node_samples(
+            self.children_left, self.children_right, self._root_node_index, n_samples
+        )
+        return np.array(n_samples)
+
+    @property
+    def _root_node_index(self):
+        return self.grf_forest["root_nodes"][0]
+
+    def _get_n_node_samples(self, left, right, idx, n_samples):
+        left_n_node_samples = (
+            n_samples[idx]
+            if left[idx] == -1
+            else self._get_n_node_samples(left, right, left[idx], n_samples)
+        )
+        right_n_node_samples = (
+            n_samples[idx]
+            if right[idx] == -1
+            else self._get_n_node_samples(left, right, right[idx], n_samples)
+        )
+        n_samples[idx] = left_n_node_samples + right_n_node_samples
+        return n_samples[idx]
+
+    @property
+    def weighted_n_node_samples(self):
+        """The sum of the weights of the samples reaching each node."""
+        weighted_n_samples = self.grf_forest["leaf_weights"][0].copy()
+        self._get_n_node_samples(
+            self.children_left,
+            self.children_right,
+            self._root_node_index,
+            weighted_n_samples,
+        )
+        return np.array(weighted_n_samples)
