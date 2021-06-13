@@ -60,3 +60,11 @@ class BaseGRFForest(GRFMixin, BaseEstimator):
             oob_prediction,
         )
         return csr_matrix((weights, (samples, neighbors)))
+
+    def apply(self, X):
+        """Calculate the leaf indices for each sample in each tree.
+
+        :param array2d X: training input features
+        """
+        check_is_fitted(self)
+        return np.array([t.apply(X) for t in self.estimators_]).T

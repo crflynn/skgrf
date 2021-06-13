@@ -177,6 +177,12 @@ class TestGRFRegressor:
         assert oob_weights.shape[0] == X_train.shape[0]
         assert oob_weights.shape[1] == X_train.shape[0]
 
+    def test_apply(self, boston_X, boston_y):
+        forest = GRFRegressor()
+        forest.fit(boston_X, boston_y)
+        leaves = forest.apply(boston_X)
+        assert leaves.shape == (len(boston_X), forest.n_estimators)
+
     # def test_shap(self, boston_X, boston_y):
     #     from shap import TreeExplainer
     #
