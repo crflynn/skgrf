@@ -36,6 +36,14 @@ class BaseGRFTree(GRFMixin, BaseEstimator):
 
 
 class Tree:
+    """The low-level tree interface.
+
+    Tree objects can be accessed using the ``tree_`` attribute on fitted
+    GRF decision tree estimators. Instances of ``Tree`` provide methods and
+    properties describing the underlying structure and attributes of the
+    tree.
+    """
+
     def __init__(self, grf_forest):
         self.grf_forest = grf_forest
 
@@ -69,7 +77,7 @@ class Tree:
         )
 
     def apply(self, X):
-        """Calculate the index of the leaf for each sample.
+        """Calculate the leaf index for each sample.
 
         :param array2d X: training input features
         """
@@ -156,7 +164,7 @@ class Tree:
 
     @property
     def children_default(self):
-        """Left children nodes for missing data."""
+        """Children nodes for missing data."""
         children_left = self.children_left
         children_right = self.children_right
         children_default = [
@@ -167,10 +175,10 @@ class Tree:
 
     @property
     def feature(self):
-        """Variables on which nodes split."""
+        """Variables on which nodes are split."""
         return np.array(self.grf_forest["split_vars"][0])
 
     @property
     def threshold(self):
-        """Threshold values on which nodes split."""
+        """Threshold values on which nodes are split."""
         return np.array(self.grf_forest["split_values"][0])
