@@ -44,6 +44,7 @@ The latest release of ``skgrf`` uses version `1.2.0 <https://github.com/grf-labs
     tree/tree_quantile_regressor
     tree/tree_regressor
     tree/tree_survival
+    tree/tree_interface
 
 
 Installation
