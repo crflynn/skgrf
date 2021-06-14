@@ -174,5 +174,10 @@ class TestGRFTreeRegressor:
         max_depth = tree_.max_depth
         n_node_samples = tree_.n_node_samples
         weighted_n_node_samples = tree_.weighted_n_node_samples
+        value = tree_.value
+        n_classes = tree_.n_classes
+        n_outputs = tree_.n_outputs
+        node_count = tree_.node_count
+        capacity = tree_.capacity
 
     # endregion
