@@ -159,6 +159,7 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
         )
         self._ensure_ptr()
         self._set_sample_weights(np.ones(len(X)))
+        self._set_n_classes()
         return self
 
     def predict(self, X):
