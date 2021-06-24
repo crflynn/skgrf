@@ -180,7 +180,6 @@ class GRFLocalLinearRegressor(BaseGRFForest, RegressorMixin):
 
         self.grf_forest_ = grf.ll_regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),
             self.outcome_index_,
             self.sample_weight_index_,
             self.ll_split_lambda,
@@ -227,10 +226,8 @@ class GRFLocalLinearRegressor(BaseGRFForest, RegressorMixin):
         result = grf.ll_regression_predict(
             self.grf_forest_cpp_,
             np.asfortranarray(self.train_.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_test_matrix
             [self.ll_split_lambda],  # ll_lambda
             self.ll_split_weight_penalty,  # ll_weight_penalty
             self.ll_split_variables_,  # linear_correction_variables

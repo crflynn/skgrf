@@ -55,7 +55,6 @@ class BaseGRFForest(GRFMixin, BaseEstimator):
         samples, neighbors, weights = grf.compute_kernel_weights(
             self.grf_forest_cpp_,
             np.asfortranarray(X.astype("float64")),
-            np.asfortranarray([[]]),
             num_threads,
             oob_prediction,
         )

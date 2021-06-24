@@ -397,10 +397,8 @@ class GRFBoostedRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             result = grf.regression_predict(
                 forest.grf_forest_cpp_,
                 np.asfortranarray([[]]),  # train_matrix
-                np.asfortranarray([[]]),  # sparse_train_matrix
                 self.outcome_index_,
                 np.asfortranarray(X.astype("float64")),  # test_matrix
-                np.asfortranarray([[]]),  # sparse_test_matrix
                 self._get_num_threads(),
                 False,  # estimate_variance
             )
