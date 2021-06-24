@@ -215,3 +215,9 @@ class Tree:
             weighted_n_samples,
         )
         return np.array(weighted_n_samples)
+
+    @property
+    def value(self):
+        """The constant prediction value of each node."""
+        values = self.grf_forest["node_values"][0]
+        return np.reshape(values, (len(values), 1, 1))
