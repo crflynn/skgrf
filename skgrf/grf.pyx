@@ -61,7 +61,6 @@ cdef class GRFForest:
 
 cpdef regression_train(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t sample_weight_index,
     bool use_sample_weights,
@@ -120,10 +119,8 @@ cpdef regression_train(
 cpdef regression_predict(
     GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
     bool estimate_variance,
 ):
@@ -149,7 +146,6 @@ cpdef quantile_train(
     vector[double] quantiles,
     bool regression_splitting,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     unsigned int mtry,
     unsigned int num_trees,
@@ -207,10 +203,8 @@ cpdef quantile_predict(
     GRFForest forest_wrapper,
     vector[double] quantiles,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
 ):
     cdef vector[grf_.Prediction] predictions
@@ -233,7 +227,6 @@ cpdef quantile_predict(
 
 cpdef survival_train(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t censor_index,
     size_t sample_weight_index,
@@ -292,13 +285,11 @@ cpdef survival_train(
 cpdef survival_predict(
     GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t censor_index,
     size_t sample_weight_index,
     bool use_sample_weights,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
     size_t num_failures,
 ):
@@ -325,7 +316,6 @@ cpdef survival_predict(
 
 cpdef ll_regression_train(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t sample_weight_index,
     double ll_split_lambda,
@@ -392,10 +382,8 @@ cpdef ll_regression_train(
 cpdef ll_regression_predict(
     GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     vector[double] ll_lambda,
     bool ll_weight_penalty,
     vector[size_t] linear_correction_variables,
@@ -429,7 +417,6 @@ cpdef ll_regression_predict(
 
 cpdef instrumental_train(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t treatment_index,
     size_t instrument_index,
@@ -497,12 +484,10 @@ cpdef instrumental_train(
 cpdef instrumental_predict(
     GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t treatment_index,
     size_t instrument_index,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
     bool estimate_variance,
 ):
@@ -532,7 +517,6 @@ cpdef instrumental_predict(
 
 cpdef causal_train(
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t treatment_index,
     size_t sample_weight_index,
@@ -599,11 +583,9 @@ cpdef causal_train(
 cpdef causal_predict(
     GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_train_matrix,
     size_t outcome_index,
     size_t treatment_index,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     unsigned int num_threads,
     bool estimate_variance,
 ):
@@ -829,7 +811,6 @@ cpdef compute_split_frequencies(
 cpdef compute_kernel_weights(
     GRFForest forest_wrapper,
     np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
-    np.ndarray[double, ndim=2, mode="fortran"] sparse_test_matrix,
     int num_threads,
     bool oob_prediction,
 ):

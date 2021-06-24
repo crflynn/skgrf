@@ -168,7 +168,6 @@ class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
             self.quantiles,
             self.regression_splitting,
             np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             self.mtry_,
             1,  # num_trees
@@ -210,10 +209,8 @@ class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
             self.grf_forest_cpp_,
             self.quantiles,
             np.asfortranarray(self.train_.astype("float64")),
-            np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_test_matrix
             1,  # num_threads
         )
         return result

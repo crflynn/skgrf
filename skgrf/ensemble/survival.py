@@ -145,7 +145,6 @@ class GRFSurvival(BaseGRFForest, BaseEstimator):
 
         self.grf_forest_ = grf.survival_train(
             np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),
             self.outcome_index_,
             self.censor_index_,
             self.sample_weight_index_,
@@ -204,13 +203,11 @@ class GRFSurvival(BaseGRFForest, BaseEstimator):
         result = grf.survival_predict(
             self.grf_forest_cpp_,
             np.asfortranarray(self.train_.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             self.censor_index_,
             self.sample_weight_index_,
             False,  # use_sample_weights
             np.asfortranarray(X.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_test_matrix
             self._get_num_threads(),
             self.num_failures_,
         )

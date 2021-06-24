@@ -150,7 +150,6 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
 
         self.grf_forest_ = grf.regression_train(
             np.asfortranarray(train_matrix.astype("float64")),
-            np.asfortranarray([[]]),
             self.outcome_index_,
             self.sample_weight_index_,
             use_sample_weight,
@@ -193,10 +192,8 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         result = grf.regression_predict(
             self.grf_forest_cpp_,
             np.asfortranarray([[]]),  # train_matrix
-            np.asfortranarray([[]]),  # sparse_train_matrix
             self.outcome_index_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
-            np.asfortranarray([[]]),  # sparse_test_matrix
             1,  # num_threads
             estimate_variance,
         )
