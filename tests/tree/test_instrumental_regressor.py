@@ -187,5 +187,6 @@ class TestGRFTreeInstrumentalRegressor:
         capacity = tree_.capacity
         n_outputs = tree_.n_outputs
         n_classes = tree_.n_classes
+        value = tree_.value
 
     # endregion
