@@ -13,7 +13,6 @@ def test_plot():
     forest = GRFRegressor()
     forest.fit(boston_X, boston_y)
     estimator = forest.get_estimator(0)
-    estimator.criterion = "mse"  # criterion must be set
     plt.figure()
     plot_tree(
         estimator,
@@ -31,7 +30,6 @@ def test_shap(boston_X, boston_y):
 
     forest = GRFRegressor()
     forest.fit(boston_X, boston_y)
-    forest.criterion = "mse"
 
     explainer = TreeExplainer(model=forest, data=boston_X)
     shap_values = explainer.shap_values(boston_X, check_additivity=True)
