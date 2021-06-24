@@ -48,6 +48,7 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
     :ivar list classes\_: The class labels determined from the fit input ``cluster``.
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``cluster``.
+    :ivar str criterion: The criterion used for splitting: ``mse``
     """
 
     def __init__(

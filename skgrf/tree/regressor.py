@@ -44,6 +44,7 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
     :ivar list classes\_: The class labels determined from the fit input ``cluster``.
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``cluster``.
+    :ivar str criterion: The criterion used for splitting: ``mse``
     """
 
     def __init__(
@@ -69,6 +70,10 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
         self.seed = seed
+
+    @property
+    def criterion(self):
+        return "mse"
 
     @classmethod
     def from_forest(cls, forest: "t.Union[GRFRegressor, GRFBoostedRegressor", idx: int):

@@ -15,40 +15,41 @@ class TestGRFCausalRegressor:
         _ = GRFCausalRegressor(n_estimators=100)
 
     def test_fit(self, causal_X, causal_y, causal_w):
-        gfc = GRFCausalRegressor(n_estimators=100)
+        forest = GRFCausalRegressor(n_estimators=100)
         with pytest.raises(NotFittedError):
-            check_is_fitted(gfc)
-        gfc.fit(causal_X, causal_y, causal_w)
-        check_is_fitted(gfc)
-        assert hasattr(gfc, "grf_forest_")
-        assert hasattr(gfc, "mtry_")
+            check_is_fitted(forest)
+        forest.fit(causal_X, causal_y, causal_w)
+        check_is_fitted(forest)
+        assert hasattr(forest, "grf_forest_")
+        assert hasattr(forest, "mtry_")
+        assert forest.criterion == "mse"
 
     def test_predict(self, causal_X, causal_y, causal_w):
-        gfc = GRFCausalRegressor(n_estimators=100)
-        gfc.fit(causal_X, causal_y, causal_w)
-        pred = gfc.predict(causal_X)
+        forest = GRFCausalRegressor(n_estimators=100)
+        forest.fit(causal_X, causal_y, causal_w)
+        pred = forest.predict(causal_X)
         assert len(pred) == causal_X.shape[0]
 
     def test_serialize(self, causal_X, causal_y, causal_w):
-        gfc = GRFCausalRegressor(n_estimators=100)
+        forest = GRFCausalRegressor(n_estimators=100)
         # not fitted
         tf = tempfile.TemporaryFile()
-        pickle.dump(gfc, tf)
+        pickle.dump(forest, tf)
         tf.seek(0)
-        gfc = pickle.load(tf)
-        gfc.fit(causal_X, causal_y, causal_w)
+        forest = pickle.load(tf)
+        forest.fit(causal_X, causal_y, causal_w)
         # fitted
         tf = tempfile.TemporaryFile()
-        pickle.dump(gfc, tf)
+        pickle.dump(forest, tf)
         tf.seek(0)
-        new_gfc = pickle.load(tf)
-        pred = new_gfc.predict(causal_X)
+        new_forest = pickle.load(tf)
+        pred = new_forest.predict(causal_X)
         assert len(pred) == causal_X.shape[0]
 
     def test_clone(self, causal_X, causal_y, causal_w):
-        gfc = GRFCausalRegressor(n_estimators=100)
-        gfc.fit(causal_X, causal_y, causal_w)
-        clone(gfc)
+        forest = GRFCausalRegressor(n_estimators=100)
+        forest.fit(causal_X, causal_y, causal_w)
+        clone(forest)
 
     def test_equalize_cluster_weights(
         self,

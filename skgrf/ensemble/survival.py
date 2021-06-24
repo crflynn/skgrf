@@ -50,6 +50,7 @@ class GRFSurvival(BaseGRFForest, BaseEstimator):
     :ivar array1d failure_times_\_: An array of unique failure times from the training
         set.
     :ivar int num_failures_\_: The length of the ``failure_times`` array.
+    :ivar str criterion: The criterion used for splitting: ``logrank``
     """
 
     def __init__(
@@ -77,6 +78,10 @@ class GRFSurvival(BaseGRFForest, BaseEstimator):
         self.alpha = alpha
         self.n_jobs = n_jobs
         self.seed = seed
+
+    @property
+    def criterion(self):
+        return "logrank"
 
     @property
     def estimators_(self):

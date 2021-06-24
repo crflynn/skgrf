@@ -28,6 +28,7 @@ class TestGRFTreeQuantileRegressor:
         assert hasattr(tree, "grf_forest_")
         assert hasattr(tree, "mtry_")
         assert tree.grf_forest_["num_trees"] == 1
+        assert tree.criterion == "gini"
 
     def test_predict(self, boston_X, boston_y):
         tree = GRFTreeQuantileRegressor()

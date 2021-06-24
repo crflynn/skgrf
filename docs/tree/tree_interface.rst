@@ -1,5 +1,5 @@
 Low-level tree interface
 ========================
 
-.. autoclass:: skgrf.tree.base.Tree
+.. autoclass:: skgrf.tree._tree.Tree
     :members:

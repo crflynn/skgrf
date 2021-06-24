@@ -58,6 +58,7 @@ class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``cluster``.
     :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
+    :ivar str criterion: The criterion used for splitting: ``mse``
     """
 
     def __init__(
@@ -91,6 +92,10 @@ class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
         self.seed = seed
+
+    @property
+    def criterion(self):
+        return "mse"
 
     @classmethod
     def from_forest(cls, forest: "GRFLocalLinearRegressor", idx: int):
