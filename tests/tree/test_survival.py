@@ -24,6 +24,7 @@ class TestGRFTreeSurvival:
         assert hasattr(tree, "grf_forest_")
         assert hasattr(tree, "mtry_")
         assert tree.grf_forest_["num_trees"] == 1
+        assert tree.criterion == "logrank"
 
     def test_predict(self, lung_X, lung_y):
         tree = GRFTreeSurvival()

@@ -54,6 +54,7 @@ class GRFInstrumentalRegressor(BaseGRFForest, RegressorMixin):
     :ivar list classes\_: The class labels determined from the fit input ``cluster``.
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``cluster``.
+    :ivar str criterion: The criterion used for splitting: ``mse``
     """
 
     def __init__(
@@ -89,6 +90,10 @@ class GRFInstrumentalRegressor(BaseGRFForest, RegressorMixin):
         self.stabilize_splits = stabilize_splits
         self.n_jobs = n_jobs
         self.seed = seed
+
+    @property
+    def criterion(self):
+        return "mse"
 
     @property
     def estimators_(self):

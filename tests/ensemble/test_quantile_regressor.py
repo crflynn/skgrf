@@ -26,6 +26,7 @@ class TestGRFQuantileRegressor:
         check_is_fitted(forest)
         assert hasattr(forest, "grf_forest_")
         assert hasattr(forest, "mtry_")
+        assert forest.criterion == "gini"
 
     def test_predict(self, boston_X, boston_y):
         forest = GRFQuantileRegressor()

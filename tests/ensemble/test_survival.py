@@ -23,6 +23,7 @@ class TestGRFSurvival:
         check_is_fitted(forest)
         assert hasattr(forest, "grf_forest_")
         assert hasattr(forest, "mtry_")
+        assert forest.criterion == "logrank"
 
     def test_predict(self, lung_X, lung_y):
         forest = GRFSurvival()

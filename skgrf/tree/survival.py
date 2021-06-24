@@ -49,6 +49,7 @@ class GRFTreeSurvival(BaseGRFTree):
     :ivar array1d failure_times_\_: An array of unique failure times from the training
         set.
     :ivar int num_failures_\_: The length of the ``failure_times`` array.
+    :ivar str criterion: The criterion used for splitting: ``logrank``
     """
 
     def __init__(
@@ -72,6 +73,10 @@ class GRFTreeSurvival(BaseGRFTree):
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
         self.seed = seed
+
+    @property
+    def criterion(self):
+        return "logrank"
 
     @classmethod
     def from_forest(cls, forest: "GRFSurvival", idx: int):

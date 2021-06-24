@@ -22,6 +22,7 @@ class TestGRFInstrumentalRegressor:
         check_is_fitted(forest)
         assert hasattr(forest, "grf_forest_")
         assert hasattr(forest, "mtry_")
+        assert forest.criterion == "mse"
 
     def test_predict(self, causal_X, causal_y, causal_w):
         forest = GRFInstrumentalRegressor()

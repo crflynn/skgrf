@@ -4,6 +4,7 @@ from sklearn.tree._tree import csr_matrix
 
 class Tree:
     """The low-level tree interface.
+
     Tree objects can be accessed using the ``tree_`` attribute on fitted
     GRF decision tree estimators. Instances of ``Tree`` provide methods and
     properties describing the underlying structure and attributes of the
@@ -65,6 +66,7 @@ class Tree:
 
     def apply(self, X):
         """Calculate the leaf index for each sample.
+
         :param array2d X: training input features
         """
         return np.apply_along_axis(self._apply, 1, X)
@@ -92,6 +94,7 @@ class Tree:
 
     def decision_path(self, X):
         """Calculate the decision path through the tree for each sample.
+
         :param array2d X: training input features
         """
         if hasattr(X, "values"):  # pd.Dataframe

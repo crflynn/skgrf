@@ -23,6 +23,7 @@ class TestGRFLocalLinearRegressor:
         check_is_fitted(forest)
         assert hasattr(forest, "grf_forest_")
         assert hasattr(forest, "mtry_")
+        assert forest.criterion == "mse"
 
     def test_predict(self, boston_X, boston_y):
         forest = GRFLocalLinearRegressor(ll_split_cutoff=0)

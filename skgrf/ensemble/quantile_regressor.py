@@ -54,6 +54,7 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``cluster``.
     :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
+    :ivar str criterion: The criterion used for splitting: ``gini``
     """
 
     def __init__(
@@ -87,6 +88,10 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
         self.imbalance_penalty = imbalance_penalty
         self.n_jobs = n_jobs
         self.seed = seed
+
+    @property
+    def criterion(self):
+        return "gini"
 
     @property
     def estimators_(self):
