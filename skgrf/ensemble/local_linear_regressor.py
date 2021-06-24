@@ -203,6 +203,7 @@ class GRFLocalLinearRegressor(BaseGRFForest, RegressorMixin):
         self._set_sample_weights(
             sample_weight if sample_weight is not None else np.ones(len(X))
         )
+        self._set_n_classes()
         return self
 
     def predict(self, X):

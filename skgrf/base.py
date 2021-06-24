@@ -36,7 +36,7 @@ class GRFMixin:
         """Validate cluster definitions against training data."""
         if cluster is None:
             self.classes_ = None
-            self.n_classes_ = None
+            self.n_classes_ = 1
             return np.array([])
         if len(cluster) != X.shape[0]:
             raise ValueError("cluster length must be the same as X")
@@ -149,3 +149,7 @@ class GRFMixin:
                 self.grf_forest_["leaf_weights"][-1].append(
                     sum([sample_weight[idx] for idx in node])
                 )
+
+    def _set_n_classes(self):
+        # for accessing in Tree
+        self.grf_forest_["n_classes"] = self.n_classes_
