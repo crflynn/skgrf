@@ -62,6 +62,13 @@ def iris_y():
 
 
 @pytest.fixture
+def iris_cluster():
+    cluster = np.zeros(_iris_y.shape)
+    cluster[20:] = 1
+    return cluster
+
+
+@pytest.fixture
 def lung_X():
     # select only the numeric cols
     return _lung_X[["Age_in_years", "Karnofsky_score", "Months_from_Diagnosis"]]

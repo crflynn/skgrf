@@ -35,6 +35,7 @@ class GRFMixin:
 
     def _check_cluster(self, X, cluster):
         """Validate cluster definitions against training data."""
+        # TODO diff clusters/classes?
         if cluster is None:
             self.classes_ = None
             self.n_classes_ = 1
