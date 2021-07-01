@@ -11,7 +11,7 @@ from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf.ensemble import GRFClassifier
-from skgrf.tree import GRFTreeRegressor
+from skgrf.tree import GRFTreeClassifier
 
 
 class TestGRFClassifier:
@@ -130,7 +130,15 @@ class TestGRFClassifier:
             forest.fit(iris_X, iris_y)
 
     def test_check_estimator(self):
-        check_estimator(GRFClassifier())
+        # using honesty here means that the test
+        # `check_classifiers_predictions` will fail, because
+        # the test dataset is very small. the failure occurs
+        # when comparing y == y_pred on binary classification
+        check_estimator(GRFClassifier(honesty=False))
+
+        with pytest.raises(AssertionError) as exc:
+            check_estimator(GRFClassifier(honesty=True))
+            assert "Arrays are not equal" in exc
 
     def test_estimators_(self, iris_X, iris_y):
         forest = GRFClassifier(n_estimators=10)
@@ -139,7 +147,7 @@ class TestGRFClassifier:
         forest.fit(iris_X, iris_y)
         estimators = forest.estimators_
         assert len(estimators) == 10
-        assert isinstance(estimators[0], GRFTreeRegressor)
+        assert isinstance(estimators[0], GRFTreeClassifier)
         check_is_fitted(estimators[0])
 
     def test_get_estimator(self, iris_X, iris_y):
@@ -149,7 +157,7 @@ class TestGRFClassifier:
         forest.fit(iris_X, iris_y)
         estimator = forest.get_estimator(0)
         check_is_fitted(estimator)
-        assert isinstance(estimator, GRFTreeRegressor)
+        assert isinstance(estimator, GRFTreeClassifier)
         with pytest.raises(IndexError):
             _ = forest.get_estimator(idx=20)
 

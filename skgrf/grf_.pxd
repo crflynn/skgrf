@@ -149,8 +149,9 @@ cdef extern from "./grf/src/prediction/DefaultPredictionStrategy.h" namespace "g
         DefaultPredictionStrategy() except +
 
 
-cdef extern from "./grf/src/prediction/CausalSurvivalPredictionStrategy.cpp":
-    pass
+# Workaround for https://github.com/grf-labs/grf/issues/1004
+# cdef extern from "./grf/src/prediction/CausalSurvivalPredictionStrategy.cpp":
+#     pass
 
 cdef extern from "./grf/src/prediction/CausalSurvivalPredictionStrategy.h" namespace "grf":
     cdef cppclass CausalSurvivalPredictionStrategy:

@@ -36,15 +36,17 @@ def find_pyx_files(directory, files=None):
     return files
 
 
-def create_extension(module_name):
+def create_extension(module_name, additional_sources=None):
     """Create a setuptools build extension for a Cython extension file.
 
     :param str module_name: The name of the module
+    :param list(str) additional_sources: A list of additional source filenames
     """
     path = module_name.replace(".", os.path.sep) + ".pyx"
+    additional_sources = additional_sources or []
     return Extension(
         module_name,
-        sources=[path],
+        sources=[path] + additional_sources,
         include_dirs=include_dirs,
         language="c++",
         extra_compile_args=["-std=c++11", "-Wall"],
@@ -53,7 +55,14 @@ def create_extension(module_name):
     )
 
 
-ext_modules = [create_extension(name) for name in find_pyx_files("skgrf")]
+# Workaround for https://github.com/grf-labs/grf/issues/1004
+# TODO consider moving cpp files out pf pxd and here instead
+additional_sources = [
+    os.path.join(
+        top, "skgrf", "grf", "src", "prediction", "CausalSurvivalPredictionStrategy.cpp"
+    )
+]
+ext_modules = [create_extension("skgrf.grf", additional_sources)]
 
 setup(
     ext_modules=cythonize(
