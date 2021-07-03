@@ -48,7 +48,7 @@ class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
     :ivar list classes\_: The class labels determined from the fit input ``y``.
     :ivar int n_classes\_: The number of unique class labels from the fit input
         ``y``.
-    :ivar str criterion: The criterion used for splitting: ``mse``
+    :ivar str criterion: The criterion used for splitting: ``gini``
     """
 
     def __init__(
