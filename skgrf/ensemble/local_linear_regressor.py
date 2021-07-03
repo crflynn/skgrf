@@ -57,8 +57,8 @@ class GRFLocalLinearRegressor(BaseGRFForest, RegressorMixin):
     :ivar dict grf_forest\_: The returned result object from calling C++ grf.
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
-    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
-    :ivar int n_classes\_: The number of unique class labels from the fit input
+    :ivar list clusters\_: The cluster labels determined from the fit input ``cluster``.
+    :ivar int n_clusters\_: The number of unique cluster labels from the fit input
         ``cluster``.
     :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
     :ivar str criterion: The criterion used for splitting: ``mse``

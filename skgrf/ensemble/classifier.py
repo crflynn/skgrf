@@ -1,36 +1,29 @@
 import numpy as np
-from sklearn.base import RegressorMixin
+from sklearn.base import ClassifierMixin
 from sklearn.exceptions import NotFittedError
+from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.ensemble.base import BaseGRFForest
-from skgrf.tree.quantile_regressor import GRFTreeQuantileRegressor
+from skgrf.tree.classifier import GRFTreeClassifier
+from skgrf.utils.validation import check_sample_weight
 
 
-class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
-    r"""GRF Quantile Regression implementation for sci-kit learn.
+class GRFClassifier(BaseGRFForest, ClassifierMixin):
+    r"""GRF Classification implementation for sci-kit learn.
 
-    Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.
+    Provides a sklearn classifier interface to the GRF C++ library using Cython.
 
-    .. warning::
-
-        Because the training dataset is required for prediction, the training dataset
-        is recorded onto the estimator instance. This means that serializing this
-        estimator will result in a file at least as large as the serialized training
-        dataset.
-
-    :param int n_estimators: The number of tree regressors to train
-    :param list(float) quantiles: A list of quantiles on which to predict.
-    :param bool regression_splitting: Use regression splits instead of splitting
-        specially for quantiles.
+    :param int n_estimators: The number of tree classifiers to train
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
         ``True``, the number of samples drawn from each cluster is equal to the size of
         the smallest cluster. If ``True``, sample weights should not be passed on
         fitting.
-    :param float sample_fraction: Fraction of samples used in each tree.
+    :param float sample_fraction: Fraction of samples used in each tree. If
+        ``ci_group_size`` > 1, the max allowed fraction is 0.5
     :param int mtry: The number of features to split on each node. The default is
         ``sqrt(p) + 20`` where ``p`` is the number of features.
     :param int min_node_size: The minimum number of observations in each tree leaf.
@@ -40,6 +33,8 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
         are empty. If ``False``, trees with empty leaves are skipped.
     :param float alpha: The maximum imbalance of a split.
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
+    :param int ci_group_size: The quantity of trees grown on each subsample. At least 2
+        is required to provide confidence intervals.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
 
@@ -53,15 +48,15 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
     :ivar list clusters\_: The cluster labels determined from the fit input ``cluster``.
     :ivar int n_clusters\_: The number of unique cluster labels from the fit input
         ``cluster``.
-    :ivar array2d train\_: The ``X,y`` concatenated train matrix passed to grf.
+    :ivar list classes\_: The class labels determined from the fit input ``y``.
+    :ivar int n_classes\_: The number of unique class labels from the fit input
+        ``y``.
     :ivar str criterion: The criterion used for splitting: ``gini``
     """
 
     def __init__(
         self,
         n_estimators=100,
-        quantiles=None,
-        regression_splitting=False,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,
@@ -70,13 +65,12 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
         honesty_fraction=0.5,
         honesty_prune_leaves=True,
         alpha=0.05,
-        imbalance_penalty=0,
+        imbalance_penalty=0.0,
+        ci_group_size=2,
         n_jobs=-1,
         seed=42,
     ):
         self.n_estimators = n_estimators
-        self.quantiles = quantiles
-        self.regression_splitting = regression_splitting
         self.equalize_cluster_weights = equalize_cluster_weights
         self.sample_fraction = sample_fraction
         self.mtry = mtry
@@ -86,6 +80,7 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
         self.honesty_prune_leaves = honesty_prune_leaves
         self.alpha = alpha
         self.imbalance_penalty = imbalance_penalty
+        self.ci_group_size = ci_group_size
         self.n_jobs = n_jobs
         self.seed = seed
 
@@ -102,7 +97,7 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
                 f"{self.__class__.__name__} object has no attribute 'estimators_'"
             ) from None
         return [
-            GRFTreeQuantileRegressor.from_forest(self, idx=idx)
+            GRFTreeClassifier.from_forest(self, idx=idx)
             for idx in range(self.n_estimators)
         ]
 
@@ -112,39 +107,49 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
         :param int idx: The index of the tree to extract.
         """
         check_is_fitted(self)
-        return GRFTreeQuantileRegressor.from_forest(self, idx=idx)
+        return GRFTreeClassifier.from_forest(self, idx=idx)
 
-    def fit(self, X, y, cluster=None):
-        """Fit the grf quantile forest using training data.
+    def fit(
+        self, X, y, sample_weight=None, cluster=None, compute_oob_predictions=False
+    ):
+        """Fit the grf forest using training data.
 
         :param array2d X: training input features
         :param array1d y: training input targets
+        :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        if self.quantiles is None:
-            raise ValueError("quantiles must be set")
-
         X, y = self._validate_data(X, y)
+        check_classification_targets(y)
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
 
-        self._check_sample_fraction()
+        self._check_sample_fraction(oob=compute_oob_predictions)
         self._check_alpha()
 
-        cluster = self._check_cluster(X=X, cluster=cluster)
+        sample_weight, use_sample_weight = check_sample_weight(sample_weight, X)
+
+        cluster_ = self._check_cluster(X=X, cluster=cluster)
         self.samples_per_cluster_ = self._check_equalize_cluster_weights(
-            cluster=cluster, sample_weight=None
+            cluster=cluster_, sample_weight=sample_weight
         )
         self.mtry_ = self._check_mtry(X=X)
 
-        train_matrix = self._create_train_matrices(X, y)
-        self.train_ = train_matrix
+        # Map classes to indices
+        y = np.copy(y)
+        self.classes_, y = np.unique(y, return_inverse=True)
+        self.n_classes_ = len(self.classes_)
 
-        self.grf_forest_ = grf.quantile_train(
-            self.quantiles,
-            self.regression_splitting,
+        train_matrix = self._create_train_matrices(
+            X=X, y=y, sample_weight=sample_weight
+        )
+
+        self.grf_forest_ = grf.probability_train(
             np.asfortranarray(train_matrix.astype("float64")),
             self.outcome_index_,
+            self.sample_weight_index_,
+            use_sample_weight,
+            self.n_classes_,
             self.mtry_,
             self.n_estimators,  # num_trees
             self.min_node_size,
@@ -152,44 +157,67 @@ class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
             self.honesty,
             self.honesty_fraction,
             self.honesty_prune_leaves,
-            1,  # ci_group_size,
+            self.ci_group_size,
             self.alpha,
             self.imbalance_penalty,
-            cluster,
+            cluster_,
             self.samples_per_cluster_,
-            False,  # compute_oob_predictions,
-            self._get_num_threads(),  # num_threads
+            compute_oob_predictions,
+            self._get_num_threads(),  # num_threads,
             self.seed,
         )
         self._ensure_ptr()
-        sample_weight = np.ones(len(X))
+        sample_weight = sample_weight if sample_weight is not None else np.ones(len(X))
         self._set_sample_weights(sample_weight)
         self._set_node_values(y, sample_weight)
         self._set_n_classes()
         return self
 
     def predict(self, X):
-        """Predict quantile regression target(s) for X.
+        """Predict classes from X.
 
         :param array2d X: prediction input features
         """
-        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
+        probas = self.predict_proba(X)
+        return self.classes_.take(np.argmax(probas, axis=1), axis=0)
 
-    def _predict(self, X):
+    def predict_proba(self, X):
+        """Predict probabilities for classes from X.
+
+        :param array2d X: prediction input features
+        """
+        result = self._predict(X)
+        predictions = np.atleast_2d(np.array(result["predictions"]))
+        return predictions
+
+    def predict_log_proba(self, X):
+        """Predict log probabilities for classes from X.
+
+        :param array2d X: prediction input features
+        """
+        proba = self.predict_proba(X)
+        return np.log(proba)
+
+    def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
         X = check_array(X)
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 
-        result = grf.quantile_predict(
+        result = grf.probability_predict(
             self.grf_forest_cpp_,
-            self.quantiles,
-            np.asfortranarray(self.train_.astype("float64")),
+            np.asfortranarray([[]]),  # train_matrix
             self.outcome_index_,
+            self.n_classes_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
-            self._get_num_threads(),  # num_threads
+            self._get_num_threads(),
+            estimate_variance,
         )
         return result
 
     def _more_tags(self):
-        return {"requires_y": True, "poor_score": True}
+        return {
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
+            },
+        }

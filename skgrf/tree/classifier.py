@@ -1,7 +1,8 @@
 import typing as t
 
 import numpy as np
-from sklearn.base import RegressorMixin
+from sklearn.base import ClassifierMixin
+from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -10,13 +11,13 @@ from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.regressor import GRFRegressor
+    from skgrf.ensemble.classifier import GRFClassifier
 
 
-class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
-    r"""GRF Tree Regression implementation for sci-kit learn.
+class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
+    r"""GRF Tree Classification implementation for sci-kit learn.
 
-    Provides a sklearn tree regressor interface to the GRF C++ library using Cython.
+    Provides a sklearn tree classifier interface to the GRF C++ library using Cython.
 
     :param bool equalize_cluster_weights: Weight the samples such that clusters have
         equally weight. If ``False``, larger clusters will have more weight. If
@@ -44,7 +45,10 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
     :ivar list clusters\_: The cluster labels determined from the fit input ``cluster``.
     :ivar int n_clusters\_: The number of unique cluster labels from the fit input
         ``cluster``.
-    :ivar str criterion: The criterion used for splitting: ``mse``
+    :ivar list classes\_: The class labels determined from the fit input ``y``.
+    :ivar int n_classes\_: The number of unique class labels from the fit input
+        ``y``.
+    :ivar str criterion: The criterion used for splitting: ``gini``
     """
 
     def __init__(
@@ -73,13 +77,13 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
 
     @property
     def criterion(self):
-        return "mse"
+        return "gini"
 
     @classmethod
-    def from_forest(cls, forest: "t.Union[GRFRegressor, GRFBoostedRegressor", idx: int):
+    def from_forest(cls, forest: "GRFClassifier", idx: int):
         """Extract a tree from a forest.
 
-        :param GRFRegressor forest: A trained GRFRegressor instance
+        :param GRFClassifier forest: A trained GRFClassifier instance
         :param int idx: The tree index from the forest to extract.
         """
         # Even though we have a tree object, we keep the exact same dictionary structure
@@ -114,6 +118,8 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         instance.n_features_in_ = forest.n_features_in_
         instance.clusters_ = forest.clusters_
         instance.n_clusters_ = forest.n_clusters_
+        instance.classes_ = forest.classes_
+        instance.n_classes_ = forest.n_classes_
         instance.samples_per_cluster_ = forest.samples_per_cluster_
         instance.mtry_ = forest.mtry_
         instance.sample_weight_index_ = forest.sample_weight_index_
@@ -130,6 +136,7 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         :param array1d cluster: optional cluster assignments for input samples
         """
         X, y = self._validate_data(X, y)
+        check_classification_targets(y)
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
 
@@ -144,15 +151,21 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         )
         self.mtry_ = self._check_mtry(X=X)
 
+        # Map classes to indices
+        y = np.copy(y)
+        self.classes_, y = np.unique(y, return_inverse=True)
+        self.n_classes_ = len(self.classes_)
+
         train_matrix = self._create_train_matrices(
             X=X, y=y, sample_weight=sample_weight
         )
 
-        self.grf_forest_ = grf.regression_train(
+        self.grf_forest_ = grf.probability_train(
             np.asfortranarray(train_matrix.astype("float64")),
             self.outcome_index_,
             self.sample_weight_index_,
             use_sample_weight,
+            self.n_classes_,
             self.mtry_,
             1,  # num_trees
             self.min_node_size,
@@ -177,11 +190,29 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         return self
 
     def predict(self, X):
-        """Predict regression target for X.
+        """Predict classes from X.
 
         :param array2d X: prediction input features
         """
-        return np.atleast_1d(np.squeeze(np.array(self._predict(X)["predictions"])))
+        probas = self.predict_proba(X)
+        return self.classes_.take(np.argmax(probas, axis=1), axis=0)
+
+    def predict_proba(self, X):
+        """Predict probabilities for classes from X.
+
+        :param array2d X: prediction input features
+        """
+        result = self._predict(X)
+        predictions = np.atleast_2d(np.array(result["predictions"]))
+        return predictions
+
+    def predict_log_proba(self, X):
+        """Predict log probabilities for classes from X.
+
+        :param array2d X: prediction input features
+        """
+        proba = self.predict_proba(X)
+        return np.log(proba)
 
     def _predict(self, X, estimate_variance=False):
         check_is_fitted(self)
@@ -189,10 +220,11 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 
-        result = grf.regression_predict(
+        result = grf.probability_predict(
             self.grf_forest_cpp_,
             np.asfortranarray([[]]),  # train_matrix
             self.outcome_index_,
+            self.n_classes_,
             np.asfortranarray(X.astype("float64")),  # test_matrix
             1,  # num_threads
             estimate_variance,
@@ -201,7 +233,6 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
 
     def _more_tags(self):
         return {
-            "requires_y": True,
             "_xfail_checks": {
                 "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
             },

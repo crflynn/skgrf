@@ -14,13 +14,14 @@ from libcpp.vector cimport vector
 from skgrf cimport grf_
 
 
-cdef class DataNumpy:
-    """Cython wrapper for DataNumpy C++ class in ``DataNumpy.h``.
+cdef class Data:
+    """Cython wrapper for Data C++ class.
+
     This wraps the Data class in C++, which encapsulates training data passed to the
     random forest classes. It allows us to pass numpy arrays as a grf-compatible
     Data object.
     """
-    cdef unique_ptr[grf_.DataNumpy] c_data
+    cdef unique_ptr[grf_.Data] c_data
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -30,7 +31,7 @@ cdef class DataNumpy:
         cdef size_t num_rows = np.PyArray_DIMS(data)[0]
         cdef size_t num_cols = np.PyArray_DIMS(data)[1]
         self.c_data.reset(
-            new grf_.DataNumpy(
+            new grf_.Data(
                 &data[0, 0],
                 num_rows,
                 num_cols,
@@ -39,12 +40,6 @@ cdef class DataNumpy:
 
     def get(self, size_t row, size_t col):
         return deref(self.c_data).get(row, col)
-
-    def reserve_memory(self):
-        return deref(self.c_data).reserve_memory()
-
-    def set(self, size_t col, size_t row, double value, bool& error):
-        return deref(self.c_data).set(col, row, value, error)
 
 
 cdef class GRFForest:
@@ -84,7 +79,7 @@ cpdef regression_train(
     cdef vector[grf_.Prediction] predictions
 
     trainer = new grf_.ForestTrainer(grf_.regression_trainer())
-    data = DataNumpy(train_matrix)
+    data = Data(train_matrix)
     deref(data.c_data).set_outcome_index(outcome_index)
 
     if use_sample_weights:
@@ -127,10 +122,10 @@ cpdef regression_predict(
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(grf_.regression_predictor(num_threads))
-    train_data = DataNumpy(train_matrix)
+    train_data = Data(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     predictions = predictor.predict(
         deref(forest_wrapper.forest),
@@ -171,7 +166,7 @@ cpdef quantile_train(
     else:
         trainer = new grf_.ForestTrainer(grf_.quantile_trainer(quantiles))
 
-    data = DataNumpy(train_matrix)
+    data = Data(train_matrix)
     deref(data.c_data).set_outcome_index(outcome_index)
 
     options = new grf_.ForestOptions(
@@ -210,10 +205,10 @@ cpdef quantile_predict(
     cdef vector[grf_.Prediction] predictions
 
     predictor = new grf_.ForestPredictor(grf_.quantile_predictor(num_threads, quantiles))
-    train_data = DataNumpy(train_matrix)
+    train_data = Data(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     predictions = predictor.predict(
         deref(forest_wrapper.forest),
@@ -251,7 +246,7 @@ cpdef survival_train(
 
     trainer = new grf_.ForestTrainer(grf_.survival_trainer())
 
-    data = DataNumpy(train_matrix)
+    data = Data(train_matrix)
     deref(data.c_data).set_outcome_index(outcome_index)
     deref(data.c_data).set_censor_index(censor_index)
     if use_sample_weights:
@@ -277,7 +272,7 @@ cpdef survival_train(
     forest = new grf_.Forest(trainer.train(deref(data.c_data), deref(options)))
 
     if compute_oob_predictions:
-        predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures))
+        predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures, 0))
 
     return create_forest_object(forest, predictions)
 
@@ -295,14 +290,14 @@ cpdef survival_predict(
 ):
     cdef vector[grf_.Prediction] predictions
 
-    predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures))
-    train_data = DataNumpy(train_matrix)
+    predictor = new grf_.ForestPredictor(grf_.survival_predictor(num_threads, num_failures, 0))
+    train_data = Data(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
     deref(train_data.c_data).set_censor_index(censor_index)
     if use_sample_weights:
         deref(train_data.c_data).set_weight_index(sample_weight_index)
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     predictions = predictor.predict(
         deref(forest_wrapper.forest),
@@ -352,7 +347,7 @@ cpdef ll_regression_train(
         )
     )
 
-    data = DataNumpy(train_matrix)
+    data = Data(train_matrix)
     deref(data.c_data).set_outcome_index(outcome_index)
     if use_sample_weights:
         deref(data.c_data).set_weight_index(sample_weight_index)
@@ -400,10 +395,10 @@ cpdef ll_regression_predict(
             linear_correction_variables,
         )
     )
-    train_data = DataNumpy(train_matrix)
+    train_data = Data(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     predictions = predictor.predict(
         deref(forest_wrapper.forest),
@@ -449,7 +444,7 @@ cpdef instrumental_train(
         )
     )
 
-    data = DataNumpy(train_matrix)
+    data = Data(train_matrix)
     deref(data.c_data).set_outcome_index(outcome_index)
     deref(data.c_data).set_treatment_index(treatment_index)
     deref(data.c_data).set_instrument_index(instrument_index)
@@ -498,12 +493,12 @@ cpdef instrumental_predict(
             num_threads,
         )
     )
-    train_data = DataNumpy(train_matrix)
+    train_data = Data(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
     deref(train_data.c_data).set_treatment_index(treatment_index)
     deref(train_data.c_data).set_instrument_index(instrument_index)
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     predictions = predictor.predict(
         deref(forest_wrapper.forest),
@@ -548,7 +543,7 @@ cpdef causal_train(
         )
     )
 
-    data = DataNumpy(train_matrix)
+    data = Data(train_matrix)
     deref(data.c_data).set_outcome_index(outcome_index)
     deref(data.c_data).set_treatment_index(treatment_index)
     deref(data.c_data).set_instrument_index(treatment_index)
@@ -596,12 +591,12 @@ cpdef causal_predict(
             num_threads,
         )
     )
-    train_data = DataNumpy(train_matrix)
+    train_data = Data(train_matrix)
     deref(train_data.c_data).set_outcome_index(outcome_index)
     deref(train_data.c_data).set_treatment_index(treatment_index)
     deref(train_data.c_data).set_instrument_index(treatment_index)
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     predictions = predictor.predict(
         deref(forest_wrapper.forest),
@@ -611,6 +606,92 @@ cpdef causal_predict(
     )
 
     return create_prediction_object(predictions)
+
+
+cpdef probability_train(
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    size_t outcome_index,
+    size_t sample_weight_index,
+    bool use_sample_weights,
+    size_t num_classes,
+    unsigned int mtry,
+    unsigned int num_trees,
+    unsigned int min_node_size,
+    double sample_fraction,
+    bool honesty,
+    double honesty_fraction,
+    bool honesty_prune_leaves,
+    size_t ci_group_size,
+    double alpha,
+    double imbalance_penalty,
+    vector[size_t] clusters,
+    unsigned int samples_per_cluster,
+    bool compute_oob_predictions,
+    unsigned int num_threads,
+    unsigned int seed,
+):
+    cdef grf_.ForestOptions* options
+    cdef vector[grf_.Prediction] predictions
+
+    trainer = new grf_.ForestTrainer(grf_.probability_trainer(num_classes))
+    data = Data(train_matrix)
+    deref(data.c_data).set_outcome_index(outcome_index)
+
+    if use_sample_weights:
+        deref(data.c_data).set_weight_index(sample_weight_index - 1)
+
+    options = new grf_.ForestOptions(
+        num_trees,
+        ci_group_size,
+        sample_fraction,
+        mtry,
+        min_node_size,
+        honesty,
+        honesty_fraction,
+        honesty_prune_leaves,
+        alpha,
+        imbalance_penalty,
+        num_threads,
+        seed,
+        clusters,
+        samples_per_cluster,
+    )
+
+    forest = new grf_.Forest(trainer.train(deref(data.c_data), deref(options)))
+
+    if compute_oob_predictions:
+        predictor = new grf_.ForestPredictor(grf_.probability_predictor(num_threads, num_classes))
+        predictions = predictor.predict_oob(deref(forest), deref(data.c_data), False)
+
+    return create_forest_object(forest, predictions)
+
+
+cpdef probability_predict(
+    GRFForest forest_wrapper,
+    np.ndarray[double, ndim=2, mode="fortran"] train_matrix,
+    size_t outcome_index,
+    size_t num_classes,
+    np.ndarray[double, ndim=2, mode="fortran"] test_matrix,
+    unsigned int num_threads,
+    bool estimate_variance,
+):
+    cdef vector[grf_.Prediction] predictions
+
+    predictor = new grf_.ForestPredictor(grf_.probability_predictor(num_threads, num_classes))
+    train_data = Data(train_matrix)
+    deref(train_data.c_data).set_outcome_index(outcome_index)
+
+    test_data = Data(test_matrix)
+
+    predictions = predictor.predict(
+        deref(forest_wrapper.forest),
+        deref(train_data.c_data),
+        deref(test_data.c_data),
+        estimate_variance,
+    )
+
+    return create_prediction_object(predictions)
+
 
 
 cdef create_forest_object(
@@ -818,7 +899,7 @@ cpdef compute_kernel_weights(
     cdef unordered_map[size_t, double] calculated_weights
     cdef unordered_map[size_t, double].iterator it
 
-    test_data = DataNumpy(test_matrix)
+    test_data = Data(test_matrix)
 
     tree_traverser = new grf_.TreeTraverser(num_threads)
     leaf_nodes_by_tree = tree_traverser.get_leaf_nodes(deref(forest_wrapper.forest), deref(test_data.c_data), oob_prediction)
