@@ -48,7 +48,7 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
     :ivar list samples_per_cluster\_: The number of samples to train per cluster.
     :ivar list clusters\_: The cluster labels determined from the fit input ``cluster``.
-    :ivar int n_clusters\_: The number of unique class labels from the fit input
+    :ivar int n_clusters\_: The number of unique cluster labels from the fit input
         ``cluster``.
     :ivar str criterion: The criterion used for splitting: ``mse``
     """

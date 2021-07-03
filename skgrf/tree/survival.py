@@ -50,7 +50,7 @@ class GRFTreeSurvival(BaseGRFTree):
         set.
     :ivar int num_failures_\_: The length of the ``failure_times`` array.
     :ivar list clusters\_: The cluster labels determined from the fit input ``cluster``.
-    :ivar int n_clusters\_: The number of unique class labels from the fit input
+    :ivar int n_clusters\_: The number of unique cluster labels from the fit input
         ``cluster``.
     :ivar str criterion: The criterion used for splitting: ``logrank``
     """
