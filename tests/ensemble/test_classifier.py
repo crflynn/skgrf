@@ -40,6 +40,18 @@ class TestGRFClassifier:
         pred = np.atleast_1d(np.squeeze(np.array(forest.grf_forest_["predictions"])))
         assert len(pred) == iris_X.shape[0]
 
+    def test_predict_proba(self, iris_X, iris_y):
+        forest = GRFClassifier()
+        forest.fit(iris_X, iris_y)
+        pred_proba = forest.predict_proba(iris_X)
+        assert pred_proba.shape == (iris_X.shape[0], forest.n_classes_)
+
+    def test_predict_log_proba(self, iris_X, iris_y):
+        forest = GRFClassifier()
+        forest.fit(iris_X, iris_y)
+        pred_log_proba = forest.predict_log_proba(iris_X)
+        assert pred_log_proba.shape == (iris_X.shape[0], forest.n_classes_)
+
     def test_serialize(self, iris_X, iris_y):
         forest = GRFClassifier()
         # not fitted

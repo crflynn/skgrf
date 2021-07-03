@@ -35,15 +35,14 @@ class GRFMixin:
 
     def _check_cluster(self, X, cluster):
         """Validate cluster definitions against training data."""
-        # TODO diff clusters/classes?
         if cluster is None:
-            self.classes_ = None
-            self.n_classes_ = 1
+            self.clusters_ = None
+            self.n_clusters_ = 1
             return np.array([])
         if len(cluster) != X.shape[0]:
             raise ValueError("cluster length must be the same as X")
-        self.classes_, new_cluster = np.unique(cluster, return_inverse=True)
-        self.n_classes_ = len(self.classes_)
+        self.clusters_, new_cluster = np.unique(cluster, return_inverse=True)
+        self.n_clusters_ = len(self.clusters_)
         return new_cluster
 
     def _check_equalize_cluster_weights(self, cluster, sample_weight):
@@ -218,4 +217,4 @@ class GRFMixin:
     def _set_n_classes(self):
         """Set num classes for ``Tree.n_classes``."""
         # for accessing in Tree
-        self.grf_forest_["n_classes"] = self.n_classes_
+        self.grf_forest_["n_classes"] = getattr(self, "n_classes_", 1)

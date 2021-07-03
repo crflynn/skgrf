@@ -42,9 +42,12 @@ class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
     :ivar int mtry\_: The ``mtry`` value determined by validation.
     :ivar int outcome_index\_: The index of the grf train matrix holding the outcomes.
     :ivar list samples_per_cluster\_: The number of samples to train per cluster.
-    :ivar list classes\_: The class labels determined from the fit input ``cluster``.
-    :ivar int n_classes\_: The number of unique class labels from the fit input
+    :ivar list clusters\_: The cluster labels determined from the fit input ``cluster``.
+    :ivar int n_clusters\_: The number of unique class labels from the fit input
         ``cluster``.
+    :ivar list classes\_: The class labels determined from the fit input ``y``.
+    :ivar int n_classes\_: The number of unique class labels from the fit input
+        ``y``.
     :ivar str criterion: The criterion used for splitting: ``mse``
     """
 
@@ -74,7 +77,7 @@ class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
 
     @property
     def criterion(self):
-        return "mse"
+        return "gini"
 
     @classmethod
     def from_forest(cls, forest: "GRFClassifier", idx: int):
@@ -113,6 +116,8 @@ class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
         # vars
         instance.outcome_index_ = forest.outcome_index_
         instance.n_features_in_ = forest.n_features_in_
+        instance.clusters_ = forest.clusters_
+        instance.n_clusters_ = forest.n_clusters_
         instance.classes_ = forest.classes_
         instance.n_classes_ = forest.n_classes_
         instance.samples_per_cluster_ = forest.samples_per_cluster_
@@ -155,11 +160,12 @@ class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
             X=X, y=y, sample_weight=sample_weight
         )
 
-        self.grf_forest_ = grf.regression_train(
+        self.grf_forest_ = grf.probability_train(
             np.asfortranarray(train_matrix.astype("float64")),
             self.outcome_index_,
             self.sample_weight_index_,
             use_sample_weight,
+            self.n_classes_,
             self.mtry_,
             1,  # num_trees
             self.min_node_size,
