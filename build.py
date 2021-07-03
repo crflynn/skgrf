@@ -19,7 +19,7 @@ include_dirs = [
 ]
 
 
-def find_pyx_files(directory, files=None):
+def find_ext_files(directory, ext="cpp", files=None):
     """Recursively find all Cython extension files.
 
     :param str directory: The directory in which to recursively crawl for .pyx files.
@@ -29,10 +29,10 @@ def find_pyx_files(directory, files=None):
         files = []
     for file in os.listdir(directory):
         path = os.path.join(directory, file)
-        if os.path.isfile(path) and path.endswith(".pyx"):
-            files.append(path.replace(os.path.sep, ".")[:-4])
+        if os.path.isfile(path) and path.endswith("." + ext):
+            files.append(path)
         elif os.path.isdir(path):
-            find_pyx_files(path, files)
+            find_ext_files(path, ext, files)
     return files
 
 
@@ -49,19 +49,15 @@ def create_extension(module_name, additional_sources=None):
         sources=[path] + additional_sources,
         include_dirs=include_dirs,
         language="c++",
-        extra_compile_args=["-std=c++11", "-Wall"],
+        extra_compile_args=["-std=c++11", "-Wall", "-O3"],
         extra_link_args=["-std=c++11", "-g"],
         define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
     )
 
 
-# Workaround for https://github.com/grf-labs/grf/issues/1004
-# TODO consider moving cpp files out pf pxd and here instead
-additional_sources = [
-    os.path.join(
-        top, "skgrf", "grf", "src", "prediction", "CausalSurvivalPredictionStrategy.cpp"
-    )
-]
+additional_sources = find_ext_files(os.path.join(top, "skgrf", "grf"), "cpp")
+additional_sources = [f for f in additional_sources if "test" not in str(f).lower()]
+
 ext_modules = [create_extension("skgrf.grf", additional_sources)]
 
 setup(
