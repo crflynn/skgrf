@@ -20,6 +20,8 @@ if os.environ.get("READTHEDOCS"):
     import subprocess
 
     os.chdir("..")
+    subprocess.run("rm -rf build".split(" "))
+    subprocess.run("pip install pip==20.0.2".split(" "))
     subprocess.run("python buildpre.py".split(" "))
     subprocess.run("python build.py clean".split(" "))
     subprocess.run("python build.py build_ext --inplace --force".split(" "))
