@@ -24,6 +24,7 @@ def test_plot():
     )
 
 
+# FIXME not working yet
 @pytest.mark.skip()
 def test_shap(boston_X, boston_y):
     from shap import TreeExplainer
