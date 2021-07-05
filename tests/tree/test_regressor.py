@@ -8,7 +8,7 @@ from sklearn.tree._tree import csr_matrix
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFRegressor
+from skgrf.ensemble import GRFForestRegressor
 from skgrf.tree.regressor import GRFTreeRegressor
 
 
@@ -127,7 +127,7 @@ class TestGRFTreeRegressor:
         check_estimator(GRFTreeRegressor())
 
     def test_from_forest(self, boston_X, boston_y):
-        forest = GRFRegressor()
+        forest = GRFForestRegressor()
         forest.fit(boston_X, boston_y)
         tree = GRFTreeRegressor.from_forest(forest=forest, idx=0)
         tree.predict(boston_X)

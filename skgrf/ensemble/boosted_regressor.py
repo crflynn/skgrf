@@ -13,13 +13,13 @@ from sklearn.utils.validation import check_is_fitted
 
 from skgrf import grf
 from skgrf.base import GRFMixin
-from skgrf.ensemble.regressor import GRFRegressor
+from skgrf.ensemble.regressor import GRFForestRegressor
 from skgrf.utils.validation import check_sample_weight
 
 logger = logging.getLogger(__name__)
 
 
-class GRFBoostedRegressor(GRFMixin, RegressorMixin, BaseEstimator):
+class GRFBoostedForestRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     r"""GRF Boosted Regression implementation for sci-kit learn.
 
     Provides a sklearn regressor interface to the GRF C++ library using Cython.
@@ -142,7 +142,7 @@ class GRFBoostedRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         _ = self._create_train_matrices(X=X, y=y, sample_weight=sample_weight)
 
         # region tuning a regression forest
-        regression_forest = GRFRegressor(
+        regression_forest = GRFForestRegressor(
             n_estimators=self.tune_n_estimators,
             equalize_cluster_weights=self.equalize_cluster_weights,
             sample_fraction=self.sample_fraction,
@@ -308,7 +308,7 @@ class GRFBoostedRegressor(GRFMixin, RegressorMixin, BaseEstimator):
             elif step > self.boost_max_steps:
                 break
             else:
-                forest_small = GRFRegressor(
+                forest_small = GRFForestRegressor(
                     sample_fraction=params["sample_fraction"],
                     mtry=params["mtry"],
                     n_estimators=self.boost_trees_tune,
@@ -336,7 +336,7 @@ class GRFBoostedRegressor(GRFMixin, RegressorMixin, BaseEstimator):
                 ) <= self.boost_error_reduction * np.nanmean(debiased_error):
                     break
 
-            forest_residual = GRFRegressor(
+            forest_residual = GRFForestRegressor(
                 sample_fraction=params["sample_fraction"],
                 mtry=params["mtry"],
                 n_estimators=self.n_estimators,

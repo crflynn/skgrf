@@ -9,7 +9,7 @@ from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.survival import GRFSurvival
+    from skgrf.ensemble.survival import GRFForestSurvival
 
 
 class GRFTreeSurvival(BaseGRFTree):
@@ -82,10 +82,10 @@ class GRFTreeSurvival(BaseGRFTree):
         return "logrank"
 
     @classmethod
-    def from_forest(cls, forest: "GRFSurvival", idx: int):
+    def from_forest(cls, forest: "GRFForestSurvival", idx: int):
         """Extract a tree from a forest.
 
-        :param GRFSurvival forest: A trained GRFSurvival instance
+        :param GRFForestSurvival forest: A trained GRFSurvival instance
         :param int idx: The tree index from the forest to extract.
         """
         # Even though we have a tree object, we keep the exact same dictionary structure

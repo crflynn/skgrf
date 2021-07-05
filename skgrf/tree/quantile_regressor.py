@@ -9,7 +9,7 @@ from skgrf import grf
 from skgrf.tree.base import BaseGRFTree
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.quantile_regressor import GRFQuantileRegressor
+    from skgrf.ensemble.quantile_regressor import GRFForestQuantileRegressor
 
 
 class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
@@ -91,10 +91,10 @@ class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
         return "gini"
 
     @classmethod
-    def from_forest(cls, forest: "GRFQuantileRegressor", idx: int):
+    def from_forest(cls, forest: "GRFForestQuantileRegressor", idx: int):
         """Extract a tree from a forest.
 
-        :param GRFQuantileRegressor forest: A trained GRFQuantileRegressor instance
+        :param GRFForestQuantileRegressor forest: A trained GRFQuantileRegressor instance
         :param int idx: The tree index from the forest to extract.
         """
         # Even though we have a tree object, we keep the exact same dictionary structure

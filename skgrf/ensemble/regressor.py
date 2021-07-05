@@ -10,7 +10,7 @@ from skgrf.tree.regressor import GRFTreeRegressor
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFRegressor(BaseGRFForest, RegressorMixin):
+class GRFForestRegressor(BaseGRFForest, RegressorMixin):
     r"""GRF Regression implementation for sci-kit learn.
 
     Provides a sklearn regressor interface to the GRF C++ library using Cython.

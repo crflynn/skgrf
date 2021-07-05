@@ -2,14 +2,14 @@ import logging
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
-from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
+from skgrf.ensemble.boosted_regressor import GRFBoostedForestRegressor
+from skgrf.ensemble.instrumental_regressor import GRFForestInstrumentalRegressor
 from skgrf.tree.causal_regressor import GRFTreeCausalRegressor
 
 logger = logging.getLogger(__name__)
 
 
-class GRFCausalRegressor(GRFInstrumentalRegressor):
+class GRFForestCausalRegressor(GRFForestInstrumentalRegressor):
     r"""GRF Causal regression implementation for sci-kit learn.
 
     Provides a sklearn causal regressor to the GRF C++ library using Cython.
@@ -153,13 +153,13 @@ class GRFCausalRegressor(GRFInstrumentalRegressor):
         }
         if y_hat is None and self.orthogonal_boosting:
             logger.debug("orthogonal boosting y_hat")
-            br = GRFBoostedRegressor(**boost_params)
+            br = GRFBoostedForestRegressor(**boost_params)
             br.fit(X, y, sample_weight=sample_weight, cluster=cluster)
             y_hat = br.boosted_forests_["predictions"]
 
         if w_hat is None and self.orthogonal_boosting:
             logger.debug("orthogonal boosting w_hat")
-            br = GRFBoostedRegressor(**boost_params)
+            br = GRFBoostedForestRegressor(**boost_params)
             br.fit(X, w, sample_weight=sample_weight, cluster=cluster)
             w_hat = br.boosted_forests_["predictions"]
 

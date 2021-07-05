@@ -11,7 +11,7 @@ from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.classifier import GRFClassifier
+    from skgrf.ensemble.classifier import GRFForestClassifier
 
 
 class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
@@ -80,10 +80,10 @@ class GRFTreeClassifier(BaseGRFTree, ClassifierMixin):
         return "gini"
 
     @classmethod
-    def from_forest(cls, forest: "GRFClassifier", idx: int):
+    def from_forest(cls, forest: "GRFForestClassifier", idx: int):
         """Extract a tree from a forest.
 
-        :param GRFClassifier forest: A trained GRFClassifier instance
+        :param GRFForestClassifier forest: A trained GRFClassifier instance
         :param int idx: The tree index from the forest to extract.
         """
         # Even though we have a tree object, we keep the exact same dictionary structure

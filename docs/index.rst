@@ -31,13 +31,13 @@ The latest release of ``skgrf`` uses version `2.0.0 <https://github.com/grf-labs
     :caption: Contents:
     :maxdepth: 2
 
-    ensemble/forest_boosted_regressor
     ensemble/forest_causal_regressor
     ensemble/forest_classifier
     ensemble/forest_instrumental_regressor
     ensemble/forest_local_linear_regressor
     ensemble/forest_quantile_regressor
     ensemble/forest_regressor
+    ensemble/forest_boosted_regressor
     ensemble/forest_survival
     tree/tree_causal_regressor
     tree/tree_classifier
