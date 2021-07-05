@@ -1,6 +1,6 @@
 Forest Regressor
 ================
 
-.. autoclass:: skgrf.ensemble.GRFRegressor
+.. autoclass:: skgrf.ensemble.GRFForestRegressor
     :members:
     :inherited-members:

@@ -10,7 +10,7 @@ from skgrf.tree.survival import GRFTreeSurvival
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFSurvival(BaseGRFForest, BaseEstimator):
+class GRFForestSurvival(BaseGRFForest, BaseEstimator):
     r"""GRF Survival implementation for sci-kit learn.
 
     Provides a sklearn survival interface to the GRF C++ library using Cython.

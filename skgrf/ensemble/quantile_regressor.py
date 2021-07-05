@@ -9,7 +9,7 @@ from skgrf.ensemble.base import BaseGRFForest
 from skgrf.tree.quantile_regressor import GRFTreeQuantileRegressor
 
 
-class GRFQuantileRegressor(BaseGRFForest, RegressorMixin):
+class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
     r"""GRF Quantile Regression implementation for sci-kit learn.
 
     Provides a sklearn quantile regressor interface to the GRF C++ library using Cython.

@@ -1,6 +1,6 @@
 Forest Instrumental Regressor
 =============================
 
-.. autoclass:: skgrf.ensemble.GRFInstrumentalRegressor
+.. autoclass:: skgrf.ensemble.GRFForestInstrumentalRegressor
     :members:
     :inherited-members:

@@ -1,6 +1,6 @@
 Forest Causal Regressor
 =======================
 
-.. autoclass:: skgrf.ensemble.GRFCausalRegressor
+.. autoclass:: skgrf.ensemble.GRFForestCausalRegressor
     :members:
     :inherited-members:

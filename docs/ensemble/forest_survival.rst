@@ -1,6 +1,6 @@
 Forest Survival
 ===============
 
-.. autoclass:: skgrf.ensemble.GRFSurvival
+.. autoclass:: skgrf.ensemble.GRFForestSurvival
     :members:
     :inherited-members:

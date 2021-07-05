@@ -10,7 +10,7 @@ from skgrf.tree.local_linear_regressor import GRFTreeLocalLinearRegressor
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFLocalLinearRegressor(BaseGRFForest, RegressorMixin):
+class GRFForestLocalLinearRegressor(BaseGRFForest, RegressorMixin):
     r"""GRF Local Linear Regression implementation for sci-kit learn.
 
     Provides a sklearn regressor interface to the GRF C++ library using Cython.
