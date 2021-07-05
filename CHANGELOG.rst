@@ -30,6 +30,7 @@ Release Changelog
 * Remove the ``DataNumpy.cpp`` class. This is no longer needed with the ``grf`` 2.0 updates to the ``Data.cpp`` class
 * Rename the ``DataNumpy`` Cython class to ``Data``
 * Remove extern cpp includes from Cython ``.pxd`` file and add ``cpp`` files to ``Extension``'s ``source`` arg
+* Rename forest estimators to ``GRFForest...``
 
 0.0.1 (2021-04-11)
 ~~~~~~~~~~~~~~~~~~
