@@ -79,7 +79,7 @@ The ``GRFForestRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy
     #  20.82455595]
 
 
-GRFQuantileRegressor
+GRFForestQuantileRegressor
 ~~~~~~~~~~~~~~~~~~~~
 
 The ``GRFForestQuantileRegressor`` predictor uses ``grf``'s QuantilePredictionStrategy class.
