@@ -1,6 +1,6 @@
 Forest Quantile Regressor
 =========================
 
-.. autoclass:: skgrf.ensemble.GRFQuantileRegressor
+.. autoclass:: skgrf.ensemble.GRFForestQuantileRegressor
     :members:
     :inherited-members:

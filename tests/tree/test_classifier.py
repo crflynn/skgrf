@@ -8,7 +8,7 @@ from sklearn.tree._tree import csr_matrix
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFClassifier
+from skgrf.ensemble import GRFForestClassifier
 from skgrf.tree.classifier import GRFTreeClassifier
 
 
@@ -147,7 +147,7 @@ class TestGRFTreeClassifier:
             assert "Arrays are not equal" in exc
 
     def test_from_forest(self, iris_X, iris_y):
-        forest = GRFClassifier()
+        forest = GRFForestClassifier()
         forest.fit(iris_X, iris_y)
         tree = GRFTreeClassifier.from_forest(forest=forest, idx=0)
         tree.predict(iris_X)

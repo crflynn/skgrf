@@ -7,16 +7,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFLocalLinearRegressor
+from skgrf.ensemble import GRFForestLocalLinearRegressor
 from skgrf.tree import GRFTreeLocalLinearRegressor
 
 
-class TestGRFLocalLinearRegressor:
+class TestGRFForestLocalLinearRegressor:
     def test_init(self):
-        _ = GRFLocalLinearRegressor()
+        _ = GRFForestLocalLinearRegressor()
 
     def test_fit(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor(ll_split_cutoff=0)
+        forest = GRFForestLocalLinearRegressor(ll_split_cutoff=0)
         with pytest.raises(NotFittedError):
             check_is_fitted(forest)
         forest.fit(boston_X, boston_y)
@@ -26,13 +26,13 @@ class TestGRFLocalLinearRegressor:
         assert forest.criterion == "mse"
 
     def test_predict(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor(ll_split_cutoff=0)
+        forest = GRFForestLocalLinearRegressor(ll_split_cutoff=0)
         forest.fit(boston_X, boston_y)
         pred = forest.predict(boston_X)
         assert len(pred) == boston_X.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor(ll_split_cutoff=0)
+        forest = GRFForestLocalLinearRegressor(ll_split_cutoff=0)
         # not fitted
         tf = tempfile.TemporaryFile()
         pickle.dump(forest, tf)
@@ -48,14 +48,14 @@ class TestGRFLocalLinearRegressor:
         assert len(pred) == boston_X.shape[0]
 
     def test_clone(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor(ll_split_cutoff=0)
+        forest = GRFForestLocalLinearRegressor(ll_split_cutoff=0)
         forest.fit(boston_X, boston_y)
         clone(forest)
 
     def test_equalize_cluster_weights(
         self, boston_X, boston_y, boston_cluster, equalize_cluster_weights
     ):
-        forest = GRFLocalLinearRegressor(
+        forest = GRFForestLocalLinearRegressor(
             equalize_cluster_weights=equalize_cluster_weights
         )
         forest.fit(boston_X, boston_y, cluster=boston_cluster)
@@ -76,7 +76,7 @@ class TestGRFLocalLinearRegressor:
     def test_sample_fraction(
         self, boston_X, boston_y, sample_fraction
     ):  # and ci_group_size
-        forest = GRFLocalLinearRegressor(
+        forest = GRFForestLocalLinearRegressor(
             sample_fraction=sample_fraction, ci_group_size=1
         )
         if sample_fraction <= 0 or sample_fraction > 1:
@@ -85,7 +85,7 @@ class TestGRFLocalLinearRegressor:
         else:
             forest.fit(boston_X, boston_y)
 
-        forest = GRFLocalLinearRegressor(
+        forest = GRFForestLocalLinearRegressor(
             sample_fraction=sample_fraction, ci_group_size=2
         )
         if sample_fraction <= 0 or sample_fraction > 0.5:
@@ -95,7 +95,7 @@ class TestGRFLocalLinearRegressor:
             forest.fit(boston_X, boston_y)
 
     def test_mtry(self, boston_X, boston_y, mtry):
-        forest = GRFLocalLinearRegressor(mtry=mtry)
+        forest = GRFForestLocalLinearRegressor(mtry=mtry)
         forest.fit(boston_X, boston_y)
         if mtry is not None:
             assert forest.mtry_ == mtry
@@ -103,11 +103,11 @@ class TestGRFLocalLinearRegressor:
             assert forest.mtry_ == 6
 
     def test_honesty(self, boston_X, boston_y, honesty):
-        forest = GRFLocalLinearRegressor(honesty=honesty)
+        forest = GRFForestLocalLinearRegressor(honesty=honesty)
         forest.fit(boston_X, boston_y)
 
     def test_honesty_fraction(self, boston_X, boston_y, honesty_fraction):
-        forest = GRFLocalLinearRegressor(
+        forest = GRFForestLocalLinearRegressor(
             honesty=True, honesty_fraction=honesty_fraction, honesty_prune_leaves=True
         )
         if honesty_fraction <= 0 or honesty_fraction >= 1:
@@ -117,13 +117,13 @@ class TestGRFLocalLinearRegressor:
             forest.fit(boston_X, boston_y)
 
     def test_honesty_prune_leaves(self, boston_X, boston_y, honesty_prune_leaves):
-        forest = GRFLocalLinearRegressor(
+        forest = GRFForestLocalLinearRegressor(
             honesty=True, honesty_prune_leaves=honesty_prune_leaves
         )
         forest.fit(boston_X, boston_y)
 
     def test_alpha(self, boston_X, boston_y, alpha):
-        forest = GRFLocalLinearRegressor(alpha=alpha)
+        forest = GRFForestLocalLinearRegressor(alpha=alpha)
         if alpha <= 0 or alpha >= 0.25:
             with pytest.raises(ValueError):
                 forest.fit(boston_X, boston_y)
@@ -131,10 +131,10 @@ class TestGRFLocalLinearRegressor:
             forest.fit(boston_X, boston_y)
 
     def test_check_estimator(self):
-        check_estimator(GRFLocalLinearRegressor())
+        check_estimator(GRFForestLocalLinearRegressor())
 
     def test_estimators_(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor(n_estimators=10)
+        forest = GRFForestLocalLinearRegressor(n_estimators=10)
         with pytest.raises(AttributeError):
             _ = forest.estimators_
         forest.fit(boston_X, boston_y)
@@ -144,7 +144,7 @@ class TestGRFLocalLinearRegressor:
         check_is_fitted(estimators[0])
 
     def test_get_estimator(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor(n_estimators=10)
+        forest = GRFForestLocalLinearRegressor(n_estimators=10)
         with pytest.raises(NotFittedError):
             _ = forest.get_estimator(idx=0)
         forest.fit(boston_X, boston_y)
@@ -155,13 +155,13 @@ class TestGRFLocalLinearRegressor:
             _ = forest.get_estimator(idx=20)
 
     def test_get_split_frequencies(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor()
+        forest = GRFForestLocalLinearRegressor()
         forest.fit(boston_X, boston_y)
         sf = forest.get_split_frequencies()
         assert sf.shape[1] == boston_X.shape[1]
 
     def test_get_feature_importances(self, boston_X, boston_y):
-        forest = GRFLocalLinearRegressor()
+        forest = GRFForestLocalLinearRegressor()
         forest.fit(boston_X, boston_y)
         fi = forest.get_feature_importances()
         assert len(fi) == boston_X.shape[1]
@@ -170,7 +170,7 @@ class TestGRFLocalLinearRegressor:
         X_train, X_test, y_train, y_test = train_test_split(
             boston_X, boston_y, test_size=0.33, random_state=42
         )
-        forest = GRFLocalLinearRegressor()
+        forest = GRFForestLocalLinearRegressor()
         forest.fit(X_train, y_train)
         weights = forest.get_kernel_weights(X_test)
         assert weights.shape[0] == X_test.shape[0]

@@ -5,7 +5,7 @@ import logging
 from skgrf.tree.instrumental_regressor import GRFTreeInstrumentalRegressor
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble import GRFCausalRegressor
+    from skgrf.ensemble import GRFForestCausalRegressor
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
         self.orthogonal_boosting = orthogonal_boosting
 
     @classmethod
-    def from_forest(cls, forest: "GRFCausalRegressor", idx: int):
+    def from_forest(cls, forest: "GRFForestCausalRegressor", idx: int):
         """Extract a tree from a forest.
 
         :param GRFLocalLinearRegressor forest: A trained GRFLocalLinearRegressor
@@ -155,7 +155,7 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
         :param array1d cluster: optional cluster assignments for input samples
         """
         # avoiding circular import
-        from skgrf.ensemble.boosted_regressor import GRFBoostedRegressor
+        from skgrf.ensemble.boosted_regressor import GRFBoostedForestRegressor
 
         X, y = self._validate_data(X, y)
         self._check_num_samples(X)
@@ -178,13 +178,13 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
         }
         if y_hat is None and self.orthogonal_boosting:
             logger.debug("orthogonal boosting y_hat")
-            br = GRFBoostedRegressor(**boost_params)
+            br = GRFBoostedForestRegressor(**boost_params)
             br.fit(X, y, sample_weight=sample_weight, cluster=cluster)
             y_hat = br.boosted_forests_["predictions"]
 
         if w_hat is None and self.orthogonal_boosting:
             logger.debug("orthogonal boosting w_hat")
-            br = GRFBoostedRegressor(**boost_params)
+            br = GRFBoostedForestRegressor(**boost_params)
             br.fit(X, w, sample_weight=sample_weight, cluster=cluster)
             w_hat = br.boosted_forests_["predictions"]
 

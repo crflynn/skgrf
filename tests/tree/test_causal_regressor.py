@@ -7,7 +7,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.tree._tree import csr_matrix
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble import GRFCausalRegressor
+from skgrf.ensemble import GRFForestCausalRegressor
 from skgrf.tree import GRFTreeCausalRegressor
 
 
@@ -143,7 +143,7 @@ class TestGRFTreeCausalRegressor:
     #     check_estimator(GRFTreeCausalRegressor())
 
     def test_from_forest(self, causal_X, causal_y, causal_w):
-        forest = GRFCausalRegressor()
+        forest = GRFForestCausalRegressor()
         forest.fit(causal_X, causal_y, causal_w)
         tree = GRFTreeCausalRegressor.from_forest(forest=forest, idx=0)
         tree.predict(causal_X)

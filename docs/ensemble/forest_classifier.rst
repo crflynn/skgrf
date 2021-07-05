@@ -1,6 +1,6 @@
 Forest Classifier
 =================
 
-.. autoclass:: skgrf.ensemble.GRFClassifier
+.. autoclass:: skgrf.ensemble.GRFForestClassifier
     :members:
     :inherited-members:

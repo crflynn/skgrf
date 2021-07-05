@@ -13,7 +13,7 @@ from skgrf.utils.validation import check_sample_weight
 logger = logging.getLogger(__name__)
 
 
-class GRFInstrumentalRegressor(BaseGRFForest, RegressorMixin):
+class GRFForestInstrumentalRegressor(BaseGRFForest, RegressorMixin):
     r"""GRF Instrumental regression implementation for sci-kit learn.
 
     Provides a sklearn instrumental regression to the GRF C++ library using Cython.

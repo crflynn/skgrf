@@ -1,6 +1,6 @@
 import pytest
 
-from skgrf.ensemble import GRFRegressor
+from skgrf.ensemble import GRFForestRegressor
 
 
 @pytest.mark.skip()
@@ -10,7 +10,7 @@ def test_plot():
     from sklearn.tree import plot_tree
 
     boston_X, boston_y = load_boston(return_X_y=True)
-    forest = GRFRegressor()
+    forest = GRFForestRegressor()
     forest.fit(boston_X, boston_y)
     estimator = forest.get_estimator(0)
     plt.figure()
@@ -29,7 +29,7 @@ def test_plot():
 def test_shap(boston_X, boston_y):
     from shap import TreeExplainer
 
-    forest = GRFRegressor()
+    forest = GRFForestRegressor()
     forest.fit(boston_X, boston_y)
 
     explainer = TreeExplainer(model=forest, data=boston_X)

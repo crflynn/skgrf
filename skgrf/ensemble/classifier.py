@@ -11,7 +11,7 @@ from skgrf.tree.classifier import GRFTreeClassifier
 from skgrf.utils.validation import check_sample_weight
 
 
-class GRFClassifier(BaseGRFForest, ClassifierMixin):
+class GRFForestClassifier(BaseGRFForest, ClassifierMixin):
     r"""GRF Classification implementation for sci-kit learn.
 
     Provides a sklearn classifier interface to the GRF C++ library using Cython.

@@ -7,7 +7,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.tree._tree import csr_matrix
 from sklearn.utils.validation import check_is_fitted
 
-from skgrf.ensemble.survival import GRFSurvival
+from skgrf.ensemble.survival import GRFForestSurvival
 from skgrf.tree.survival import GRFTreeSurvival
 
 
@@ -127,7 +127,7 @@ class TestGRFTreeSurvival:
     #     check_estimator(GRFTreeSurvival())
 
     def test_from_forest(self, lung_X, lung_y):
-        forest = GRFSurvival()
+        forest = GRFForestSurvival()
         forest.fit(lung_X, lung_y)
         tree = GRFTreeSurvival.from_forest(forest=forest, idx=0)
         tree.predict(lung_X)

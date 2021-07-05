@@ -10,7 +10,7 @@ from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.regressor import GRFRegressor
+    from skgrf.ensemble.regressor import GRFForestRegressor
 
 
 class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
@@ -79,7 +79,7 @@ class GRFTreeRegressor(BaseGRFTree, RegressorMixin):
     def from_forest(cls, forest: "t.Union[GRFRegressor, GRFBoostedRegressor", idx: int):
         """Extract a tree from a forest.
 
-        :param GRFRegressor forest: A trained GRFRegressor instance
+        :param GRFForestRegressor forest: A trained GRFRegressor instance
         :param int idx: The tree index from the forest to extract.
         """
         # Even though we have a tree object, we keep the exact same dictionary structure

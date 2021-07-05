@@ -1,6 +1,6 @@
-Forest Boosted Regressor
+Boosted Forest Regressor
 ========================
 
-.. autoclass:: skgrf.ensemble.GRFBoostedRegressor
+.. autoclass:: skgrf.ensemble.GRFBoostedForestRegressor
     :members:
     :inherited-members:

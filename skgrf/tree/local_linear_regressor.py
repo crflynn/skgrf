@@ -10,7 +10,7 @@ from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.local_linear_regressor import GRFLocalLinearRegressor
+    from skgrf.ensemble.local_linear_regressor import GRFForestLocalLinearRegressor
 
 
 class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
@@ -98,10 +98,10 @@ class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
         return "mse"
 
     @classmethod
-    def from_forest(cls, forest: "GRFLocalLinearRegressor", idx: int):
+    def from_forest(cls, forest: "GRFForestLocalLinearRegressor", idx: int):
         """Extract a tree from a forest.
 
-        :param GRFLocalLinearRegressor forest: A trained GRFLocalLinearRegressor
+        :param GRFForestLocalLinearRegressor forest: A trained GRFLocalLinearRegressor
             instance
         :param int idx: The tree index from the forest to extract.
         """

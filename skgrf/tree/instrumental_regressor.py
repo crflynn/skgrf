@@ -11,7 +11,7 @@ from skgrf.tree.base import BaseGRFTree
 from skgrf.utils.validation import check_sample_weight
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from skgrf.ensemble.instrumental_regressor import GRFInstrumentalRegressor
+    from skgrf.ensemble.instrumental_regressor import GRFForestInstrumentalRegressor
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ class GRFTreeInstrumentalRegressor(BaseGRFTree, RegressorMixin):
         return "mse"
 
     @classmethod
-    def from_forest(cls, forest: "GRFInstrumentalRegressor", idx: int):
+    def from_forest(cls, forest: "GRFForestInstrumentalRegressor", idx: int):
         """Extract a tree from a forest.
 
         :param GRFLocalLinearRegressor forest: A trained GRFLocalLinearRegressor
