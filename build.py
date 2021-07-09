@@ -53,7 +53,7 @@ def create_extension(module_name, additional_sources=None):
         language="c++",
         extra_compile_args=["-std=c++11", "-Wall", "-O3"],
         extra_link_args=["-std=c++11", "-g"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        # define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
     )
 
 
