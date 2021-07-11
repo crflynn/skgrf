@@ -54,7 +54,7 @@ Usage
 -----
 
 GRFForestRegressor
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 The ``GRFForestRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy class.
 
@@ -80,7 +80,7 @@ The ``GRFForestRegressor`` predictor uses ``grf``'s RegressionPredictionStrategy
 
 
 GRFForestQuantileRegressor
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``GRFForestQuantileRegressor`` predictor uses ``grf``'s QuantilePredictionStrategy class.
 
