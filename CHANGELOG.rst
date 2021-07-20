@@ -1,6 +1,11 @@
 Release Changelog
 -----------------
 
+0.1.1 (2021-07-20)
+~~~~~~~~~~~~~~~~~~
+
+* Fix to include grf src (accidentally removed in 0.1.0)
+
 0.1.0 (2021-07-04)
 ~~~~~~~~~~~~~~~~~~
 

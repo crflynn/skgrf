@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skgrf"
-version = "0.1.0"
+version = "0.1.1"
 description = "python bindings for C++ generalized random forests (grf)"
 authors = ["flynn <crf204@gmail.com>"]
 build = "build.py"
