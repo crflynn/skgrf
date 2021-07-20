@@ -10,7 +10,7 @@ homepage = "https://github.com/crflynn/skgrf"
 repository = "https://github.com/crflynn/skgrf"
 documentation = "https://github.com/crflynn/skgrf"
 include = [
-    "skgrf/ensemble/grf/**/*",
+    "skgrf/grf/**/*",
     "CHANGELOG.rst",
     "LICENSE.txt",
     "README.rst",
