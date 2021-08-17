@@ -161,6 +161,10 @@ class TestGRFForestCausalRegressor:
         with pytest.raises(AttributeError):
             _ = forest.estimators_
         forest.fit(causal_X, causal_y, causal_w, causal_w)
+        with pytest.raises(ValueError):
+            _ = forest.estimators_
+        forest = GRFForestCausalRegressor(n_estimators=10, enable_tree_details=True)
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
         estimators = forest.estimators_
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeCausalRegressor)
@@ -171,7 +175,11 @@ class TestGRFForestCausalRegressor:
         with pytest.raises(NotFittedError):
             _ = forest.get_estimator(idx=0)
         forest.fit(causal_X, causal_y, causal_w, causal_w)
-        estimator = forest.get_estimator(0)
+        with pytest.raises(ValueError):
+            _ = forest.get_estimator(idx=0)
+        forest = GRFForestCausalRegressor(n_estimators=10, enable_tree_details=True)
+        forest.fit(causal_X, causal_y, causal_w, causal_w)
+        estimator = forest.get_estimator(idx=0)
         check_is_fitted(estimator)
         assert isinstance(estimator, GRFTreeCausalRegressor)
         with pytest.raises(IndexError):

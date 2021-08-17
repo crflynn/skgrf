@@ -159,6 +159,10 @@ class TestGRFForestClassifier:
         with pytest.raises(AttributeError):
             _ = forest.estimators_
         forest.fit(iris_X, iris_y)
+        with pytest.raises(ValueError):
+            _ = forest.estimators_
+        forest = GRFForestClassifier(n_estimators=10, enable_tree_details=True)
+        forest.fit(iris_X, iris_y)
         estimators = forest.estimators_
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeClassifier)
@@ -169,7 +173,11 @@ class TestGRFForestClassifier:
         with pytest.raises(NotFittedError):
             _ = forest.get_estimator(idx=0)
         forest.fit(iris_X, iris_y)
-        estimator = forest.get_estimator(0)
+        with pytest.raises(ValueError):
+            _ = forest.get_estimator(idx=0)
+        forest = GRFForestClassifier(n_estimators=10, enable_tree_details=True)
+        forest.fit(iris_X, iris_y)
+        estimator = forest.get_estimator(idx=0)
         check_is_fitted(estimator)
         assert isinstance(estimator, GRFTreeClassifier)
         with pytest.raises(IndexError):

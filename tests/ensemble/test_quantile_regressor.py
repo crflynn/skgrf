@@ -133,6 +133,12 @@ class TestGRFForestQuantileRegressor:
         with pytest.raises(AttributeError):
             _ = forest.estimators_
         forest.fit(boston_X, boston_y)
+        with pytest.raises(ValueError):
+            _ = forest.estimators_
+        forest = GRFForestQuantileRegressor(
+            n_estimators=10, quantiles=[0.2], enable_tree_details=True
+        )
+        forest.fit(boston_X, boston_y)
         estimators = forest.estimators_
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeQuantileRegressor)
@@ -142,6 +148,12 @@ class TestGRFForestQuantileRegressor:
         forest = GRFForestQuantileRegressor(n_estimators=10, quantiles=[0.2])
         with pytest.raises(NotFittedError):
             _ = forest.get_estimator(idx=0)
+        forest.fit(boston_X, boston_y)
+        with pytest.raises(ValueError):
+            _ = forest.get_estimator(idx=0)
+        forest = GRFForestQuantileRegressor(
+            n_estimators=10, quantiles=[0.2], enable_tree_details=True
+        )
         forest.fit(boston_X, boston_y)
         estimator = forest.get_estimator(0)
         check_is_fitted(estimator)
