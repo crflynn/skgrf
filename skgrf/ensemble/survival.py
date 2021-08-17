@@ -41,7 +41,7 @@ class GRFForestSurvival(BaseGRFForest, BaseEstimator):
     :param int seed: Random seed value.
     :param bool enable_tree_details: When ``True``, perform additional calculations
         for building the underlying decision trees. Must be enabled for ``estimators_``
-        and ``get_estimator`` to work. Very low.
+        and ``get_estimator`` to work. Very slow.
 
     :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
