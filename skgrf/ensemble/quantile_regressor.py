@@ -42,6 +42,9 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
     :param float imbalance_penalty: Penalty applied to imbalanced splits.
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
+    :param bool enable_tree_details: When ``True``, perform additional calculations
+        for building the underlying decision trees. Must be enabled for ``estimators_``
+        and ``get_estimator`` to work. Very slow.
 
     :ivar list estimators\_: A list of tree objects from the forest.
     :ivar int n_features_in\_: The number of features (columns) from the fit input
@@ -73,6 +76,7 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
         imbalance_penalty=0,
         n_jobs=-1,
         seed=42,
+        enable_tree_details=False,
     ):
         self.n_estimators = n_estimators
         self.quantiles = quantiles
@@ -88,6 +92,7 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
         self.imbalance_penalty = imbalance_penalty
         self.n_jobs = n_jobs
         self.seed = seed
+        self.enable_tree_details = enable_tree_details
 
     @property
     def criterion(self):
@@ -101,6 +106,8 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
             raise AttributeError(
                 f"{self.__class__.__name__} object has no attribute 'estimators_'"
             ) from None
+        if not self.enable_tree_details:
+            raise ValueError("enable_tree_details must be True prior to training")
         return [
             GRFTreeQuantileRegressor.from_forest(self, idx=idx)
             for idx in range(self.n_estimators)
@@ -112,6 +119,8 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
         :param int idx: The index of the tree to extract.
         """
         check_is_fitted(self)
+        if not self.enable_tree_details:
+            raise ValueError("enable_tree_details must be True prior to training")
         return GRFTreeQuantileRegressor.from_forest(self, idx=idx)
 
     def fit(self, X, y, cluster=None):
@@ -162,10 +171,13 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
             self.seed,
         )
         self._ensure_ptr()
-        sample_weight = np.ones(len(X))
-        self._set_sample_weights(sample_weight)
-        self._set_node_values(y, sample_weight)
-        self._set_n_classes()
+
+        if self.enable_tree_details:
+            sample_weight = np.ones(len(X))
+            self._set_sample_weights(sample_weight)
+            self._set_node_values(y, sample_weight)
+            self._set_n_classes()
+
         return self
 
     def predict(self, X):

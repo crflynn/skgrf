@@ -138,6 +138,12 @@ class TestGRFForestLocalLinearRegressor:
         with pytest.raises(AttributeError):
             _ = forest.estimators_
         forest.fit(boston_X, boston_y)
+        with pytest.raises(ValueError):
+            _ = forest.estimators_
+        forest = GRFForestLocalLinearRegressor(
+            n_estimators=10, enable_tree_details=True
+        )
+        forest.fit(boston_X, boston_y)
         estimators = forest.estimators_
         assert len(estimators) == 10
         assert isinstance(estimators[0], GRFTreeLocalLinearRegressor)
@@ -148,7 +154,13 @@ class TestGRFForestLocalLinearRegressor:
         with pytest.raises(NotFittedError):
             _ = forest.get_estimator(idx=0)
         forest.fit(boston_X, boston_y)
-        estimator = forest.get_estimator(0)
+        with pytest.raises(ValueError):
+            _ = forest.get_estimator(idx=0)
+        forest = GRFForestLocalLinearRegressor(
+            n_estimators=10, enable_tree_details=True
+        )
+        forest.fit(boston_X, boston_y)
+        estimator = forest.get_estimator(idx=0)
         check_is_fitted(estimator)
         assert isinstance(estimator, GRFTreeLocalLinearRegressor)
         with pytest.raises(IndexError):
