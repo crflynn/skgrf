@@ -187,7 +187,6 @@ class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
         )
         self._ensure_ptr()
         sample_weight = np.ones(len(X))
-        self._set_sample_weights(sample_weight)
         self._set_node_values(y, sample_weight)
         self._set_n_classes()
         return self
