@@ -1,6 +1,13 @@
 Release Changelog
 -----------------
 
+0.2.0 (2021-08-23)
+~~~~~~~~~~~~~~~~~~
+
+* Pin sklearn version to >=0.23.0,<1.0
+* Changed tree details calculations to be optional due to expensive calculations
+* Added more documentation around tree detail interface
+
 0.1.1 (2021-07-20)
 ~~~~~~~~~~~~~~~~~~
 
