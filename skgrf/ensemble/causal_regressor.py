@@ -40,7 +40,7 @@ class GRFForestCausalRegressor(GRFForestInstrumentalRegressor):
     :param int n_jobs: The number of threads. Default is number of CPU cores.
     :param int seed: Random seed value.
     :param bool enable_tree_details: When ``True``, perform additional calculations
-        for building the underlying decision trees. Must be enabled for ``estimators_``
+        for detailing the underlying decision trees. Must be enabled for ``estimators_``
         and ``get_estimator`` to work. Very slow.
 
     :ivar list estimators\_: A list of tree objects from the forest.

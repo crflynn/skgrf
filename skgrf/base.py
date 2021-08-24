@@ -148,15 +148,15 @@ class GRFMixin:
                 "The sample fraction is too small, resulting in less than 1 sample for fitting."
             )
 
-    def _set_sample_weights(self, sample_weight):
+    def _set_sample_weights(self, sample_weights):
         """Set leaf weights for access in ``Tree``."""
-        self.grf_forest_["leaf_weights"] = []
-        for tree in self.grf_forest_["leaf_samples"]:
-            self.grf_forest_["leaf_weights"].append([])
-            for node in tree:
-                self.grf_forest_["leaf_weights"][-1].append(
-                    sum([sample_weight[idx] for idx in node])
-                )
+        weights = []
+        for tree in sample_weights:
+            tree_weights = []
+            for idx, node in enumerate(tree):
+                tree_weights.append(sum(node))
+            weights.append(tree_weights)
+        self.grf_forest_["leaf_weights"] = weights
 
     def _get_sample_values(self, values):
         """Map the leaf samples to corresponding values.
@@ -189,6 +189,7 @@ class GRFMixin:
         """Set the node values for ``Tree.value``."""
         forest_values = self._get_sample_values(y)
         forest_weights = self._get_sample_values(sample_weight)
+        self._set_sample_weights(forest_weights)
         self.grf_forest_["node_values"] = []
         for idx in range(self.grf_forest_["num_trees"]):
             left = self.grf_forest_["child_nodes"][idx][0]
