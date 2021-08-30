@@ -45,15 +45,12 @@ jobs:
       run: |
         poetry run python buildpre.py
         poetry build
+        poetry run python -c "from skgrf import grf"
 
     - name: Install deps
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
         poetry install --no-root
-
-    - name: Install
-      run: |
-        poetry install
 
     - name: Format
       run: |
@@ -117,15 +114,12 @@ jobs:
       run: |
         poetry run python buildpre.py
         poetry build
+        poetry run python -c "from skgrf import grf"
 
     - name: Install deps
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
         poetry install --no-root
-
-    - name: Install
-      run: |
-        poetry install
 
     - name: Test
       run: |
@@ -182,15 +176,12 @@ jobs:
       run: |
         poetry run python buildpre.py
         poetry build
+        poetry run python -c "from skgrf import grf"
 
     - name: Install deps
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
         poetry install --no-root
-
-    - name: Install
-      run: |
-        poetry install
 
     - name: Test
       run: |
