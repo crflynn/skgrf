@@ -46,12 +46,11 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
+        poetry run pip install dist/*whl
 
-    - name: Install
-      if: steps.cache-deps.outputs.cache-hit != 'true'
+    - name: Install deps
       run: |
         poetry install --no-root
-        poetry run pip install dist/*whl
 
     - name: Format
       run: |
@@ -116,12 +115,11 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
+        poetry run pip install dist/*whl
 
-    - name: Install
-      if: steps.cache-deps.outputs.cache-hit != 'true'
+    - name: Install deps
       run: |
         poetry install --no-root
-        poetry run pip install dist/*whl
 
     - name: Test
       run: |
@@ -179,12 +177,11 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
+        poetry run pip install dist/*whl
 
-    - name: Install
-      if: steps.cache-deps.outputs.cache-hit != 'true'
+    - name: Install deps
       run: |
         poetry install --no-root
-        poetry run pip install dist/*whl
 
     - name: Test
       run: |
