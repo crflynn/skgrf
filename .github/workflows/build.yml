@@ -43,14 +43,15 @@ jobs:
 
     - name: Build
       run: |
+        poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
-        poetry run python -c "from skgrf import grf"
 
-    - name: Install deps
+    - name: Install
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
         poetry install --no-root
+        poetry run pip install dist/*whl
 
     - name: Format
       run: |
@@ -112,14 +113,15 @@ jobs:
 
     - name: Build
       run: |
+        poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
-        poetry run python -c "from skgrf import grf"
 
-    - name: Install deps
+    - name: Install
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
         poetry install --no-root
+        poetry run pip install dist/*whl
 
     - name: Test
       run: |
@@ -174,14 +176,15 @@ jobs:
 
     - name: Build
       run: |
+        poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
-        poetry run python -c "from skgrf import grf"
 
-    - name: Install deps
+    - name: Install
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
         poetry install --no-root
+        poetry run pip install dist/*whl
 
     - name: Test
       run: |
