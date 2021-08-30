@@ -46,6 +46,7 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
+        poetry run pip install -U pip
         poetry run pip install dist/*whl
 
     - name: Install deps
@@ -115,6 +116,7 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
+        poetry run pip install -U pip
         poetry run pip install dist/*whl
 
     - name: Install deps
@@ -177,6 +179,7 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
+        poetry run pip install -U pip
         poetry run pip install dist/*whl
 
     - name: Install deps
