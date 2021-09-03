@@ -29,9 +29,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v1-${{ runner.os }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v2-${{ runner.os }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v1-${{ runner.os }}-asdf-
+          v2-${{ runner.os }}-asdf-
 
     - name: Install tools
       # pip 20.1 fails on generation of multiple .egg-info dirs
@@ -41,15 +41,15 @@ jobs:
         poetry run pip install pip==20.0.2
         poetry run pip install -U setuptools wheel
 
-    - name: Install deps
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      run: |
-        poetry install --no-root
-
     - name: Build
       run: |
+        poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
-        poetry install
+        poetry run python build.py build_ext --inplace --force
+
+    - name: Install deps
+      run: |
+        poetry install --no-root
 
     - name: Format
       run: |
@@ -88,9 +88,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v1-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v2-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v1-${{ runner.os }}-${{ matrix.python-version }}-asdf-
+          v2-${{ runner.os }}-${{ matrix.python-version }}-asdf-
 
     - name: Install python
       if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -109,15 +109,15 @@ jobs:
         poetry run pip install pip==20.0.2
         poetry run pip install -U setuptools wheel
 
-    - name: Install deps
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      run: |
-        poetry install --no-root
-
     - name: Build
       run: |
+        poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
-        poetry install
+        poetry run python build.py build_ext --inplace --force
+
+    - name: Install deps
+      run: |
+        poetry install --no-root
 
     - name: Test
       run: |
@@ -149,9 +149,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v1-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v2-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v1-${{ runner.os }}-${{ matrix.python-version }}-asdf-
+          v2-${{ runner.os }}-${{ matrix.python-version }}-asdf-
 
     - name: Install python
       if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -170,15 +170,15 @@ jobs:
         poetry run pip install pip==20.0.2
         poetry run pip install -U setuptools wheel
 
-    - name: Install deps
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      run: |
-        poetry install --no-root
-
     - name: Build
       run: |
+        poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
-        poetry install
+        poetry run python build.py build_ext --inplace --force
+
+    - name: Install deps
+      run: |
+        poetry install --no-root
 
     - name: Test
       run: |
