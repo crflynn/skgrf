@@ -46,11 +46,10 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
-        poetry run pip install -U pip
-        poetry run pip install dist/*whl
 
     - name: Install deps
       run: |
+        cp build/**/grf*.dylib skgrf
         poetry install --no-root
 
     - name: Format
@@ -119,8 +118,7 @@ jobs:
 
     - name: Install deps
       run: |
-        cp build/**/grf*.so skgrf || true
-        cp build/**/grf*.dylib skgrf || true
+        cp build/**/grf*.dylib skgrf
         poetry install --no-root
 
     - name: Test
@@ -179,11 +177,10 @@ jobs:
         poetry run pip install cython oldest-supported-numpy
         poetry run python buildpre.py
         poetry build
-        poetry run pip install -U pip
-        poetry run pip install dist/*whl
 
     - name: Install deps
       run: |
+        cp build/**/grf*.so skgrf
         poetry install --no-root
 
     - name: Test
