@@ -157,7 +157,7 @@ class GRFTreeCausalRegressor(GRFTreeInstrumentalRegressor):
         # avoiding circular import
         from skgrf.ensemble.boosted_regressor import GRFBoostedForestRegressor
 
-        X, y = self._validate_data(X, y)
+        X, y = self._validate_data(X, y, force_all_finite="allow-nan")
         self._check_num_samples(X)
 
         boost_params = {

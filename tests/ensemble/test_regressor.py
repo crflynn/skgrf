@@ -32,6 +32,14 @@ class TestGRFForestRegressor:
         pred = forest.predict(boston_X)
         assert len(pred) == boston_X.shape[0]
 
+    def test_with_X_nan(self, boston_X, boston_y):
+        index = np.random.choice(boston_X.size, 100, replace=False)
+        boston_X.ravel()[index] = np.nan
+        forest = GRFForestRegressor()
+        forest.fit(boston_X, boston_y)
+        pred = forest.predict(boston_X)
+        assert len(pred) == boston_X.shape[0]
+
     def test_predict_oob(self, boston_X, boston_y):
         forest = GRFForestRegressor()
         forest.fit(boston_X, boston_y, compute_oob_predictions=True)

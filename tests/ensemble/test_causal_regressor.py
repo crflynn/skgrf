@@ -1,3 +1,4 @@
+import numpy as np
 import pickle
 import pytest
 import tempfile
@@ -25,6 +26,14 @@ class TestGRFForestCausalRegressor:
         assert forest.criterion == "mse"
 
     def test_predict(self, causal_X, causal_y, causal_w):
+        forest = GRFForestCausalRegressor(n_estimators=100)
+        forest.fit(causal_X, causal_y, causal_w)
+        pred = forest.predict(causal_X)
+        assert len(pred) == causal_X.shape[0]
+
+    def test_with_X_nan(self, causal_X, causal_y, causal_w):
+        index = np.random.choice(causal_X.size, 100, replace=False)
+        causal_X.ravel()[index] = np.nan
         forest = GRFForestCausalRegressor(n_estimators=100)
         forest.fit(causal_X, causal_y, causal_w)
         pred = forest.predict(causal_X)

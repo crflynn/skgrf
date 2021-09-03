@@ -133,7 +133,7 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
         if self.quantiles is None:
             raise ValueError("quantiles must be set")
 
-        X, y = self._validate_data(X, y)
+        X, y = self._validate_data(X, y, force_all_finite="allow-nan")
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
 
@@ -188,7 +188,7 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
 
     def _predict(self, X):
         check_is_fitted(self)
-        X = check_array(X)
+        X = check_array(X, force_all_finite="allow-nan")
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 

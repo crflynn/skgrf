@@ -31,6 +31,14 @@ class TestGRFForestSurvival:
         pred = forest.predict(lung_X)
         assert len(pred) == lung_X.shape[0]
 
+    def test_with_X_nan(self, lung_X, lung_y):
+        index = np.random.choice(lung_X.size, 100, replace=False)
+        lung_X.ravel()[index] = np.nan
+        forest = GRFForestSurvival()
+        forest.fit(lung_X, lung_y)
+        pred = forest.predict(lung_X)
+        assert len(pred) == lung_X.shape[0]
+
     def test_serialize(self, lung_X, lung_y):
         forest = GRFForestSurvival()
         # not fitted

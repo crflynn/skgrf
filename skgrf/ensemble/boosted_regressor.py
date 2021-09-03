@@ -123,7 +123,7 @@ class GRFBoostedForestRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = self._validate_data(X, y)
+        X, y = self._validate_data(X, y, force_all_finite="allow-nan")
         self._check_n_features(X, reset=True)
 
         self._check_boost_error_reduction()
@@ -383,7 +383,7 @@ class GRFBoostedForestRegressor(GRFMixin, RegressorMixin, BaseEstimator):
         :param int boost_predict_steps: number of boost prediction steps
         """
         check_is_fitted(self)
-        X = check_array(X)
+        X = check_array(X, force_all_finite="allow-nan")
         self._check_n_features(X, reset=False)
         num_forests = len(self.boosted_forests_["forest"])
         if boost_predict_steps is None:
