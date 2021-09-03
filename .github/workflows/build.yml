@@ -120,6 +120,7 @@ jobs:
     - name: Install deps
       run: |
         cp build/**/grf*.so skgrf
+        cp build/**/grf*.dylib skgrf
         poetry install --no-root
 
     - name: Test
