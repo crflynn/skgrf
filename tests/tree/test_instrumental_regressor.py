@@ -32,6 +32,16 @@ class TestGRFTreeInstrumentalRegressor:
         pred = tree.predict(causal_X)
         assert len(pred) == causal_X.shape[0]
 
+    def test_with_X_nan(self, causal_X, causal_y, causal_w):
+        causal_X_nan = causal_X.copy()
+        index = np.random.choice(causal_X_nan.size, 100, replace=False)
+        causal_X_nan.ravel()[index] = np.nan
+        assert np.sum(np.isnan(causal_X_nan)) == 100
+        tree = GRFTreeInstrumentalRegressor()
+        tree.fit(causal_X_nan, causal_y, causal_w, causal_w)
+        pred = tree.predict(causal_X_nan)
+        assert len(pred) == causal_X_nan.shape[0]
+
     def test_serialize(self, causal_X, causal_y, causal_w):
         tree = GRFTreeInstrumentalRegressor()
         # not fitted

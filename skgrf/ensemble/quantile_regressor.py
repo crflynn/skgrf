@@ -203,4 +203,4 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
         return result
 
     def _more_tags(self):
-        return {"requires_y": True, "poor_score": True}
+        return {"requires_y": True, "poor_score": True, "allow_nan": True}

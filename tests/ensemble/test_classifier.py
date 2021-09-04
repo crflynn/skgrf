@@ -35,12 +35,14 @@ class TestGRFForestClassifier:
         assert len(pred) == iris_X.shape[0]
 
     def test_with_X_nan(self, iris_X, iris_y):
-        index = np.random.choice(iris_X.size, 100, replace=False)
-        iris_X.ravel()[index] = np.nan
+        iris_X_nan = iris_X.copy()
+        index = np.random.choice(iris_X_nan.size, 100, replace=False)
+        iris_X_nan.ravel()[index] = np.nan
+        assert np.sum(np.isnan(iris_X_nan)) == 100
         forest = GRFForestClassifier()
-        forest.fit(iris_X, iris_y)
-        pred = forest.predict(iris_X)
-        assert len(pred) == iris_X.shape[0]
+        forest.fit(iris_X_nan, iris_y)
+        pred = forest.predict(iris_X_nan)
+        assert len(pred) == iris_X_nan.shape[0]
 
     def test_predict_oob(self, iris_X, iris_y):
         forest = GRFForestClassifier()

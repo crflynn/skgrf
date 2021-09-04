@@ -315,4 +315,5 @@ class GRFTreeInstrumentalRegressor(BaseGRFTree, RegressorMixin):
             "_xfail_checks": {
                 "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
             },
+            "allow_nan": True,
         }

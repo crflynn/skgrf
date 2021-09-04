@@ -30,12 +30,14 @@ class TestGRFBoostedForestRegressor:
         assert len(pred) == boston_X.shape[0]
 
     def test_with_X_nan(self, boston_X, boston_y):
-        index = np.random.choice(boston_X.size, 100, replace=False)
-        boston_X.ravel()[index] = np.nan
+        boston_X_nan = boston_X.copy()
+        index = np.random.choice(boston_X_nan.size, 100, replace=False)
+        boston_X_nan.ravel()[index] = np.nan
+        assert np.sum(np.isnan(boston_X_nan)) == 100
         forest = GRFBoostedForestRegressor()
-        forest.fit(boston_X, boston_y)
-        pred = forest.predict(boston_X)
-        assert len(pred) == boston_X.shape[0]
+        forest.fit(boston_X_nan, boston_y)
+        pred = forest.predict(boston_X_nan)
+        assert len(pred) == boston_X_nan.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
         forest = GRFBoostedForestRegressor()

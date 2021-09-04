@@ -32,6 +32,20 @@ class TestGRFTreeSurvival:
         pred = tree.predict(lung_X)
         assert len(pred) == lung_X.shape[0]
 
+    def test_with_X_nan(self, lung_X, lung_y):
+        lung_X_nan = lung_X.copy()
+        index = np.random.choice(lung_X_nan.size, 100, replace=False)
+        lung_X_nan = lung_X_nan.to_numpy()
+        shape = lung_X_nan.shape
+        lung_X_nan = lung_X_nan.ravel()
+        lung_X_nan[index] = np.nan
+        lung_X_nan = lung_X_nan.reshape(shape)
+        assert np.sum(np.isnan(lung_X_nan)) == 100
+        tree = GRFTreeSurvival()
+        tree.fit(lung_X_nan, lung_y)
+        pred = tree.predict(lung_X_nan)
+        assert len(pred) == lung_X_nan.shape[0]
+
     def test_serialize(self, lung_X, lung_y):
         tree = GRFTreeSurvival()
         # not fitted
