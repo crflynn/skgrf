@@ -1,3 +1,4 @@
+import numpy as np
 import pickle
 import pytest
 import tempfile
@@ -27,6 +28,16 @@ class TestGRFBoostedForestRegressor:
         forest.fit(boston_X, boston_y)
         pred = forest.predict(boston_X, boost_predict_steps=boost_predict_steps)
         assert len(pred) == boston_X.shape[0]
+
+    def test_with_X_nan(self, boston_X, boston_y):
+        boston_X_nan = boston_X.copy()
+        index = np.random.choice(boston_X_nan.size, 100, replace=False)
+        boston_X_nan.ravel()[index] = np.nan
+        assert np.sum(np.isnan(boston_X_nan)) == 100
+        forest = GRFBoostedForestRegressor()
+        forest.fit(boston_X_nan, boston_y)
+        pred = forest.predict(boston_X_nan)
+        assert len(pred) == boston_X_nan.shape[0]
 
     def test_serialize(self, boston_X, boston_y):
         forest = GRFBoostedForestRegressor()

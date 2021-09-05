@@ -141,7 +141,7 @@ class GRFForestCausalRegressor(GRFForestInstrumentalRegressor):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X, y = self._validate_data(X, y)
+        X, y = self._validate_data(X, y, force_all_finite="allow-nan")
         self._check_num_samples(X)
 
         boost_params = {

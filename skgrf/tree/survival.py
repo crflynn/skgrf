@@ -137,7 +137,7 @@ class GRFTreeSurvival(BaseGRFTree):
         :param array1d sample_weight: optional weights for input samples
         :param array1d cluster: optional cluster assignments for input samples
         """
-        X = check_array(X)
+        X = check_array(X, force_all_finite="allow-nan")
         self._check_num_samples(X)
         self._check_n_features(X, reset=True)
         y = np.array(y.tolist())
@@ -219,7 +219,7 @@ class GRFTreeSurvival(BaseGRFTree):
 
     def _predict(self, X):
         check_is_fitted(self)
-        X = check_array(X)
+        X = check_array(X, force_all_finite="allow-nan")
         self._check_n_features(X, reset=False)
         self._ensure_ptr()
 
@@ -242,4 +242,5 @@ class GRFTreeSurvival(BaseGRFTree):
             "_xfail_checks": {
                 "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
             },
+            "allow_nan": True,
         }
