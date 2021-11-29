@@ -29,9 +29,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v3-${{ runner.os }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v4-${{ runner.os }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v3-${{ runner.os }}-asdf-
+          v4-${{ runner.os }}-asdf-
 
     - name: Install tools
       run: |
@@ -87,9 +87,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v3-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v3-${{ runner.os }}-${{ matrix.python-version }}-asdf-
+          v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-
 
     - name: Install python
       if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -122,7 +122,7 @@ jobs:
 
   macos:
 
-    runs-on: macos-10.15
+    runs-on: macos-latest
     strategy:
       matrix:
         python-version: [3.7.12, 3.8.12, 3.9.8]
@@ -152,9 +152,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v3-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v3-${{ runner.os }}-${{ matrix.python-version }}-asdf-
+          v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-
 
     - name: Install python
       if: steps.cache-deps.outputs.cache-hit != 'true'
