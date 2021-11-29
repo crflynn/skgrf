@@ -165,14 +165,28 @@ class Tree:
     def feature(self):
         """Variables on which nodes are split."""
         # sklearn uses -2, grf uses 0
-        return np.array([-2 if v == 0 else v for v in self.grf_forest["split_vars"][0]])
+        return np.array(
+            [
+                -2 if n == 0 else v
+                for n, v in zip(
+                    self.grf_forest["child_nodes"][0][0],
+                    self.grf_forest["split_vars"][0],
+                )
+            ]
+        )
 
     @property
     def threshold(self):
         """Threshold values on which nodes are split."""
         # sklearn uses -2, grf uses -1
         return np.array(
-            [-2 if v == -1 else v for v in self.grf_forest["split_values"][0]]
+            [
+                -2 if n == 0 else v
+                for n, v in zip(
+                    self.grf_forest["child_nodes"][0][0],
+                    self.grf_forest["split_values"][0],
+                )
+            ]
         )
 
     @property
@@ -220,4 +234,4 @@ class Tree:
     def value(self):
         """The constant prediction value of each node."""
         values = self.grf_forest["node_values"][0]
-        return np.reshape(values, (len(values), 1, 1))
+        return np.reshape(values, (len(values), 1, self.n_classes[0]))

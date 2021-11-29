@@ -1,6 +1,13 @@
-import pytest
+import os
+import sys
 
+import pytest
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+
+from skgrf.ensemble import GRFForestClassifier
 from skgrf.ensemble import GRFForestRegressor
+from skgrf.utils.shap import shap_patch
 
 
 @pytest.mark.skip()
@@ -24,27 +31,55 @@ def test_plot():
     )
 
 
-# FIXME not working yet
-@pytest.mark.skip()
-def test_shap(boston_X, boston_y):
+@pytest.mark.skipif(
+    sys.version_info > (3, 9) and os.getenv("CI") is not None, reason="requires < 3.9"
+)
+def test_shap_regressor(boston_X, boston_y):
     from shap import TreeExplainer
 
-    forest = GRFForestRegressor()
+    forest = GRFForestRegressor(enable_tree_details=True)
     forest.fit(boston_X, boston_y)
 
-    explainer = TreeExplainer(model=forest, data=boston_X)
-    shap_values = explainer.shap_values(boston_X, check_additivity=True)
+    with shap_patch(target=GRFForestRegressor, using=RandomForestRegressor):
+        explainer = TreeExplainer(model=forest, data=boston_X)
+    shap_values = explainer.shap_values(boston_X, check_additivity=False)
+    print(shap_values)
+
+
+@pytest.mark.skipif(
+    sys.version_info > (3, 9) and os.getenv("CI") is not None, reason="requires < 3.9"
+)
+def test_shap_classifier(iris_X, iris_y):
+    from shap import TreeExplainer
+
+    forest = GRFForestClassifier(enable_tree_details=True)
+    forest.fit(iris_X, iris_y)
+
+    with shap_patch(target=GRFForestClassifier, using=RandomForestClassifier):
+        explainer = TreeExplainer(model=forest, data=iris_X)
+    shap_values = explainer.shap_values(iris_X, check_additivity=False)
     print(shap_values)
 
 
 @pytest.mark.skip()
-def test_shap_sklearn(boston_X, boston_y):
+def test_shap_sklearn_regressor(boston_X, boston_y):
     from shap import TreeExplainer
-    from sklearn.ensemble import RandomForestRegressor
 
     forest = RandomForestRegressor()
     forest.fit(boston_X, boston_y)
 
     explainer = TreeExplainer(model=forest, data=boston_X)
-    shap_values = explainer.shap_values(boston_X, check_additivity=True)
+    shap_values = explainer.shap_values(boston_X, check_additivity=False)
+    print(shap_values)
+
+
+@pytest.mark.skip()
+def test_shap_sklearn_classifier(iris_X, iris_y):
+    from shap import TreeExplainer
+
+    forest = RandomForestClassifier()
+    forest.fit(iris_X, iris_y)
+
+    explainer = TreeExplainer(model=forest, data=iris_X)
+    shap_values = explainer.shap_values(iris_X, check_additivity=False)
     print(shap_values)
