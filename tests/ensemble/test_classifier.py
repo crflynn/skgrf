@@ -1,7 +1,8 @@
-import numpy as np
 import pickle
-import pytest
 import tempfile
+
+import numpy as np
+import pytest
 from sklearn.base import clone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.exceptions import NotFittedError

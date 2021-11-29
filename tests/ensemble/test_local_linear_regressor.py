@@ -1,6 +1,7 @@
 import pickle
-import pytest
 import tempfile
+
+import pytest
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split

@@ -1,4 +1,5 @@
 import logging
+
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
