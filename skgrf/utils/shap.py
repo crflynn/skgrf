@@ -1,7 +1,15 @@
 from contextlib import contextmanager
 
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree._tree import Tree as SKTree
 
+from skgrf.ensemble import GRFForestCausalRegressor
+from skgrf.ensemble import GRFForestClassifier
+from skgrf.ensemble import GRFForestInstrumentalRegressor
+from skgrf.ensemble import GRFForestLocalLinearRegressor
+from skgrf.ensemble import GRFForestQuantileRegressor
+from skgrf.ensemble import GRFForestRegressor
 from skgrf.tree._tree import Tree
 
 
@@ -17,12 +25,25 @@ def _getclass(klass):
 
 
 @contextmanager
-def shap_patch(target, using):
+def shap_patch():
     """Trick shap into thinking skgrf objects are sklearn objects."""
     tree_orig = Tree.__getattribute__
     Tree.__getattribute__ = _getclass(SKTree)
-    reg_orig = target.__getattribute__
-    target.__getattribute__ = _getclass(using)
+    regressors = [
+        GRFForestRegressor,
+        GRFForestLocalLinearRegressor,
+        GRFForestCausalRegressor,
+        GRFForestInstrumentalRegressor,
+        GRFForestQuantileRegressor,
+    ]
+    originals = []
+    for klass in regressors:
+        originals.append(klass.__getattribute__)
+        klass.__getattribute__ = _getclass(RandomForestRegressor)
+    clf_orig = GRFForestClassifier.__getattribute__
+    GRFForestClassifier.__getattribute__ = _getclass(RandomForestClassifier)
     yield
     Tree.__getattribute__ = tree_orig
-    target.__getattribute__ = reg_orig
+    for klass, orig in zip(regressors, originals):
+        klass.__getattribute__ = orig
+    GRFForestClassifier.__getattribute__ = clf_orig

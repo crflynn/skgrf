@@ -40,7 +40,7 @@ def test_shap_regressor(boston_X, boston_y):
     forest = GRFForestRegressor(enable_tree_details=True)
     forest.fit(boston_X, boston_y)
 
-    with shap_patch(target=GRFForestRegressor, using=RandomForestRegressor):
+    with shap_patch():
         explainer = TreeExplainer(model=forest, data=boston_X)
     shap_values = explainer.shap_values(boston_X, check_additivity=False)
     print(shap_values)
@@ -55,7 +55,7 @@ def test_shap_classifier(iris_X, iris_y):
     forest = GRFForestClassifier(enable_tree_details=True)
     forest.fit(iris_X, iris_y)
 
-    with shap_patch(target=GRFForestClassifier, using=RandomForestClassifier):
+    with shap_patch():
         explainer = TreeExplainer(model=forest, data=iris_X)
     shap_values = explainer.shap_values(iris_X, check_additivity=False)
     print(shap_values)

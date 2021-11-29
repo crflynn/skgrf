@@ -35,14 +35,12 @@ SHAP
 
 Regressors and classifiers can be used with shap. A
 context manager is provided which can patch skgrf objects so that they work
-with shap. Use ``RandomForestRegressor`` and ``RandomForestClassfier``
-for patching ``skgrf`` regressors and classifier, respectively.
+with shap.
 
 .. code-block:: python
 
     from shap import TreeExplainer
     from sklearn.datasets import load_iris
-    from sklearn.ensemble import RandomForestClassifier
     from sklearn.model_selection import train_test_split
     from skgrf.ensemble import GRFForestClassifier
     from skgrf.utils.shap import shap_patch
@@ -52,7 +50,7 @@ for patching ``skgrf`` regressors and classifier, respectively.
 
     forest = GRFForestClassifier(enable_tree_details=True).fit(X_train, y_train)
 
-    with shap_patch(target=GRFForestClassifier, using=RandomForestClassifier):
+    with shap_patch():
         explainer = TreeExplainer(model=forest, data=X_train)
 
     shap_values = explainer.shap_values(X_test, check_additivity=False)
