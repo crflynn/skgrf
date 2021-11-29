@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import NotFittedError

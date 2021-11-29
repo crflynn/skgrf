@@ -1,7 +1,8 @@
-import numpy as np
 import pickle
-import pytest
 import tempfile
+
+import numpy as np
+import pytest
 from sklearn import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import check_estimator

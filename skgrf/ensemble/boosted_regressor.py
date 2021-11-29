@@ -1,7 +1,8 @@
 import logging
-import numpy as np
 from abc import ABC
 from abc import abstractmethod
+
+import numpy as np
 from numpy import random
 from scipy import stats as ss
 from sklearn.base import BaseEstimator

@@ -1,6 +1,5 @@
-import typing as t
-
 import logging
+import typing as t
 
 from skgrf.tree.instrumental_regressor import GRFTreeInstrumentalRegressor
 

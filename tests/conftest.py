@@ -1,6 +1,7 @@
+import pathlib
+
 import numpy as np
 import pandas as pd
-import pathlib
 import pytest
 from scipy.io.arff import loadarff
 from sklearn.datasets import load_boston

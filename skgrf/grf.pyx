@@ -1,6 +1,7 @@
+import sys
+
 import cython
 import numpy as np
-import sys
 
 cimport numpy as np
 from cython.operator cimport dereference as deref

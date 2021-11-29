@@ -1,6 +1,6 @@
+import logging
 import typing as t
 
-import logging
 import numpy as np
 from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array

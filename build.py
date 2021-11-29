@@ -1,9 +1,10 @@
-from setuptools import Extension
-from setuptools import setup
+import os
+import sys
 
 import numpy as np
-import os
 from Cython.Build import cythonize
+from setuptools import Extension
+from setuptools import setup
 
 # skgrf project directory
 top = os.path.dirname(os.path.abspath(__file__))
@@ -64,16 +65,23 @@ additional_sources = [
 
 ext_modules = [create_extension("skgrf.grf", additional_sources)]
 
-setup(
-    ext_modules=cythonize(
-        ext_modules,
-        gdb_debug=False,
-        force=True,
-        annotate=False,
-        compiler_directives={"language_level": "3"},
+
+def build_ext():
+    setup(
+        name="skgrf",
+        ext_modules=cythonize(
+            ext_modules,
+            gdb_debug=False,
+            force=True,
+            annotate=False,
+            compiler_directives={"language_level": "3"},
+        ),
     )
-)
+
+
+if "clean" in sys.argv or "build_ext" in sys.argv:
+    build_ext()
 
 
 def build(setup_kwargs):
-    setup_kwargs.update({"ext_modules": ext_modules})
+    build_ext()
