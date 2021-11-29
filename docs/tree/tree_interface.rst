@@ -36,7 +36,7 @@ SHAP
 Regressors and classifiers can be used with shap. A
 context manager is provided which can patch skgrf objects so that they work
 with shap. Use ``RandomForestRegressor`` and ``RandomForestClassfier``
-for patching ``skgrf`` regressors and classfier, respectively.
+for patching ``skgrf`` regressors and classifier, respectively.
 
 .. code-block:: python
 
