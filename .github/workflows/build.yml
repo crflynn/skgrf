@@ -34,12 +34,10 @@ jobs:
           v2-${{ runner.os }}-asdf-
 
     - name: Install tools
-      # pip 20.1 fails on generation of multiple .egg-info dirs
       run: |
         asdf install
         poetry config virtualenvs.create false
-        poetry run pip install pip==20.0.2
-        poetry run pip install -U setuptools wheel
+        poetry run pip install -U pip setuptools wheel
 
     - name: Build
       run: |
@@ -61,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6.12, 3.7.9, 3.8.6, 3.9.1]
+        python-version: [3.7.9, 3.8.6, 3.9.1]
 
     steps:
     - name: Checkout
@@ -102,12 +100,10 @@ jobs:
         asdf local python ${{ matrix.python-version }}
 
     - name: Install tools
-      # pip 20.1 fails on generation of multiple .egg-info dirs
       run: |
         asdf install
         poetry config virtualenvs.create false
-        poetry run pip install pip==20.0.2
-        poetry run pip install -U setuptools wheel
+        poetry run pip install -U pip setuptools wheel
 
     - name: Build
       run: |
@@ -128,7 +124,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.6.12, 3.7.9, 3.8.6, 3.9.1]
+        python-version: [3.7.9, 3.8.6, 3.9.1]
 
     steps:
     - name: Checkout
@@ -163,12 +159,10 @@ jobs:
         asdf local python ${{ matrix.python-version }}
 
     - name: Install tools
-      # pip 20.1 fails on generation of multiple .egg-info dirs
       run: |
         asdf install
         poetry config virtualenvs.create false
-        poetry run pip install pip==20.0.2
-        poetry run pip install -U setuptools wheel
+        poetry run pip install -U pip setuptools wheel
 
     - name: Build
       run: |
