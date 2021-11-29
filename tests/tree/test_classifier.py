@@ -211,5 +211,6 @@ class TestGRFTreeClassifier:
         n_outputs = tree_.n_outputs
         n_classes = tree_.n_classes
         value = tree_.value
+        assert value.shape == (capacity, 1, n_classes[0])
 
     # endregion

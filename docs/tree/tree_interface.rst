@@ -28,3 +28,31 @@ and ``value`` attributes of the ``Tree`` class.
 
 .. autoclass:: skgrf.tree._tree.Tree
     :members:
+
+
+SHAP
+----
+
+Regressors and classifiers can be used with shap. A
+context manager is provided which can patch skgrf objects so that they work
+with shap. Use ``RandomForestRegressor`` and ``RandomForestClassfier``
+for patching ``skgrf`` regressors and classfier, respectively.
+
+.. code-block:: python
+
+    from shap import TreeExplainer
+    from sklearn.datasets import load_iris
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    from skgrf.ensemble import GRFForestClassifier
+    from skgrf.utils.shap import shap_patch
+
+    X, y = load_iris(return_X_y=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+    forest = GRFForestClassifier(enable_tree_details=True).fit(X_train, y_train)
+
+    with shap_patch(target=GRFForestClassifier, using=RandomForestClassifier):
+        explainer = TreeExplainer(model=forest, data=X_train)
+
+    shap_values = explainer.shap_values(X_test, check_additivity=False)
