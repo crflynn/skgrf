@@ -10,10 +10,10 @@ homepage = "https://github.com/crflynn/skgrf"
 repository = "https://github.com/crflynn/skgrf"
 documentation = "https://github.com/crflynn/skgrf"
 include = [
-    "skgrf/grf/**/*",
-    "CHANGELOG.rst",
-    "LICENSE.txt",
-    "README.rst",
+    { path="skgrf/grf/**/*" },
+    { path="CHANGELOG.rst", format="sdist" },
+    { path="LICENSE.txt", format="sdist" },
+    { path="README.rst", format="sdist" },
 ]
 keywords = ["generalized", "random", "forest", "machine", "learning"]
 classifiers = [
