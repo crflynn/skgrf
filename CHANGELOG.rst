@@ -1,6 +1,16 @@
 Release Changelog
 -----------------
 
+0.3.0 (2021-12-09)
+~~~~~~~~~~~~~~~~~~
+
+* Allow X to contain NaN values on all estimators except local linear.
+* Allow ``skgrf`` predictors to work with shap using ``skgrf.utils.shap.shap_patch`` context manager
+* Fix Tree.values for classifiers
+* Fix Tree.feature to use proper value for leaf nodes
+* Fix package includes to prevent installing extra files to site-packages
+* Drop support for Python 3.6
+
 0.2.1 (2021-09-03)
 ~~~~~~~~~~~~~~~~~~
 
