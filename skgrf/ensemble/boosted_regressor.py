@@ -73,6 +73,7 @@ class GRFBoostedForestRegressor(GRFMixin, RegressorMixin, BaseEstimator):
     def __init__(
         self,
         n_estimators=100,
+        *,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,

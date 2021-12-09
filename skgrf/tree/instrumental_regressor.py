@@ -58,6 +58,7 @@ class GRFTreeInstrumentalRegressor(BaseGRFTree, RegressorMixin):
 
     def __init__(
         self,
+        *,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,

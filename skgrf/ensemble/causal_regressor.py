@@ -60,6 +60,7 @@ class GRFForestCausalRegressor(GRFForestInstrumentalRegressor):
     def __init__(
         self,
         n_estimators=2000,
+        *,
         equalize_cluster_weights=False,
         sample_fraction=0.5,
         mtry=None,

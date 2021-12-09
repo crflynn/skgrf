@@ -60,6 +60,7 @@ class GRFTreeQuantileRegressor(BaseGRFTree, RegressorMixin):
 
     def __init__(
         self,
+        *,
         quantiles=None,
         regression_splitting=False,
         equalize_cluster_weights=False,
