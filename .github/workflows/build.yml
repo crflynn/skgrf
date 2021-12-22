@@ -29,9 +29,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v4-${{ runner.os }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v5-${{ runner.os }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v4-${{ runner.os }}-asdf-
+          v5-${{ runner.os }}-asdf-
 
     - name: Install tools
       run: |
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7.12, 3.8.12, 3.9.8]
+        python-version: [3.7.12, 3.8.12, 3.9.8, 3.10.1]
 
     steps:
     - name: Checkout
@@ -87,9 +87,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v5-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-
+          v5-${{ runner.os }}-${{ matrix.python-version }}-asdf-
 
     - name: Install python
       if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -125,7 +125,7 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: [3.7.12, 3.8.12, 3.9.8]
+        python-version: [3.7.12, 3.8.12, 3.9.8, 3.10.1]
 
     steps:
     - name: Checkout
@@ -152,9 +152,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.asdf
-        key: v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
+        key: v5-${{ runner.os }}-${{ matrix.python-version }}-asdf-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
         restore-keys: |
-          v4-${{ runner.os }}-${{ matrix.python-version }}-asdf-
+          v5-${{ runner.os }}-${{ matrix.python-version }}-asdf-
 
     - name: Install python
       if: steps.cache-deps.outputs.cache-hit != 'true'
