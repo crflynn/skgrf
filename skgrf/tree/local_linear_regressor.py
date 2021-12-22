@@ -63,6 +63,7 @@ class GRFTreeLocalLinearRegressor(BaseGRFTree, RegressorMixin):
 
     def __init__(
         self,
+        *,
         ll_split_weight_penalty=False,
         ll_split_lambda=0.1,
         ll_split_variables=None,

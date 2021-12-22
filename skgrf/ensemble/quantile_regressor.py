@@ -63,6 +63,7 @@ class GRFForestQuantileRegressor(BaseGRFForest, RegressorMixin):
     def __init__(
         self,
         n_estimators=100,
+        *,
         quantiles=None,
         regression_splitting=False,
         equalize_cluster_weights=False,

@@ -70,6 +70,7 @@ class GRFForestLocalLinearRegressor(BaseGRFForest, RegressorMixin):
     def __init__(
         self,
         n_estimators=100,
+        *,
         ll_split_weight_penalty=False,
         ll_split_lambda=0.1,
         ll_split_variables=None,

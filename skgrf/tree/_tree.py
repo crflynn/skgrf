@@ -11,7 +11,7 @@ class Tree:
     tree.
     """
 
-    def __init__(self, grf_forest):
+    def __init__(self, *, grf_forest):
         self.grf_forest = grf_forest
 
     @property
