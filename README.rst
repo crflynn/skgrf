@@ -1,13 +1,13 @@
 skgrf
 =====
 
-|actions| |wheels| |rtd| |pypi| |pyversions|
+|build| |wheels| |rtd| |pypi| |pyversions|
 
-.. |actions| image:: https://github.com/crflynn/skgrf/workflows/build/badge.svg
+.. |build| image:: https://github.com/crflynn/skgrf/workflows/build_and_test/badge.svg
     :target: https://github.com/crflynn/skgrf/actions
 
-.. |wheels| image:: https://github.com/crflynn/skgrf-wheels/workflows/wheels/badge.svg
-    :target: https://github.com/crflynn/skgrf-wheels/actions
+.. |wheels| image:: https://github.com/crflynn/skgrf-wheels/workflows/release/badge.svg
+    :target: https://github.com/crflynn/skgrf/actions
 
 .. |rtd| image:: https://img.shields.io/readthedocs/skgrf.svg
     :target: http://skgrf.readthedocs.io/en/latest/
