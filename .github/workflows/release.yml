@@ -1,15 +1,15 @@
 name: build wheels
 
 on:
-#  push:
-#    branches:
-#      - main
-#  release:
-#    types:
-#      - published
-  pull_request:
+  push:
     branches:
       - main
+  release:
+    types:
+      - published
+#  pull_request:
+#    branches:
+#      - main
 
 jobs:
   build_wheels:
