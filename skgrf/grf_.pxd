@@ -5,6 +5,9 @@ from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
 
 
+cdef extern from "./grf/src/commons/Data.cpp":
+    pass
+
 cdef extern from "./grf/src/commons/Data.h" namespace "grf":
     cdef cppclass Data:
         Data(
@@ -39,6 +42,8 @@ cdef extern from "./grf/src/commons/Data.h" namespace "grf":
         bool is_failure(size_t row) const
         double get(size_t row, size_t col) const
 
+cdef extern from "./grf/src/commons/utility.cpp":
+    pass
 
 cdef extern from "./grf/src/commons/utility.h" namespace "grf":
     void split_sequence(
@@ -48,6 +53,8 @@ cdef extern from "./grf/src/commons/utility.h" namespace "grf":
         unsigned int num_parts,
     )
 
+cdef extern from "./grf/src/forest/Forest.cpp":
+    pass
 
 cdef extern from "./grf/src/forest/Forest.h" namespace "grf":
     cdef cppclass Forest:
@@ -62,6 +69,8 @@ cdef extern from "./grf/src/forest/Forest.h" namespace "grf":
         const vector[unique_ptr[Tree]]& get_trees() const
         vector[unique_ptr[Tree]]& get_trees_()
 
+cdef extern from "./grf/src/forest/ForestOptions.cpp":
+    pass
 
 cdef extern from "./grf/src/forest/ForestOptions.h" namespace "grf":
     cdef cppclass ForestOptions:
@@ -83,16 +92,22 @@ cdef extern from "./grf/src/forest/ForestOptions.h" namespace "grf":
             unsigned int samples_per_cluster,
         )
 
+cdef extern from "./grf/src/prediction/collector/DefaultPredictionCollector.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/collector/DefaultPredictionCollector.h" namespace "grf":
     cdef cppclass DefaultPredictionCollector:
         DefaultPredictionCollector() except +
 
+cdef extern from "./grf/src/prediction/collector/OptimizedPredictionCollector.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/collector/OptimizedPredictionCollector.h" namespace "grf":
     cdef cppclass OptimizedPredictionCollector:
         OptimizedPredictionCollector() except +
 
+cdef extern from "./grf/src/prediction/collector/SampleWeightComputer.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/collector/SampleWeightComputer.h" namespace "grf":
     cdef cppclass SampleWeightComputer:
@@ -104,6 +119,8 @@ cdef extern from "./grf/src/prediction/collector/SampleWeightComputer.h" namespa
             const vector[vector[bool]]& valid_trees_by_sample,
         ) const
 
+cdef extern from "./grf/src/prediction/collector/TreeTraverser.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/collector/TreeTraverser.h" namespace "grf":
     cdef cppclass TreeTraverser:
@@ -119,51 +136,68 @@ cdef extern from "./grf/src/prediction/collector/TreeTraverser.h" namespace "grf
             bool oob_prediction
         ) const
 
-
 cdef extern from "./grf/src/prediction/DefaultPredictionStrategy.h" namespace "grf":
     cdef cppclass DefaultPredictionStrategy:
         DefaultPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/CausalSurvivalPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/CausalSurvivalPredictionStrategy.h" namespace "grf":
     cdef cppclass CausalSurvivalPredictionStrategy:
         CausalSurvivalPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/ProbabilityPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/ProbabilityPredictionStrategy.h" namespace "grf":
     cdef cppclass ProbabilityPredictionStrategy:
         ProbabilityPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/MultiRegressionPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/MultiRegressionPredictionStrategy.h" namespace "grf":
     cdef cppclass MultiRegressionPredictionStrategy:
         MultiRegressionPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/InstrumentalPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/InstrumentalPredictionStrategy.h" namespace "grf":
     cdef cppclass InstrumentalPredictionStrategy:
         InstrumentalPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/LLCausalPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/LLCausalPredictionStrategy.h" namespace "grf":
     cdef cppclass LLCausalPredictionStrategy:
         LLCausalPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/MultiCausalPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/MultiCausalPredictionStrategy.h" namespace "grf":
     cdef cppclass MultiCausalPredictionStrategy:
         MultiCausalPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/LocalLinearPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/LocalLinearPredictionStrategy.h" namespace "grf":
     cdef cppclass LocalLinearPredictionStrategy:
         LocalLinearPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/ObjectiveBayesDebiaser.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/ObjectiveBayesDebiaser.h" namespace "grf":
     cdef cppclass ObjectiveBayesDebiaser:
         ObjectiveBayesDebiaser() except +
 
+cdef extern from "./grf/src/prediction/Prediction.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/Prediction.h" namespace "grf":
     cdef cppclass Prediction:
@@ -182,6 +216,8 @@ cdef extern from "./grf/src/prediction/Prediction.h" namespace "grf":
         const bool contains_error_estimates() const
         const size_t size() const
 
+cdef extern from "./grf/src/prediction/PredictionValues.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/PredictionValues.h" namespace "grf":
     cdef cppclass PredictionValues:
@@ -193,151 +229,202 @@ cdef extern from "./grf/src/prediction/PredictionValues.h" namespace "grf":
         const vector[vector[double]]& get_all_values() const
         const size_t get_num_types() const
 
-
 cdef extern from "./grf/src/prediction/OptimizedPredictionStrategy.h" namespace "grf":
     cdef cppclass OptimizedPredictionStrategy:
         OptimizedPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/QuantilePredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/QuantilePredictionStrategy.h" namespace "grf":
     cdef cppclass QuantilePredictionStrategy:
         QuantilePredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/RegressionPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/RegressionPredictionStrategy.h" namespace "grf":
     cdef cppclass RegressionPredictionStrategy:
         RegressionPredictionStrategy() except +
 
+cdef extern from "./grf/src/prediction/SurvivalPredictionStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/prediction/SurvivalPredictionStrategy.h" namespace "grf":
     cdef cppclass SurvivalPredictionStrategy:
         SurvivalPredictionStrategy() except +
 
+cdef extern from "./grf/src/relabeling/InstrumentalRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/InstrumentalRelabelingStrategy.h" namespace "grf":
     cdef cppclass InstrumentalRelabelingStrategy:
         InstrumentalRelabelingStrategy() except +
 
+cdef extern from "./grf/src/relabeling/CausalSurvivalRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/CausalSurvivalRelabelingStrategy.h" namespace "grf":
     cdef cppclass CausalSurvivalRelabelingStrategy:
         CausalSurvivalRelabelingStrategy() except +
 
+cdef extern from "./grf/src/relabeling/MultiCausalRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/MultiCausalRelabelingStrategy.h" namespace "grf":
     cdef cppclass MultiCausalRelabelingStrategy:
         MultiCausalRelabelingStrategy() except +
 
+cdef extern from "./grf/src/relabeling/LLRegressionRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/LLRegressionRelabelingStrategy.h" namespace "grf":
     cdef cppclass LLRegressionRelabelingStrategy:
         LLRegressionRelabelingStrategy() except +
 
+cdef extern from "./grf/src/relabeling/NoopRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/NoopRelabelingStrategy.h" namespace "grf":
     cdef cppclass NoopRelabelingStrategy:
         NoopRelabelingStrategy() except +
 
+cdef extern from "./grf/src/relabeling/MultiNoopRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/MultiNoopRelabelingStrategy.h" namespace "grf":
     cdef cppclass MultiNoopRelabelingStrategy:
         MultiNoopRelabelingStrategy() except +
 
+cdef extern from "./grf/src/relabeling/QuantileRelabelingStrategy.cpp":
+    pass
 
 cdef extern from "./grf/src/relabeling/QuantileRelabelingStrategy.h" namespace "grf":
     cdef cppclass QuantileRelabelingStrategy:
         QuantileRelabelingStrategy() except +
 
-
 cdef extern from "./grf/src/relabeling/RelabelingStrategy.h" namespace "grf":
     cdef cppclass RelabelingStrategy:
         RelabelingStrategy() except +
 
+cdef extern from "./grf/src/sampling/RandomSampler.cpp":
+    pass
 
 cdef extern from "./grf/src/sampling/RandomSampler.h" namespace "grf":
     cdef cppclass RandomSampler:
         RandomSampler() except +
 
+cdef extern from "./grf/src/sampling/SamplingOptions.cpp":
+    pass
 
 cdef extern from "./grf/src/sampling/SamplingOptions.h" namespace "grf":
     cdef cppclass SamplingOptions:
         SamplingOptions() except +
 
+cdef extern from "./grf/src/splitting/factory/InstrumentalSplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/InstrumentalSplittingRuleFactory.h" namespace "grf":
     cdef cppclass InstrumentalSplittingRuleFactory:
         InstrumentalSplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/factory/CausalSurvivalSplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/CausalSurvivalSplittingRuleFactory.h" namespace "grf":
     cdef cppclass CausalSurvivalSplittingRuleFactory:
         CausalSurvivalSplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/factory/MultiCausalSplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/MultiCausalSplittingRuleFactory.h" namespace "grf":
     cdef cppclass MultiCausalSplittingRuleFactory:
         MultiCausalSplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/factory/MultiRegressionSplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/MultiRegressionSplittingRuleFactory.h" namespace "grf":
     cdef cppclass MultiRegressionSplittingRuleFactory:
         MultiRegressionSplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/factory/RegressionSplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/RegressionSplittingRuleFactory.h" namespace "grf":
     cdef cppclass RegressionSplittingRuleFactory:
         RegressionSplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/factory/ProbabilitySplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/ProbabilitySplittingRuleFactory.h" namespace "grf":
     cdef cppclass ProbabilitySplittingRuleFactory:
         ProbabilitySplittingRuleFactory() except +
 
-
 cdef extern from "./grf/src/splitting/factory/SplittingRuleFactory.h" namespace "grf":
     cdef cppclass SplittingRuleFactory:
         SplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/factory/SurvivalSplittingRuleFactory.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/factory/SurvivalSplittingRuleFactory.h" namespace "grf":
     cdef cppclass SurvivalSplittingRuleFactory:
         SurvivalSplittingRuleFactory() except +
 
+cdef extern from "./grf/src/splitting/InstrumentalSplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/InstrumentalSplittingRule.h" namespace "grf":
     cdef cppclass InstrumentalSplittingRule:
         InstrumentalSplittingRule() except +
 
+cdef extern from "./grf/src/splitting/CausalSurvivalSplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/CausalSurvivalSplittingRule.h" namespace "grf":
     cdef cppclass CausalSurvivalSplittingRule:
         CausalSurvivalSplittingRule() except +
 
+cdef extern from "./grf/src/splitting/MultiCausalSplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/MultiCausalSplittingRule.h" namespace "grf":
     cdef cppclass MultiCausalSplittingRule:
         MultiCausalSplittingRule() except +
 
+cdef extern from "./grf/src/splitting/MultiRegressionSplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/MultiRegressionSplittingRule.h" namespace "grf":
     cdef cppclass MultiRegressionSplittingRule:
         MultiRegressionSplittingRule() except +
 
+cdef extern from "./grf/src/splitting/ProbabilitySplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/ProbabilitySplittingRule.h" namespace "grf":
     cdef cppclass ProbabilitySplittingRule:
         ProbabilitySplittingRule() except +
 
+cdef extern from "./grf/src/splitting/RegressionSplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/RegressionSplittingRule.h" namespace "grf":
     cdef cppclass RegressionSplittingRule:
         RegressionSplittingRule() except +
 
+cdef extern from "./grf/src/splitting/SurvivalSplittingRule.cpp":
+    pass
 
 cdef extern from "./grf/src/splitting/SurvivalSplittingRule.h" namespace "grf":
     cdef cppclass SurvivalSplittingRule:
         SurvivalSplittingRule() except +
 
+cdef extern from "./grf/src/tree/Tree.cpp":
+    pass
 
 cdef extern from "./grf/src/tree/Tree.h" namespace "grf":
     cdef cppclass Tree:
@@ -360,16 +447,22 @@ cdef extern from "./grf/src/tree/Tree.h" namespace "grf":
         const vector[bool]& get_send_missing_left() const
         const PredictionValues& get_prediction_values() const
 
+cdef extern from "./grf/src/tree/TreeOptions.cpp":
+    pass
 
 cdef extern from "./grf/src/tree/TreeOptions.h" namespace "grf":
     cdef cppclass TreeOptions:
         TreeOptions() except +
 
+cdef extern from "./grf/src/tree/TreeTrainer.cpp":
+    pass
 
 cdef extern from "./grf/src/tree/TreeTrainer.h" namespace "grf":
     cdef cppclass TreeTrainer:
         TreeTrainer() except +
 
+cdef extern from "./grf/src/forest/ForestPredictor.cpp":
+    pass
 
 cdef extern from "./grf/src/forest/ForestPredictor.h" namespace "grf":
     cdef cppclass ForestPredictor:
@@ -394,6 +487,8 @@ cdef extern from "./grf/src/forest/ForestPredictor.h" namespace "grf":
             bool estimate_variance,
         ) const
 
+cdef extern from "./grf/src/forest/ForestPredictors.cpp":
+    pass
 
 cdef extern from "./grf/src/forest/ForestPredictors.h" namespace "grf":
     cdef ForestPredictor instrumental_predictor(unsigned int num_threads)
@@ -418,6 +513,8 @@ cdef extern from "./grf/src/forest/ForestPredictors.h" namespace "grf":
         int prediction_type,
     )
 
+cdef extern from "./grf/src/forest/ForestTrainer.cpp":
+    pass
 
 cdef extern from "./grf/src/forest/ForestTrainer.h" namespace "grf":
     cdef cppclass ForestTrainer:
@@ -435,6 +532,8 @@ cdef extern from "./grf/src/forest/ForestTrainer.h" namespace "grf":
             const ForestOptions& options,
         )
 
+cdef extern from "./grf/src/forest/ForestTrainers.cpp":
+    pass
 
 cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
     cdef ForestTrainer instrumental_trainer(
@@ -453,6 +552,8 @@ cdef extern from "./grf/src/forest/ForestTrainers.h" namespace "grf":
     cdef ForestTrainer regression_trainer()
     cdef ForestTrainer survival_trainer()
 
+cdef extern from "./grf/src/analysis/SplitFrequencyComputer.cpp":
+    pass
 
 cdef extern from "./grf/src/analysis/SplitFrequencyComputer.h" namespace "grf":
     cdef cppclass SplitFrequencyComputer:

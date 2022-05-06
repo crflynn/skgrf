@@ -20,7 +20,7 @@ include_dirs = [
 ]
 
 
-def find_ext_files(directory, ext="cpp", files=None):
+def find_ext_files(directory, ext="pyx", files=None):
     """Recursively find all Cython extension files.
 
     :param str directory: The directory in which to recursively crawl for .pyx files.
@@ -45,8 +45,6 @@ def create_extension(module_name, additional_sources=None):
     """
     path = module_name.replace(".", os.path.sep) + ".pyx"
     additional_sources = additional_sources or []
-    for k in additional_sources:
-        print(k)
     return Extension(
         module_name,
         sources=[path] + additional_sources,
@@ -58,12 +56,7 @@ def create_extension(module_name, additional_sources=None):
     )
 
 
-additional_sources = find_ext_files(os.path.join(top, "skgrf", "grf"), "cpp")
-additional_sources = [
-    f for f in additional_sources if "test" not in str(f).split("skgrf")[-1].lower()
-]
-
-ext_modules = [create_extension("skgrf.grf", additional_sources)]
+ext_modules = [create_extension("skgrf.grf")]
 
 
 def build_ext():
