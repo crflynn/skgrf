@@ -46,7 +46,7 @@ isort = "^5.10.1"
 cibuildwheel = "^2.5.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools", "cython", "oldest-supported-numpy"]
+requires = ["poetry-core", "setuptools", "cython", "oldest-supported-numpy"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
