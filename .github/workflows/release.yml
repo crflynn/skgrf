@@ -7,9 +7,9 @@ on:
   release:
     types:
       - published
-#  pull_request:
-#    branches:
-#      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build_wheels:
@@ -33,7 +33,6 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.py }}
         CIBW_ARCHS: auto
-        CIBW_ARCHS_LINUX: auto64
         CIBW_BEFORE_BUILD: python buildpre.py
         CIBW_TEST_COMMAND: python -c "import skgrf; print(skgrf.__version__); from skgrf import grf"
         # targets without wheels for numpy/scipy

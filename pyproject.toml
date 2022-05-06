@@ -89,4 +89,4 @@ filterwarnings = [
 
 [tool.cibuildwheel]
 build = ["cp38-*"]
-archs = ["auto64"]
+archs = ["auto"]
