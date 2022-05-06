@@ -20,7 +20,7 @@ skgrf
 
 ``skgrf`` provides `scikit-learn <https://scikit-learn.org/stable/index.html>`__ compatible Python bindings to the C++ random forest implementation, `grf <https://github.com/grf-labs/grf>`__, using `Cython <https://cython.readthedocs.io/en/latest/>`__.
 
-The latest release of ``skgrf`` uses version `2.0.0 <https://github.com/grf-labs/grf/releases/tag/v2.0.0>`__ of ``grf``.
+The latest release of ``skgrf`` uses version `2.1.0 <https://github.com/grf-labs/grf/releases/tag/v2.1.0>`__ of ``grf``.
 
 ``skgrf`` is still in development. Please create issues for any discrepancies or errors. PRs welcome.
 
