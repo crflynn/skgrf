@@ -1,0 +1,101 @@
+name: build wheels
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+#  pull_request:
+#    branches:
+#      - main
+
+jobs:
+  build_wheels:
+    name: build ${{ matrix.py }} wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # TODO windows C++11
+        os: [ubuntu-20.04, macos-10.15]
+        py: ["cp38-*", "cp39-*", "cp310-*"]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.4.0
+      env:
+        CIBW_BUILD: ${{ matrix.py }}
+        CIBW_ARCHS: auto
+        # targets without wheels for numpy/scipy
+        CIBW_SKIP: "*cp310*linux_i686* *cp310-win32* *musl*"
+        CIBW_BEFORE_BUILD: python buildpre.py
+        CIBW_TEST_COMMAND: python -c "import skgrf; print(skgrf.__version__); from skgrf import grf"
+
+    - name: Show wheelhouse
+      run: |
+        ls wheelhouse
+
+    - name: Set up python
+      id: setup-python
+      if: github.event_name == 'release' && github.event.action == 'published'
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Publish on tag
+      if: github.event_name == 'release' && github.event.action == 'published'
+      env:
+        TWINE_USERNAME: crflynn
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      run: |
+        pip install --upgrade twine
+        twine upload wheelhouse/*.whl
+
+  build_sdist:
+    name: build sdist
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Set up python
+      id: setup-python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py }}
+
+    - name: Install poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.1.11
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Create sdist
+      run: |
+        poetry run python buildpre.py
+        poetry build -f sdist
+
+    - name: Show dist
+      run: |
+        ls dist
+
+    - name: Publish on tag
+      if: github.event_name == 'release' && github.event.action == 'published'
+      env:
+        TWINE_USERNAME: crflynn
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      run: |
+        pip install --upgrade twine
+        twine upload dist/*.tar.gz

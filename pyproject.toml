@@ -28,12 +28,10 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 scikit-learn = "^1.0"
 
 [tool.poetry.dev-dependencies]
-black = "^20.8b1"
-isort = "^5.6.4"
 pytest = "^6.1.2"
 Sphinx = "^3.3.1"
 Cython = "^3.0a5"
@@ -43,14 +41,17 @@ pandas = "^1.0.3"
 pytest-xdist = "^2.2.1"
 shap = {version = "^0.40.0", python = "<3.9"}  # llvm/numba doesnt work on 3.9
 matplotlib = {version = "^3.4.2", python = ">=3.7,<4.0.0"}
+black = "^22.3.0"
+isort = "^5.10.1"
+cibuildwheel = "^2.5.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython", "oldest-supported-numpy"]
+requires = ["poetry-core", "setuptools", "cython", "oldest-supported-numpy"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 (
@@ -85,3 +86,7 @@ filterwarnings = [
     "ignore:divide by zero encountered in log:RuntimeWarning",
     "ignore:Skipping check_sample_weights_invariance:sklearn.exceptions.SkipTestWarning",
 ]
+
+[tool.cibuildwheel]
+build = ["cp38-*"]
+archs = ["auto"]
